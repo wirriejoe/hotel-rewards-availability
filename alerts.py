@@ -47,6 +47,7 @@ def main():
         hotel_name = fields['hotel_name']
         hotel_brand = fields['hotel_brand'][0]
         hotel_code = fields['hotel_code'][0]
+        user_email = fields['user_email'][0]
 
         date_range_start = datetime.strptime(fields['date_range_start'], '%Y-%m-%d')
         date_range_end = datetime.strptime(fields['date_range_end'], '%Y-%m-%d')
@@ -67,7 +68,7 @@ def main():
                 time_check = time_checks[0]
                 time_check_id = time_checks[0]['id']
                 last_checked_time = parse_date(time_check['fields']['last_checked_time'])
-                if (datetime.now(pytz.UTC) - last_checked_time) < timedelta(hours=1):
+                if (datetime.now(pytz.UTC) - last_checked_time) < timedelta(hours=3):
                     print(f"Skipping stay {time_check_query}, it was checked within the last hour.")
                     check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
                     continue
@@ -106,7 +107,8 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_check_id]
+                        'last_checked_id': [time_check_id],
+                        'alert_users': user_email
                         })
                 else:  # Stay does not exist
                     stays_table.insert({
@@ -122,7 +124,8 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_check_id]
+                        'last_checked_id': [time_check_id],
+                        'alert_users': user_email
                     })
             print("Finished with " + hotel_code + " from " + check_in_date + " to " + check_out_date + "!")
             check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
