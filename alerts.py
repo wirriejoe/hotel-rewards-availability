@@ -104,7 +104,7 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_checks[0]['id']]
+                        'last_checked_id': time_check_query
                         })
                 else:  # Stay does not exist
                     stays_table.insert({
@@ -120,7 +120,7 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_checks[0]['id']]  # added this line
+                        'last_checked_id': time_check_query  # added this line
                     })
             print("Finished with " + hotel_code + " from " + check_in_date + " to " + check_out_date + "!")
             check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
