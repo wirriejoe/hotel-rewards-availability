@@ -65,6 +65,7 @@ def main():
 
             if time_checks:
                 time_check = time_checks[0]
+                time_check_id = time_checks[0]['id']
                 last_checked_time = parse_date(time_check['fields']['last_checked_time'])
                 if (datetime.now(pytz.UTC) - last_checked_time) < timedelta(hours=1):
                     print(f"Skipping stay {time_check_query}, it was checked within the last hour.")
