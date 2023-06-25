@@ -2,6 +2,7 @@ import os
 import json
 from airtable import Airtable
 from datetime import datetime, timedelta
+from dateutil.parser import parse as parse_date
 import pytz
 import time
 import random
@@ -19,6 +20,7 @@ airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_name = os.getenv('AIRTABLE_BASE')
 alerts_table = Airtable(base_name, 'Alerts', airtable_api_key)
 stays_table = Airtable(base_name, 'Stays', airtable_api_key)
+last_checked_table = Airtable(base_name, 'Last Checked', airtable_api_key)
 
 def main():
     options = ChromeOptions()
@@ -38,7 +40,7 @@ def main():
         print(fields['date_range_start'])
         print(fields['date_range_end'])
 
-        hotel_id = fields['hotel_id']
+        hotel_name = fields['hotel_name']
         hotel_brand = fields['hotel_brand'][0]
         hotel_code = fields['hotel_code'][0]
 
@@ -50,6 +52,29 @@ def main():
 
             check_out_date = (check_in_date + timedelta(days=1)).strftime('%Y-%m-%d')
             check_in_date = check_in_date.strftime('%Y-%m-%d')
+
+            time_check_query = f"{hotel_code}-{check_in_date}-{check_out_date}"
+            time_checks = last_checked_table.search('last_checked_id', time_check_query)
+            
+            # Get UTC time
+            utc_time = datetime.now(pytz.timezone('US/Pacific')).astimezone(pytz.UTC)
+
+            if time_checks:
+                time_check = time_checks[0]
+                last_checked_time = parse_date(time_check['fields']['last_checked_time'])
+                if (datetime.now(pytz.UTC) - last_checked_time) < timedelta(hours=1):
+                    print(f"Skipping stay {time_check_query}, it was checked within the last hour.")
+                    check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
+                    continue
+                last_checked_table.update(time_checks[0]['id'], {
+                    'last_checked_time': str(utc_time)
+                })
+            else:
+                last_checked_table.insert({
+                    'last_checked_id': time_check_query,
+                    'last_checked_time': str(utc_time)
+                })
+
 
             # Step 2: Search for awards
             award_stays = awardsearch.get_award_stays(hotel_brand, hotel_code, check_in_date, check_out_date)
@@ -67,54 +92,36 @@ def main():
 
                 room_quantity = room_details.get('Room Quantity', 0)
                 # Get UTC time
-                pacific = pytz.timezone('US/Pacific')
-                now_pacific = datetime.now(pacific)
-                utc_time = now_pacific.astimezone(pytz.UTC)
+                utc_time = datetime.now(pytz.timezone('US/Pacific')).astimezone(pytz.UTC)
                 if stays:  # Stay exists
-                    stay = stays[0]
-                    if room_quantity:  # Case: Stay_id exists and award exists - Replace existing record with new record
-                        print("Award stay is still available!")
-                        stays_table.update(stay['id'], {
-                            'stay_id': stay_id,
-                            'hotel_id': hotel_id,
-                            'check_in_date': check_in_date,
-                            'check_out_date': check_out_date,
-                            'room_name': room_details['Room Name'],
-                            'room_type_code': room_details['Room Type Code'],
-                            'room_category': room_details['Room Category'],
-                            'lowest_points_rate': room_details['Lowest Point Value'],
-                            'cash_rate': room_details['Lowest Public Rate'],
-                            'currency_code': room_details['Currency Code'],
-                            'availability': room_quantity,
-                            'last_checked_time': str(utc_time),
-                            'search_url': room_details['Search URL']
+                    stays_table.update(stays[0]['id'], {
+                        'lowest_points_rate': room_details['Lowest Point Value'],
+                        'cash_rate': room_details['Lowest Public Rate'],
+                        'currency_code': room_details['Currency Code'],
+                        'availability': room_quantity,
+                        'search_url': room_details['Search URL'],
+                        'last_checked_id': [time_checks[0]['id']]
                         })
-                    else:  # Case: Stay_id exists and award does not exist anymore - Change room_quantity to 0 and last_checked_time to now()
-                        print("Award stay is no longer available.")
-                        stays_table.update(stay['id'], {'room_quantity': 0, 'last_checked_time': str(utc_time)})
                 else:  # Stay does not exist
-                    if room_quantity:  # Case: Stay_id does not exist and award exists - Add new record to Stays table
-                        print("New award stay found.")
-                        stays_table.insert({
-                            'stay_id': stay_id,
-                            'hotel_id': hotel_id,
-                            'check_in_date': check_in_date,
-                            'check_out_date': check_out_date,
-                            'room_name': room_details['Room Name'],
-                            'room_type_code': room_details['Room Type Code'],
-                            'room_category': room_details['Room Category'],
-                            'lowest_points_rate': room_details['Lowest Point Value'],
-                            'cash_rate': room_details['Lowest Public Rate'],
-                            'currency_code': room_details['Currency Code'],
-                            'availability': room_quantity,
-                            'last_checked_time': str(utc_time),
-                            'search_url': room_details['Search URL']
-                        })
+                    stays_table.insert({
+                        'stay_id': stay_id,
+                        'hotel_name': hotel_name,
+                        'check_in_date': check_in_date,
+                        'check_out_date': check_out_date,
+                        'room_name': room_details['Room Name'],
+                        'room_type_code': room_details['Room Type Code'],
+                        'room_category': room_details['Room Category'],
+                        'lowest_points_rate': room_details['Lowest Point Value'],
+                        'cash_rate': room_details['Lowest Public Rate'],
+                        'currency_code': room_details['Currency Code'],
+                        'availability': room_quantity,
+                        'search_url': room_details['Search URL'],
+                        'last_checked_id': [time_checks[0]['id']]  # added this line
+                    })
             print("Finished with " + hotel_code + " from " + check_in_date + " to " + check_out_date + "!")
             check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
             time.sleep(random.randint(5, 10))
     awardsearch.quit()
-
 
 if __name__ == "__main__":
     main()
