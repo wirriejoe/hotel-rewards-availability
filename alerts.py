@@ -74,10 +74,11 @@ def main():
                     'last_checked_time': str(utc_time)
                 })
             else:
-                last_checked_table.insert({
+                time_check_id = last_checked_table.insert({
                     'last_checked_id': time_check_query,
                     'last_checked_time': str(utc_time)
-                })
+                })['id']
+
 
 
             # Step 2: Search for awards
@@ -104,7 +105,7 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': time_check_query
+                        'last_checked_id': [time_check_id]
                         })
                 else:  # Stay does not exist
                     stays_table.insert({
@@ -120,7 +121,7 @@ def main():
                         'currency_code': room_details['Currency Code'],
                         'availability': room_quantity,
                         'search_url': room_details['Search URL'],
-                        'last_checked_id': time_check_query  # added this line
+                        'last_checked_id': [time_check_id]
                     })
             print("Finished with " + hotel_code + " from " + check_in_date + " to " + check_out_date + "!")
             check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
