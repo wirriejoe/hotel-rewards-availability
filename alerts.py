@@ -25,7 +25,11 @@ last_checked_table = Airtable(base_name, 'Last Checked', airtable_api_key)
 def main():
     options = ChromeOptions()
     mydriver = Chrome(profile, options=options, uc_driver=False)
-    mydriver.options.add_argument("--headless=new")
+    # mydriver.options.add_argument("--headless=new")
+    mydriver.options.add_argument("--headless")
+    mydriver.options.add_argument("--no-sandbox")
+    mydriver.options.add_argument("--disable-dev-shm-usage")
+
     driver = mydriver.start() 
 
     awardsearch = AwardSearch(driver)
