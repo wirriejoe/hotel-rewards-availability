@@ -1,136 +1,106 @@
-import os
-import json
-from airtable import Airtable
-from datetime import datetime, timedelta
-from dateutil.parser import parse as parse_date
-import pytz
-import time
-import random
+from pyairtable import Table
+from dateutil.rrule import rrule, DAILY
+from dateutil.parser import parse
+from datetime import timedelta
 from dotenv import load_dotenv
-from selenium_profiles.webdriver import Chrome
-from selenium.webdriver import ChromeOptions
-from search import AwardSearch
+import os
 
 # Load environment variables
 load_dotenv()  
 
-# Load Selenium profile
-profile = json.loads(os.getenv('SELENIUM_PROFILE'))
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_name = os.getenv('AIRTABLE_BASE')
-alerts_table = Airtable(base_name, 'Alerts', airtable_api_key)
-stays_table = Airtable(base_name, 'Stays', airtable_api_key)
-last_checked_table = Airtable(base_name, 'Last Checked', airtable_api_key)
+alerts_table = Table(base_id=base_name, table_name='Alerts', api_key=airtable_api_key)
+stays_table = Table(base_id=base_name, table_name='Stays', api_key=airtable_api_key)
 
-def main():
-    options = ChromeOptions()
-    mydriver = Chrome(profile, options=options, uc_driver=False)
-    # mydriver.options.add_argument("--headless=new")
-    mydriver.options.add_argument("--headless")
-    mydriver.options.add_argument("--no-sandbox")
-    mydriver.options.add_argument("--disable-dev-shm-usage")
+def update_alerts_stays(alert_ids, alert_on=True):
+    print('Retrieving alerts with specified alert_ids...')
+    # Assuming 'id' is a field in your table
+    alerts = alerts_table.all(formula="OR(" + ', '.join([f'alert_id = "{alert_id}"' for alert_id in alert_ids]) + ")")
 
-    driver = mydriver.start() 
+    print(f"Retrieved {len(alerts)} alerts")
 
-    awardsearch = AwardSearch(driver)
-    
-    # Step 1: Get the records from the Alerts table
-    alerts = alerts_table.get_all(formula="AND(is_active = 1)")
-    
+    stays = {}
     for alert in alerts:
-        fields = alert['fields']
-        print(fields['hotel_brand'][0])
-        print(fields['hotel_code'][0])
-        print(fields['date_range_start'])
-        print(fields['date_range_end'])
+        print(f"Processing alert with ID {alert['id']}...")
+        start_date = parse(alert['fields']['date_range_start'])
+        end_date = parse(alert['fields']['date_range_end'])
+        dates = list(rrule(DAILY, dtstart=start_date, until=end_date - timedelta(days=1)))
 
-        hotel_name = fields['hotel_name']
-        hotel_brand = fields['hotel_brand'][0]
-        hotel_code = fields['hotel_code'][0]
-        user_email = fields['user_email'][0]
-
-        date_range_start = datetime.strptime(fields['date_range_start'], '%Y-%m-%d')
-        date_range_end = datetime.strptime(fields['date_range_end'], '%Y-%m-%d')
-
-        check_in_date = date_range_start
-        while check_in_date < date_range_end:
-
-            check_out_date = (check_in_date + timedelta(days=1)).strftime('%Y-%m-%d')
-            check_in_date = check_in_date.strftime('%Y-%m-%d')
-
-            time_check_query = f"{hotel_code}-{check_in_date}-{check_out_date}"
-            time_checks = last_checked_table.search('last_checked_id', time_check_query)
+        for check_in_date in dates:
+            check_out_date = check_in_date + timedelta(days=1)
+            stay_id = f"{alert['fields']['hotel_code'][0]}-{check_in_date.strftime('%Y-%m-%d')}-{check_out_date.strftime('%Y-%m-%d')}"
+            print(f"Generated stay_id: {stay_id}")
             
-            # Get UTC time
-            utc_time = datetime.now(pytz.timezone('US/Pacific')).astimezone(pytz.UTC)
-
-            if time_checks:
-                time_check = time_checks[0]
-                time_check_id = time_checks[0]['id']
-                last_checked_time = parse_date(time_check['fields']['last_checked_time'])
-                if (datetime.now(pytz.UTC) - last_checked_time) < timedelta(hours=3):
-                    print(f"Skipping stay {time_check_query}, it was checked within the last hour.")
-                    check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
-                    continue
-                last_checked_table.update(time_checks[0]['id'], {
-                    'last_checked_time': str(utc_time)
-                })
+            if stay_id in stays:
+                stays[stay_id]['alert_emails'].append(alert['fields'].get('user_email', []))
+                if alert_on:
+                    stays[stay_id]['is_active'] = True
+                print(f"Stay already exists in stays. Appended email {alert['fields'].get('user_email', [])} to alert_emails.")
             else:
-                time_check_id = last_checked_table.insert({
-                    'last_checked_id': time_check_query,
-                    'last_checked_time': str(utc_time)
-                })['id']
+                stays[stay_id] = {
+                    'alert_emails': alert['fields'].get('user_email', []),
+                    'is_active': True # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
+                }
+                print(f"Created new stay with stay_id {stay_id} and email {alert['fields'].get('user_email', [])}")
+
+    print('Retrieving existing stays from Stays table...')
+    existing_stays = stays_table.all(formula="OR(" + ', '.join([f'stay_id = "{stay_id}"' for stay_id in stays.keys()]) + ")")
+    print(f"Retrieved {len(existing_stays)} existing stays")
+
+    print('Updating stays with existing alert_emails...')
+    for existing_stay in existing_stays:
+        print(existing_stay)
+        existing_alert_emails = existing_stay['fields'].get('alert_emails', [])
+                
+        if alert_on:
+            existing_alert_emails.extend(email for email in stays[existing_stay['fields']['stay_id']]['alert_emails'] if email not in existing_alert_emails)
+            stays[existing_stay['fields']['stay_id']]['alert_emails'] = existing_alert_emails
+            print(f"Appended new emails to existing emails for stay_id {existing_stay['fields']['stay_id']}")
+        else:
+            stays[existing_stay['fields']['stay_id']]['alert_emails'] = [email for email in existing_alert_emails if email not in stays[existing_stay['fields']['stay_id']]['alert_emails']]
+            print(f"Removed emails from alert_emails for stay_id {existing_stay['fields']['stay_id']}")
+
+            if not stays[existing_stay['fields']['stay_id']]['alert_emails']:
+                stays[existing_stay['fields']['stay_id']]['is_active'] = False
+                print(f"Set is_active to False for stay_id {existing_stay['fields']['stay_id']} as there are no more alert_emails")
+
+    # After updating the existing stays, update the rest of the stays that do not exist in `existing_stays`
+    if not alert_on:
+        for stay_id in stays:
+            if stay_id not in [existing_stay['fields']['stay_id'] for existing_stay in existing_stays]:
+                stays[stay_id]['alert_emails'] = []
+                stays[stay_id]['is_active'] = False
+
+    print(stays)
+    print('Preparing data for batch_upsert...')
+    data_for_upsert = [{"fields": {'stay_id': stay_id, 'alert_emails': info['alert_emails'], 'is_active': info['is_active']}} for stay_id, info in stays.items()]
+    stays_table.batch_upsert(data_for_upsert, key_fields=['stay_id'])
+    print("Upsert complete!")
+
+def update_active_alerts():
+    print('Retrieving active alerts...')
+    active_alerts = alerts_table.all(formula="is_active=1")  # retrieves only active alerts
+
+    print(f"Found {len(active_alerts)} active alerts.")
+    for alert in active_alerts:
+        print(f"Updating stays for alert {alert['id']}")
+        update_alerts_stays(alert['id'], alert_on=False)
 
 
+    # print('Data for batch_upsert:')
+    # for item in data_for_upsert:
+    #     print(item)
 
-            # Step 2: Search for awards
-            award_stays = awardsearch.get_award_stays(hotel_brand, hotel_code, check_in_date, check_out_date)
+# test = stays_table.all(formula="stay_id = 'cdgys-2023-08-19-2023-08-20'")
+# print(test)
 
-            for room_details in award_stays:
-                if room_details['Lowest Point Value'] is None:
-                    print("No award stays available.")
-                    continue
-                # Step 3: Create stay_id
-                stay_id = f"{hotel_code}-{check_in_date}-{check_out_date}-{room_details['Room Type Code']}-{room_details['Room Category']}"
-                print(stay_id)
 
-                # Step 4 & 5: Check if award exists in Stays table and update/insert accordingly
-                stays = stays_table.search('stay_id', stay_id)
+# Use the function
+# alerts = ["1",
+#           "2",
+#           "3"]
 
-                room_quantity = room_details.get('Room Quantity', 0)
-                # Get UTC time
-                utc_time = datetime.now(pytz.timezone('US/Pacific')).astimezone(pytz.UTC)
-                if stays:  # Stay exists
-                    stays_table.update(stays[0]['id'], {
-                        'lowest_points_rate': room_details['Lowest Point Value'],
-                        'cash_rate': room_details['Lowest Public Rate'],
-                        'currency_code': room_details['Currency Code'],
-                        'availability': room_quantity,
-                        'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_check_id],
-                        'alert_users': user_email
-                        })
-                else:  # Stay does not exist
-                    stays_table.insert({
-                        'stay_id': stay_id,
-                        'hotel_name': hotel_name,
-                        'check_in_date': check_in_date,
-                        'check_out_date': check_out_date,
-                        'room_name': room_details['Room Name'],
-                        'room_type_code': room_details['Room Type Code'],
-                        'room_category': room_details['Room Category'],
-                        'lowest_points_rate': room_details['Lowest Point Value'],
-                        'cash_rate': room_details['Lowest Public Rate'],
-                        'currency_code': room_details['Currency Code'],
-                        'availability': room_quantity,
-                        'search_url': room_details['Search URL'],
-                        'last_checked_id': [time_check_id],
-                        'alert_users': user_email
-                    })
-            print("Finished with " + hotel_code + " from " + check_in_date + " to " + check_out_date + "!")
-            check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d') + timedelta(days=1)
-            time.sleep(random.randint(5, 10))
-    awardsearch.quit()
+# update_alerts_stays(alerts)
 
-if __name__ == "__main__":
-    main()
+update_active_alerts()
