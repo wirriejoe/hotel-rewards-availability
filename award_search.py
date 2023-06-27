@@ -10,21 +10,21 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class AwardSearch:
     @staticmethod
-    def initialize_driver(profile):
+    def initialize_driver():
         # Load Selenium profile
         load_dotenv()  # take environment variables from .env.
         profile = json.loads(os.getenv('SELENIUM_PROFILE'))
         
         options = ChromeOptions()
-        driver = Chrome(profile, options=options, uc_driver=False)
-        driver.options.add_argument("--headless")
-        driver.options.add_argument("--no-sandbox")
-        driver.options.add_argument("--disable-dev-shm-usage")
-        driver.start() 
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        mydriver = Chrome(profile, options=options, uc_driver=False)
+        driver = mydriver.start() 
         return driver
 
-    def __init__(self, profile):
-        self.driver = self.initialize_driver(profile)
+    def __init__(self):
+        self.driver = self.initialize_driver()
 
     def build_url(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
         base_url_dict = {
@@ -82,9 +82,9 @@ class AwardSearch:
 # mydriver.options.add_argument("--headless=new")
 # driver = mydriver.start() 
 
-# awardsearch = AwardSearch(driver)
+# awardsearch = AwardSearch()
 
-# award_stays = awardsearch.get_award_stays('Hyatt', 'madel', '2023-08-23', '2023-08-24')
+# award_stays = awardsearch.get_award_stays('Hyatt', 'mldal', '2023-08-26', '2023-08-27')
 
 # for room_details in award_stays:
 #     print(room_details)

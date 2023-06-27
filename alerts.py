@@ -13,13 +13,7 @@ base_name = os.getenv('AIRTABLE_BASE')
 alerts_table = Table(base_id=base_name, table_name='Alerts', api_key=airtable_api_key)
 stays_table = Table(base_id=base_name, table_name='Stays', api_key=airtable_api_key)
 
-def update_alerts_stays(alert_ids, alert_on=True):
-    print('Retrieving alerts with specified alert_ids...')
-    # Assuming 'id' is a field in your table
-    alerts = alerts_table.all(formula="OR(" + ', '.join([f'alert_id = "{alert_id}"' for alert_id in alert_ids]) + ")")
-
-    print(f"Retrieved {len(alerts)} alerts")
-
+def update_alert(alerts, alert_on=True):
     stays = {}
     for alert in alerts:
         print(f"Processing alert with ID {alert['id']}...")
@@ -40,6 +34,9 @@ def update_alerts_stays(alert_ids, alert_on=True):
             else:
                 stays[stay_id] = {
                     'alert_emails': alert['fields'].get('user_email', []),
+                    'hotel_name': alert['fields'].get('hotel_name', []),
+                    'check_in_date': check_in_date,
+                    'check_out_date': check_out_date,
                     'is_active': True # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
                 }
                 print(f"Created new stay with stay_id {stay_id} and email {alert['fields'].get('user_email', [])}")
@@ -74,7 +71,7 @@ def update_alerts_stays(alert_ids, alert_on=True):
 
     print(stays)
     print('Preparing data for batch_upsert...')
-    data_for_upsert = [{"fields": {'stay_id': stay_id, 'alert_emails': info['alert_emails'], 'is_active': info['is_active']}} for stay_id, info in stays.items()]
+    data_for_upsert = [{"fields": {'stay_id': stay_id, 'alert_emails': stay['alert_emails'], 'is_active': stay['is_active']}} for stay_id, stay in stays.items()]
     stays_table.batch_upsert(data_for_upsert, key_fields=['stay_id'])
     print("Upsert complete!")
 
@@ -83,9 +80,16 @@ def update_active_alerts():
     active_alerts = alerts_table.all(formula="is_active=1")  # retrieves only active alerts
 
     print(f"Found {len(active_alerts)} active alerts.")
-    for alert in active_alerts:
-        print(f"Updating stays for alert {alert['id']}")
-        update_alerts_stays(alert['id'], alert_on=False)
+    add_alert(active_alerts)
+    # delete_alert(active_alerts)
+
+def add_alert(alerts):
+    update_alert(alerts, alert_on=True)
+
+def delete_alert(alerts):
+    update_alert(alerts, alert_on=False)
+
+update_active_alerts()
 
 
     # print('Data for batch_upsert:')
@@ -102,5 +106,3 @@ def update_active_alerts():
 #           "3"]
 
 # update_alerts_stays(alerts)
-
-update_active_alerts()
