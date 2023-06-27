@@ -66,7 +66,7 @@ def update_awards_table(award_stays, stay):
             })
     print("Finished with " + hotel_name[0] + " from " + check_in_date + " to " + check_out_date + "!")
 
-def search_awards(search_frequency = timedelta(hours=3)):
+def search_awards(search_frequency = timedelta(hours=24)):
     awardsearch = AwardSearch()
     
     # Step 1: Get the records from the Alerts table
