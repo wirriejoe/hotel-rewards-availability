@@ -35,8 +35,8 @@ def update_alert(alerts, alert_on=True):
                 stays[stay_id] = {
                     'alert_emails': alert['fields'].get('user_email', []),
                     'hotel_name': alert['fields'].get('hotel_name', []),
-                    'check_in_date': check_in_date,
-                    'check_out_date': check_out_date,
+                    'check_in_date': check_in_date.isoformat(),
+                    'check_out_date': check_out_date.isoformat(),
                     'is_active': True # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
                 }
                 print(f"Created new stay with stay_id {stay_id} and email {alert['fields'].get('user_email', [])}")
@@ -71,7 +71,14 @@ def update_alert(alerts, alert_on=True):
 
     print(stays)
     print('Preparing data for batch_upsert...')
-    data_for_upsert = [{"fields": {'stay_id': stay_id, 'alert_emails': stay['alert_emails'], 'is_active': stay['is_active']}} for stay_id, stay in stays.items()]
+    data_for_upsert = [{"fields": {
+                        'stay_id': stay_id, 
+                        'alert_emails': stay['alert_emails'], 
+                        'is_active': stay['is_active'],
+                        'hotel_name': stay['hotel_name'],
+                        'check_in_date': stay['check_in_date'],
+                        'check_out_date': stay['check_out_date']
+                        }} for stay_id, stay in stays.items()]
     stays_table.batch_upsert(data_for_upsert, key_fields=['stay_id'])
     print("Upsert complete!")
 
