@@ -21,6 +21,7 @@ kaitaistruct==0.10
 outcome==1.2.0
 packaging==23.1
 Pillow==9.5.0
+pyairtable==1.5.0
 pyasn1==0.5.0
 pycparser==2.21
 pyOpenSSL==23.2.0
@@ -43,7 +44,7 @@ tqdm==4.65.0
 trio==0.22.0
 trio-websocket==0.10.3
 undetected-chromedriver==3.5.0
-urllib3==2.0.3
+urllib3==1.26.16
 webdriver-manager==3.8.6
 websockets==11.0.3
 wsproto==1.2.0
