@@ -94,7 +94,7 @@ def search_awards(search_frequency = timedelta(hours=24)):
                 'last_checked_time': datetime.now(pytz.UTC).isoformat()
         })
 
-        time.sleep(random.randint(5, 10))
+        time.sleep(random.randint(3, 5))
     awardsearch.quit()
 
 if __name__ == "__main__":

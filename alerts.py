@@ -1,7 +1,7 @@
 from pyairtable import Table
 from dateutil.rrule import rrule, DAILY
 from dateutil.parser import parse
-from datetime import timedelta
+from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
 
@@ -37,6 +37,7 @@ def update_alert(alerts, alert_on=True):
                     'hotel_name': alert['fields'].get('hotel_name', []),
                     'check_in_date': check_in_date.isoformat(),
                     'check_out_date': check_out_date.isoformat(),
+                    'last_checked_time': datetime(1900, 1, 1, 0, 0, 0).isoformat(),
                     'is_active': True # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
                 }
                 print(f"Created new stay with stay_id {stay_id} and email {alert['fields'].get('user_email', [])}")
@@ -77,7 +78,8 @@ def update_alert(alerts, alert_on=True):
                         'is_active': stay['is_active'],
                         'hotel_name': stay['hotel_name'],
                         'check_in_date': stay['check_in_date'],
-                        'check_out_date': stay['check_out_date']
+                        'check_out_date': stay['check_out_date'],
+                        'last_checked_time': stay['last_checked_time']
                         }} for stay_id, stay in stays.items()]
     stays_table.batch_upsert(data_for_upsert, key_fields=['stay_id'])
     print("Upsert complete!")

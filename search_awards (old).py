@@ -1,5 +1,4 @@
 import os
-import json
 from airtable import Airtable
 from datetime import datetime, timedelta
 from dateutil.parser import parse as parse_date
@@ -7,8 +6,6 @@ import pytz
 import time
 import random
 from dotenv import load_dotenv
-from selenium_profiles.webdriver import Chrome
-from selenium.webdriver import ChromeOptions
 from award_search import AwardSearch
 
 # Load environment variables
