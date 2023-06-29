@@ -51,7 +51,7 @@ def update_alert(alerts, alert_on=True):
         print(existing_stay)
         existing_alert_emails = existing_stay['fields'].get('alert_emails', [])
         # Remove last_checked_time if stay_id already exists
-        stays[existing_stay['fields']['stay_id']].pop('last_checked_time', None)
+        stays[existing_stay['fields']['stay_id']]['last_checked_time'] = existing_stay['fields']['last_checked_time']
                 
         if alert_on:
             existing_alert_emails.extend(email for email in stays[existing_stay['fields']['stay_id']]['alert_emails'] if email not in existing_alert_emails)
