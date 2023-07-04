@@ -1,7 +1,6 @@
 import json
 from dotenv import load_dotenv
 import os
-from urllib.parse import urlencode
 from selenium_profiles.webdriver import Chrome
 from selenium.webdriver.common.by import By  # locate elements
 from selenium.webdriver import ChromeOptions

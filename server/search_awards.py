@@ -1,6 +1,5 @@
 import os
 from pyairtable import Table, formulas
-from airtable import Airtable
 from datetime import datetime, timedelta
 from dateutil.parser import parse as parse_date
 import pytz

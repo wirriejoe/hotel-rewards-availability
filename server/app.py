@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, render_template, current_app
+from flask import Flask, request, jsonify, render_template
+from search_stays import search_by_consecutive_nights
 from pyairtable import Table
 from dotenv import load_dotenv
 import os
@@ -13,6 +14,27 @@ stays_table = Table(base_id=os.getenv('AIRTABLE_BASE'), table_name='Stays', api_
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/search')
+def search_page():
+    return render_template('search.html')
+
+@app.route('/api/consecutive_stays', methods=['POST'])
+def consecutive_stays():
+    data = request.json
+
+    start_date = data['startDate']
+    end_date = data['endDate']
+    length_of_stay = int(data['lengthOfStay'])
+    hotel_name_text = data.get('hotel')  # These are optional, so use .get() to return None if they are not present
+    hotel_city = data.get('city')
+    hotel_country = data.get('country')
+    rate_filter = data.get('rateFilter')
+    app.logger.info(data.get('pointsBudget'))
+    max_points_budget = int(data.get('pointsBudget'))
+
+    stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, rate_filter, max_points_budget)
+    return jsonify(stays)  # Convert list of stays to JSON
 
 @app.route('/api/search', methods=['POST'])
 def search():
