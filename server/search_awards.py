@@ -1,13 +1,10 @@
 import os
-from pyairtable import Table, formulas
+from pyairtable import Table
 from datetime import datetime, timedelta
-from dateutil.parser import parse as parse_date
 import pytz
 import time
 import random
 from dotenv import load_dotenv
-from selenium_profiles.webdriver import Chrome
-from selenium.webdriver import ChromeOptions
 from award_search import AwardSearch
 
 # Load environment variables
@@ -65,12 +62,13 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 100):
     awardsearch = AwardSearch()
     award_updates = []
     stay_updates = []
+    search_counter = 0
+    start_timer = datetime.now()
     
     # Step 1: Get the search_batch_size num records from the Stays table where status = Active and last_checked_time is longer than search_frequency (default 24 hours) and check_in_date is after today
-    stays = stays_table.all(formula=f'AND(status="Active", \
-                            DATETIME_DIFF(NOW(),last_checked_time,"hours")>={search_frequency_hours}), \
-                            check_in_date>=today()\
-                                ', max_records = search_batch_size)
+    filter_formula = f'AND(status="Active", DATETIME_DIFF(NOW(),last_checked_time,"hours")>={search_frequency_hours}, check_in_date>=today())'
+    print(filter_formula)
+    stays = stays_table.all(formula=filter_formula, max_records = search_batch_size)
 
     status_update = [{
         'id': stay['id'],
@@ -81,6 +79,8 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 100):
     stays_table.batch_upsert(status_update, key_fields=['stay_id'])
 
     for stay in stays:
+        search_counter+=1
+        print(f"Searching #{search_counter} stay! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         stay_fields = stay['fields']
         hotel_code = stay_fields['hotel_code'][0]
         check_in_date = datetime.strptime(stay_fields['check_in_date'], '%Y-%m-%d').date()
@@ -93,6 +93,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 100):
         
         if awards:
             award_updates.append(update_awards_table(awards, stay))
+
         stay_updates.append({
             'id': stay['id'],
             'fields': {
@@ -107,4 +108,4 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 100):
     awardsearch.quit()
 
 if __name__ == "__main__":
-    search_awards(search_frequency_hours=24,search_batch_size=1000)
+    search_awards(search_frequency_hours=24,search_batch_size=1500)
