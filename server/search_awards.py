@@ -25,6 +25,7 @@ def update_awards_table(award_stays, stay):
     hotel_name = stay_fields['hotel_name']
     check_in_date = stay_fields['check_in_date']
     check_out_date = stay_fields['check_out_date']
+    award_updates = []
     
     for room_details in award_stays:
         if room_details['Lowest Point Value'] is None:
@@ -34,21 +35,10 @@ def update_awards_table(award_stays, stay):
         award_id = f"{stay_id}-{room_details['Room Type Code']}-{room_details['Room Category']}"
         print(award_id)
 
-        # Check if award exists in Awards table and update/insert accordingly
-        existing_award = awards_table.all(formula=formulas.match({'award_id': award_id}))
-
         room_quantity = room_details.get('Room Quantity', 0)
-        if existing_award:  # Award exists
-            awards_table.update(existing_award[0]['id'], {
-                'lowest_points_rate': room_details['Lowest Point Value'],
-                'cash_rate': room_details['Lowest Public Rate'],
-                'currency_code': room_details['Currency Code'],
-                'availability': room_quantity,
-                'search_url': room_details['Search URL'],
-                'stay_id': [stay['id']]
-                })
-        else:  # Stay does not exist
-            awards_table.create({
+
+        award_updates.append({
+            'fields': {
                 'award_id': award_id,
                 'hotel_name': hotel_name,
                 'check_in_date': check_in_date,
@@ -62,41 +52,59 @@ def update_awards_table(award_stays, stay):
                 'availability': room_quantity,
                 'search_url': room_details['Search URL'],
                 'stay_id': [stay['id']]
-            })
+            }
+        })
+    
     print("Finished with " + hotel_name[0] + " from " + check_in_date + " to " + check_out_date + "!")
 
-def search_awards(search_frequency = timedelta(hours=24)):
+    return award_updates[0]
+
+def search_awards(search_frequency_hours = 24, search_batch_size = 100):
+    search_frequency = timedelta(hours=search_frequency_hours)
+    
     awardsearch = AwardSearch()
+    award_updates = []
+    stay_updates = []
     
-    # Step 1: Get the records from the Alerts table
-    stays = stays_table.all(formula='AND(is_active = 1)')
-    
+    # Step 1: Get the search_batch_size num records from the Stays table where status = Active and last_checked_time is longer than search_frequency (default 24 hours) and check_in_date is after today
+    stays = stays_table.all(formula=f'AND(status="Active", \
+                            DATETIME_DIFF(NOW(),last_checked_time,"hours")>={search_frequency_hours}), \
+                            check_in_date>=today()\
+                                ', max_records = search_batch_size)
+
+    status_update = [{
+        'id': stay['id'],
+        'fields': {
+        'status': 'Queued'
+    }} for stay in stays]
+
+    stays_table.batch_upsert(status_update, key_fields=['stay_id'])
+
     for stay in stays:
         stay_fields = stay['fields']
         hotel_code = stay_fields['hotel_code'][0]
         check_in_date = datetime.strptime(stay_fields['check_in_date'], '%Y-%m-%d').date()
         check_out_date = datetime.strptime(stay_fields['check_out_date'], '%Y-%m-%d').date()
-        last_checked_time = parse_date(stay_fields['last_checked_time'])
 
-        #skip if stay search had been searched more recently than search_frequency (e.g. 3 hours)
-        if (datetime.now(pytz.UTC) - last_checked_time) < search_frequency:
-            print(f"Skipping stay {stay_fields['stay_id']}, it was checked within the last hour.")
-            continue
-        
         awards = awardsearch.get_award_stays(hotel_brand='Hyatt', 
                                              hotel_code=hotel_code, 
                                              checkin_date=check_in_date, 
                                              checkout_date=check_out_date)
-        update_awards_table(awards, stay)
-
-        stays_table.update(stay['id'], {
-                'last_checked_time': datetime.now(pytz.UTC).isoformat()
+        
+        if awards:
+            award_updates.append(update_awards_table(awards, stay))
+        stay_updates.append({
+            'id': stay['id'],
+            'fields': {
+                'last_checked_time': datetime.now(pytz.UTC).isoformat(),
+                'status': 'Active'
+            }
         })
 
-        time.sleep(random.randint(3, 5))
+        time.sleep(random.randint(1, 2))
+    awards_table.batch_upsert(award_updates, key_fields=['award_id'])
+    stays_table.batch_upsert(stay_updates, key_fields=['stay_id'])
     awardsearch.quit()
 
 if __name__ == "__main__":
-    search_awards()
-    # stays = stays_table.all(max_records=1)
-    # print(stays[0]['fields']['stay_id'])
+    search_awards(search_frequency_hours=24,search_batch_size=1000)

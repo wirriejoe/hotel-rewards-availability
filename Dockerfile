@@ -32,5 +32,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
-# Run search_awards.py when the container launches
+# Run server/search_awards.py when the container launches
 CMD ["python", "server/search_awards.py"]

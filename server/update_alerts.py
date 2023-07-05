@@ -29,7 +29,7 @@ def update_alert(alerts, alert_on=True):
             if stay_id in stays:
                 stays[stay_id]['alert_emails'].append(alert['fields'].get('user_email', []))
                 if alert_on:
-                    stays[stay_id]['is_active'] = True
+                    stays[stay_id]['status'] = 'Active'
                 print(f"Stay already exists in stays. Appended email {alert['fields'].get('user_email', [])} to alert_emails.")
             else:
                 stays[stay_id] = {
@@ -38,12 +38,13 @@ def update_alert(alerts, alert_on=True):
                     'check_in_date': check_in_date.isoformat(),
                     'check_out_date': check_out_date.isoformat(),
                     'last_checked_time': datetime(1900, 1, 1, 0, 0, 0).isoformat(),
-                    'is_active': True # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
+                    'status': 'Active' # if alert_on = True, the alert should be active. If alert_on = False, the alert should be inactive
                 }
                 print(f"Created new stay with stay_id {stay_id} and email {alert['fields'].get('user_email', [])}")
 
     print('Retrieving existing stays from Stays table...')
-    existing_stays = stays_table.all(formula="OR(" + ', '.join([f'stay_id = "{stay_id}"' for stay_id in stays.keys()]) + ")")
+    filter_formula = "OR(" + ', '.join([f'stay_id = "{stay_id}"' for stay_id in stays.keys()]) + ")"
+    existing_stays = stays_table.all(formula=filter_formula)
     print(f"Retrieved {len(existing_stays)} existing stays")
 
     print('Updating stays with existing alert_emails...')
@@ -62,22 +63,22 @@ def update_alert(alerts, alert_on=True):
             print(f"Removed emails from alert_emails for stay_id {existing_stay['fields']['stay_id']}")
 
             if not stays[existing_stay['fields']['stay_id']]['alert_emails']:
-                stays[existing_stay['fields']['stay_id']]['is_active'] = False
-                print(f"Set is_active to False for stay_id {existing_stay['fields']['stay_id']} as there are no more alert_emails")
+                stays[existing_stay['fields']['stay_id']]['status'] = 'Inactive'
+                print(f"Set status to Inactive for stay_id {existing_stay['fields']['stay_id']} as there are no more alert_emails")
 
     # After updating the existing stays, update the rest of the stays that do not exist in `existing_stays`
     if not alert_on:
         for stay_id in stays:
             if stay_id not in [existing_stay['fields']['stay_id'] for existing_stay in existing_stays]:
                 stays[stay_id]['alert_emails'] = []
-                stays[stay_id]['is_active'] = False
+                stays[stay_id]['status'] = 'Inactive'
 
     print(stays)
     print('Preparing data for batch_upsert...')
     data_for_upsert = [{"fields": {
                         'stay_id': stay_id, 
                         'alert_emails': stay['alert_emails'], 
-                        'is_active': stay['is_active'],
+                        'status': stay['status'],
                         'hotel_name': stay['hotel_name'],
                         'check_in_date': stay['check_in_date'],
                         'check_out_date': stay['check_out_date'],
@@ -88,7 +89,7 @@ def update_alert(alerts, alert_on=True):
 
 def update_active_alerts():
     print('Retrieving active alerts...')
-    active_alerts = alerts_table.all(formula="is_active=1")  # retrieves only active alerts
+    active_alerts = alerts_table.all(formula='is_active=1')  # retrieves only active alerts
 
     print(f"Found {len(active_alerts)} active alerts.")
     add_alert(active_alerts)
