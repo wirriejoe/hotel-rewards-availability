@@ -75,7 +75,7 @@ for hotel_code, hotel in hotels.items():
     airtable_data.append({"fields": airtable_record})
 # now airtable_data is a list of dictionaries ready to be used with the Airtable API
 
-load_dotenv()
+load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
 
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_name = os.getenv('AIRTABLE_BASE')

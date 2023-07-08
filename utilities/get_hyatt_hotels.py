@@ -3,7 +3,7 @@ from airtable import Airtable
 import os
 import requests
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
 
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_key = os.getenv('AIRTABLE_BASE')

@@ -11,7 +11,7 @@ class AwardSearch:
     @staticmethod
     def initialize_driver():
         # Load Selenium profile
-        load_dotenv()  # take environment variables from .env.
+        load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
         profile = json.loads(os.getenv('SELENIUM_PROFILE'))
         
         options = ChromeOptions()

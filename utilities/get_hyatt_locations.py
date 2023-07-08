@@ -6,7 +6,7 @@ from airtable import Airtable
 
 # Go here to download JSON https://www.hyatt.com/development/explore-hotels/api/hotels
 
-load_dotenv()
+load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
 
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_name = os.getenv('AIRTABLE_BASE')

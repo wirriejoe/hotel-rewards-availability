@@ -1,73 +1,112 @@
-from pyairtable import Table
+import psycopg2
+import psycopg2.extras
+from datetime import datetime, timedelta
 from dateutil.rrule import rrule, DAILY
-from dateutil.parser import parse
-from datetime import timedelta, datetime
+import logging
+import time
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  
+# initialize logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-airtable_api_key = os.getenv('AIRTABLE_API_KEY')
-base_name = os.getenv('AIRTABLE_BASE')
-alerts_table = Table(base_id=base_name, table_name='Alerts', api_key=airtable_api_key)
-stays_table = Table(base_id=base_name, table_name='Stays', api_key=airtable_api_key)
+load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
 
-def update_alert(alerts, alert_on=True):
-    stays = {}
+# PostgreSQL connection URL
+connection_url = os.getenv('POSTGRES_DB_URL')
 
-    print('Processing alerts and generating stays...')
-    for alert in alerts:
-        start_date = parse(alert['fields']['date_range_start'])
-        end_date = parse(alert['fields']['date_range_end'])
-        dates = list(rrule(DAILY, dtstart=start_date, until=end_date - timedelta(days=1)))
+# establish a database connection
+conn = psycopg2.connect(connection_url)
 
-        for check_in_date in dates:
-            check_out_date = check_in_date + timedelta(days=1)
-            stay_id = f"{alert['fields']['hotel_code'][0]}-{check_in_date.strftime('%Y-%m-%d')}-{check_out_date.strftime('%Y-%m-%d')}"
-            
-            stays[stay_id] = {
-                'alert_emails': alert['fields'].get('user_email', []),
-                'hotel_name': alert['fields'].get('hotel_name', []),
-                'check_in_date': check_in_date.isoformat(),
-                'check_out_date': check_out_date.isoformat(),
-                'last_checked_time': datetime(1900, 1, 1, 0, 0, 0).isoformat(),
-                'status': 'Active' if alert_on else 'Inactive'
-            }
-            
-    print('Retrieving existing stays...')
-    existing_stays = stays_table.all()
+# create a new dictionary cursor object
+cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    print('Updating generated stays with existing alert emails...')
-    for existing_stay in existing_stays:
-        stay_id = existing_stay['fields']['stay_id']
-        if stay_id in stays:
-            new_alert_emails = list(set(stays[stay_id]['alert_emails'] + existing_stay['fields'].get('alert_emails', [])))
-            # Check if there are changes
-            if stays[stay_id]['alert_emails'] != new_alert_emails:
-                # Update if there are changes
-                stays[stay_id]['alert_emails'] = new_alert_emails
-                stays[stay_id]['last_checked_time'] = existing_stay['fields']['last_checked_time']
-            else:
-                # Remove from upsert list if there are no changes
-                del stays[stay_id]
+logging.info('Retrieving all alerts where is_active = true')
+start_time = time.time()
+# Step 1: Retrieve all alerts where is_active = true
+cur.execute("SELECT alerts.hotel_id, hotel_code, date_range_start, date_range_end, user_email FROM alerts LEFT JOIN hotels on alerts.hotel_id = hotels.hotel_id WHERE is_active = 'true';")
+alerts = cur.fetchall()
+logging.info(f'Retrieved {len(alerts)} alerts in {time.time() - start_time} seconds')
+
+# Step 2: Generate unique new_stays
+logging.info('Generating new stays')
+start_time = time.time()
+new_stays = {}
+
+for alert in alerts:
+    start_date = alert['date_range_start']
+    end_date = alert['date_range_end']
+    date_range = list(rrule(DAILY, dtstart=start_date, until=end_date - timedelta(days=1)))
     
-    print('Preparing data for batch_upsert...')
-    data_for_upsert = [{"fields": {'stay_id': stay_id, **stay}} for stay_id, stay in stays.items()]
-    stays_table.batch_upsert(data_for_upsert, key_fields=['stay_id'])
-    print("Upsert complete!")
+    for date in date_range:
+        stay_id = f"{alert['hotel_code']}-{date.strftime('%Y-%m-%d')}-{(date + timedelta(days=1)).strftime('%Y-%m-%d')}"
+        new_stays[stay_id] = {
+            'hotel_id': alert['hotel_id'],
+            'user_email': alert['user_email'],
+            'check_in_date': date.strftime('%Y-%m-%d'),
+            'check_out_date': (date + timedelta(days=1)).strftime('%Y-%m-%d'),
+            'status': 'Active',
+            'last_checked_time': datetime(1900, 1, 1, 0, 0, 0)
+        }
 
-def update_active_alerts():
-    print('Retrieving active alerts...')
-    active_alerts = alerts_table.all(formula='is_active=1')  # retrieves only active alerts
+logging.info(f'Generated {len(new_stays)} new stays in {time.time() - start_time} seconds')
 
-    print(f"Found {len(active_alerts)} active alerts.")
-    add_alert(active_alerts)
-    # delete_alert(active_alerts)
+logging.info('Retrieving all existing stays')
+start_time = time.time()
+# Step 3: Retrieve all existing_stays from stays table
+cur.execute("UPDATE stays SET user_email = ''")
+cur.execute("SELECT * FROM stays;")
+existing_stays = cur.fetchall()
+logging.info(f'Retrieved {len(existing_stays)} existing stays in {time.time() - start_time} seconds')
 
-def add_alert(alerts):
-    update_alert(alerts, alert_on=True)
+# Step 4: Modify new_stays based on existing_stays
+logging.info('Modifying new stays based on existing stays')
+start_time = time.time()
 
-def delete_alert(alerts):
-    update_alert(alerts, alert_on=False)
+for existing_stay in existing_stays:
+    stay_id = existing_stay['stay_id']
+    if stay_id in new_stays:
+        new_user_emails = list(set(new_stays[stay_id]['user_email'].split(',') + existing_stay.get('user_email', None).split(',')))
+        print(new_user_emails)
+        new_user_emails = ','.join(new_user_emails).strip(',')
+        print(new_user_emails)
+        if new_stays[stay_id]['user_email'] != new_user_emails:
+            # Update if there are changes
+            new_stays[stay_id]['user_email'] = new_user_emails
+            new_stays[stay_id]['last_checked_time'] = existing_stay['last_checked_time']
+            logging.info(f"Updated existing {existing_stay['stay_id']} in {time.time() - start_time} seconds")
+        else:
+            # Remove from upsert list if there are no changes
+            del new_stays[stay_id]
+            logging.info(f"Deleted existing {existing_stay['stay_id']} in {time.time() - start_time} seconds")
+    
 
-update_active_alerts()
+logging.info(f'Modified new stays in {time.time() - start_time} seconds')
+
+# Step 5: Upsert new_stays to stays table
+logging.info('Upserting new stays to stays table')
+start_time = time.time()
+
+print(new_stays)
+for stay_id, stay_info in new_stays.items():
+    print(stay_id)
+    query = """
+    INSERT INTO stays (stay_id, hotel_id, user_email, check_in_date, check_out_date, status, last_checked_time)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (stay_id) DO UPDATE
+    SET user_email = excluded.user_email, status = excluded.status, last_checked_time = excluded.last_checked_time;
+    """
+    cur.execute(query, (stay_id, stay_info['hotel_id'], stay_info['user_email'], stay_info['check_in_date'], stay_info['check_out_date'], stay_info['status'], stay_info['last_checked_time']))
+
+    logging.info(f"Upserted {stay_id} in {time.time() - start_time} seconds")
+
+logging.info(f'Upserted new stays to stays table in {time.time() - start_time} seconds')
+
+# commit the transaction
+conn.commit()
+
+# close the cursor and connection
+cur.close()
+conn.close()
+
+logging.info('All steps completed successfully')
