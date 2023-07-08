@@ -1,14 +1,14 @@
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import timedelta
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from operator import itemgetter
 from itertools import groupby
 from datetime import timedelta
 import os
 
 # Load environment variables
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')

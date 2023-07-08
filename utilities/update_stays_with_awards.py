@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, MetaData, select, update, func
 from sqlalchemy.sql import label
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 import logging
 
@@ -9,7 +9,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Load environment variables
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')

@@ -1,5 +1,5 @@
 import json
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 from selenium_profiles.webdriver import Chrome
 from selenium.webdriver.common.by import By  # locate elements
@@ -11,7 +11,7 @@ class AwardSearch:
     @staticmethod
     def initialize_driver():
         # Load Selenium profile
-        load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+        load_dotenv(find_dotenv())
         profile = json.loads(os.getenv('SELENIUM_PROFILE'))
         
         options = ChromeOptions()

@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 from dateutil.rrule import rrule, DAILY
 import logging
 import time
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
 # initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 # PostgreSQL connection URL
 connection_url = os.getenv('POSTGRES_DB_URL')

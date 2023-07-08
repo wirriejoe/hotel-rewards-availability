@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, MetaData, select, and_, update, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from award_search import AwardSearch
 import os
 import pytz
@@ -12,7 +12,7 @@ import logging
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
-load_dotenv(dotenv_path='/etc/secrets/.env')
+load_dotenv(find_dotenv())
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

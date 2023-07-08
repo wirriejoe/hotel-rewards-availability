@@ -1,10 +1,10 @@
 from pyairtable import Table
 from datetime import datetime, timedelta
 from collections import defaultdict
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 API_KEY = os.getenv('AIRTABLE_API_KEY')
 BASE_ID = os.getenv('AIRTABLE_BASE')

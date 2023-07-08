@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify, render_template
 from search_stays import search_by_consecutive_nights
 from sqlalchemy import create_engine, MetaData, select, and_, join, func, or_
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
 from pytz import utc
 import os
 import logging
 
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 

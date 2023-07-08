@@ -2,10 +2,10 @@ from pyairtable import Table
 from dateutil.rrule import rrule, DAILY
 from dateutil.parser import parse
 from datetime import timedelta, datetime
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_name = os.getenv('AIRTABLE_BASE')

@@ -1,9 +1,9 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from airtable import Airtable
 import os
 import requests
 
-load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
+load_dotenv(find_dotenv())
 
 airtable_api_key = os.getenv('AIRTABLE_API_KEY')
 base_key = os.getenv('AIRTABLE_BASE')
