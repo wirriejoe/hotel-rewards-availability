@@ -13,8 +13,11 @@ RUN apt-get update \
         libgconf-2-4 \
         default-jdk \
         wget \
+        libpq-dev \
     && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+    && apt-get upgrade -y
+
 
 # Chrome Driver
 RUN wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip \
