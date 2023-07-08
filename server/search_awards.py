@@ -12,7 +12,7 @@ import logging
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
-load_dotenv(os.path(dotenv_path='/etc/secrets/.env'))
+load_dotenv(dotenv_path='/etc/secrets/.env')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
