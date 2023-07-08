@@ -15,11 +15,12 @@ import logging
 load_dotenv(find_dotenv())
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')
-engine = create_engine(database_url)
+print(database_url)
+engine = create_engine(database_url, echo=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 
