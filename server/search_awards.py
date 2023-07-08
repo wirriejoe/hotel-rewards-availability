@@ -155,5 +155,5 @@ def update_rates():
     logging.info("Changes committed to the database.")
 
 if __name__ == "__main__":
-    search_awards(search_frequency_hours=24,search_batch_size=20)
+    search_awards(search_frequency_hours=24,search_batch_size=1000)
     update_rates()
