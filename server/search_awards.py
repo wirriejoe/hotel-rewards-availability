@@ -15,11 +15,12 @@ import logging
 load_dotenv(find_dotenv())
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')
-print(database_url)
+logging.debug("Database URL: %s", database_url)  # Use lazy logging format
 engine = create_engine(database_url, echo=True)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -157,5 +158,8 @@ def update_rates():
     logging.info("Changes committed to the database.")
 
 if __name__ == "__main__":
-    search_awards(search_frequency_hours=24,search_batch_size=1000)
-    update_rates()
+    try:
+        search_awards(search_frequency_hours=24, search_batch_size=1000)
+        update_rates()
+    except Exception as e:
+        logging.error("Error in main function: %s", str(e))  # Log exceptions
