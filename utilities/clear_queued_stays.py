@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 import os
 import logging
+from datetime import datetime, timedelta
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -28,8 +29,12 @@ stays = meta.tables['stays']
 def clear_queued_stays():
     logging.info("Starting to update 'Queued' stays to 'Active'...")
 
-    # Update statement to set status='Active' where status='Queued'
-    update_query = update(stays).where(stays.c.status == 'Queued').values(status='Active')
+    # Get current time and time 24 hours ago
+    now = datetime.now()
+    time_24_hours_ago = now - timedelta(hours=24)
+
+    # Update statement to set status='Active' where status='Queued' and last_checked_time > 24 hours ago
+    update_query = update(stays).where(stays.c.status == 'Queued').where(stays.c.last_checked_time < time_24_hours_ago).values(status='Active')
 
     # Execute the update query
     result = session.execute(update_query)
