@@ -13,6 +13,7 @@ class AwardSearch:
         # Load Selenium profile
         load_dotenv(find_dotenv())
         profile = json.loads(os.getenv('SELENIUM_PROFILE'))
+
         
         options = ChromeOptions()
         options.add_argument("--headless")
