@@ -34,7 +34,7 @@ def clear_queued_stays():
     time_24_hours_ago = now - timedelta(hours=24)
 
     # Update statement to set status='Active' where status='Queued' and last_checked_time > 24 hours ago
-    update_query = update(stays).where(stays.c.status == 'Queued').where(stays.c.last_checked_time < time_24_hours_ago).values(status='Active')
+    update_query = update(stays).where(stays.c.status == 'Queued').where(stays.c.last_checked_time >= time_24_hours_ago).values(status='Active')
 
     # Execute the update query
     result = session.execute(update_query)
