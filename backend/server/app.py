@@ -117,7 +117,7 @@ def get_regions():
         return jsonify([row[0] for row in result])
 
 @app.route('/api/award_categories', methods=['GET'])
-def get_regions():
+def get_categories():
     with engine.connect() as connection:
         s = select(hotels.c.award_category).where(hotels.c.award_category != '').distinct()
         result = connection.execute(s)

@@ -48,3 +48,7 @@
 .table-container {
   padding: 1% 0; /* Top/bottom padding: 0, Left/Right padding: 5% */
 }
+
+.row {
+  padding-bottom: 0.5%;
+}
