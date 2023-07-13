@@ -2,55 +2,41 @@ import React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import { styled } from '@mui/system';
+
+const CustomTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }} />
+))({
+  '& .MuiTooltip-tooltip': {
+    backgroundColor: 'black',
+    color: 'white',
+  },
+});
 
 const columns = [
     { field: 'date_range_start', headerName: 'Check In Date', sortable: true, flex: 6 },
     { field: 'date_range_end', headerName: 'Check Out Date', sortable: true, flex: 6 },
     { field: 'last_checked', headerName: 'Last Checked', sortable: true, flex: 6 },
     {
-        field: 'hotel_name', 
-        headerName: 'Hotel Name', 
-        sortable: true, 
-        flex: 16,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
+      field: 'hotel_name', 
+      headerName: 'Hotel', 
+      sortable: true, 
+      flex: 16,
+      renderCell: (params) => {
+        const { row } = params;
+        return (
+          <CustomTooltip title={
+            <React.Fragment>
+              <div>{row.hotel_name}</div>
+              <div>{row.hotel_city}, {row.hotel_country}, {row.hotel_region}</div>
+              <div>Award Category: {row.award_category}</div>
+            </React.Fragment>
+          }>
             <div>{params.value}</div>
-          </Tooltip>
-        )
-    },    
-    {
-        field: 'hotel_city', 
-        headerName: 'City', 
-        sortable: true, 
-        flex: 8,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <div>{params.value}</div>
-          </Tooltip>
-        )
+          </CustomTooltip>
+        );
+      },
     },
-    {
-        field: 'hotel_country', 
-        headerName: 'Country', 
-        sortable: true, 
-        flex: 8,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <div>{params.value}</div>
-          </Tooltip>
-        )
-    }, 
-    {
-        field: 'hotel_region', 
-        headerName: 'Region', 
-        sortable: true, 
-        flex: 8,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <div>{params.value}</div>
-          </Tooltip>
-        )
-    }, 
     {
         field: 'award_category', 
         headerName: 'Category', 
@@ -62,6 +48,39 @@ const columns = [
           </Tooltip>
         )
     }, 
+    {
+        field: 'hotel_city', 
+        headerName: 'City', 
+        sortable: true, 
+        flex: 8,
+        renderCell: (params) => (
+          <Tooltip title={params.value}>
+            <div>{params.value}</div>
+          </Tooltip>
+        )
+    },
+    // {
+    //     field: 'hotel_country', 
+    //     headerName: 'Country', 
+    //     sortable: true, 
+    //     flex: 8,
+    //     renderCell: (params) => (
+    //       <Tooltip title={params.value}>
+    //         <div>{params.value}</div>
+    //       </Tooltip>
+    //     )
+    // }, 
+    // {
+    //     field: 'hotel_region', 
+    //     headerName: 'Region', 
+    //     sortable: true, 
+    //     flex: 8,
+    //     renderCell: (params) => (
+    //       <Tooltip title={params.value}>
+    //         <div>{params.value}</div>
+    //       </Tooltip>
+    //     )
+    // }, 
     {
         field: 'standard_rate', 
         headerName: 'Standard', 
@@ -114,7 +133,6 @@ const columns = [
 ];  
 
 function Table({ stays }) {
-
   stays = stays.map(stay => ({
     ...stay,
     date_range_start: new Date(stay.date_range_start).toISOString().slice(0,10),
@@ -126,10 +144,9 @@ function Table({ stays }) {
       <DataGrid
         rows={stays}
         columns={columns}
-        getRowId={(row) => row.booking_url} // Specify the 'booking_url' as unique identifier
+        getRowId={(row) => row.booking_url}
         pageSize={100}
         rowsPerPageOptions={[10, 20, 50, 100]}
-        // enableColumnMenu
         disableColumnMenu
       />
     </div>

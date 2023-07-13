@@ -38,11 +38,14 @@
 }
 
 .app-container {
-  padding: 0 2.5%; /* Top/bottom padding: 0, Left/Right padding: 5% */
+  padding:  0 2.5%; /* Top/bottom padding: 0, Left/Right padding: 5% */
 }
 
 .form-container {
-  padding: 1% 0; /* Top/bottom padding: 0, Left/Right padding: 5% */
+  border: 1px solid lightgrey;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
 }
 
 .table-container {
@@ -51,4 +54,8 @@
 
 .row {
   padding-bottom: 0.5%;
+}
+
+.header {
+  margin-top: 20px;
 }

@@ -14,6 +14,10 @@ function App() {
 
     return (
         <div className="app-container">
+            <div className="header">
+                <h1>Search</h1>
+                <p>Instantly search for availability for hotel stays across all of our supported Hyatt hotels at once!</p>
+            </div>
             <div className="form-container">
                 <Form setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />
             </div>
