@@ -36,4 +36,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 80
 
 # Run server/search_awards.py when the container launches
-CMD ["python", "server/search_awards.py"]
+CMD ["python", "backend/server/search_awards.py"]

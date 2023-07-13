@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from search_stays import search_by_consecutive_nights
-from sqlalchemy import create_engine, MetaData, select, join, or_, distinct
+from .search_stays import search_by_consecutive_nights
+from sqlalchemy import create_engine, MetaData, select, join, or_
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
@@ -123,4 +123,4 @@ def time_since(last_checked_time):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    app.run(port=10000) #locally, i've been using port 3000, but render default is 10000
+    app.run(port=3000) #locally, i've been using port 3000, but render default is 10000
