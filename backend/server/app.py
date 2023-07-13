@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from search_stays import search_by_consecutive_nights
-from sqlalchemy import create_engine, MetaData, select, and_, join, func, or_
+from sqlalchemy import create_engine, MetaData, select, join, or_, distinct
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
@@ -10,7 +11,8 @@ import logging
 
 load_dotenv(find_dotenv())
 
-app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app = Flask(__name__)
+CORS(app)
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')
@@ -28,6 +30,10 @@ hotels = meta.tables['hotels']
 def index():
     return render_template('index.html')
 
+@app.route('/explore')
+def explore_page():
+    return render_template('explore.html')
+
 @app.route('/search')
 def search_page():
     return render_template('search.html')
@@ -35,6 +41,8 @@ def search_page():
 @app.route('/api/consecutive_stays', methods=['POST'])
 def consecutive_stays():
     data = request.json
+
+    print(data)
 
     start_date = data['startDate']
     end_date = data['endDate']
@@ -78,6 +86,27 @@ def search():
     # print(stay_results)
     return jsonify(stay_results)
 
+@app.route('/api/hotels', methods=['GET'])
+def get_hotels():
+    with engine.connect() as connection:
+        s = select(hotels.c.hotel_name).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+    
+@app.route('/api/cities', methods=['GET'])
+def get_cities():
+    with engine.connect() as connection:
+        s = select(hotels.c.hotel_city).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+
+@app.route('/api/countries', methods=['GET'])
+def get_countries():
+    with engine.connect() as connection:
+        s = select(hotels.c.hotel_country).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+
 def time_since(last_checked_time):
     now = datetime.now().astimezone(utc)
     last_checked_time = last_checked_time.astimezone(utc)
@@ -94,4 +123,4 @@ def time_since(last_checked_time):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    app.run(port=3000)
+    app.run(port=10000) #locally, i've been using port 3000, but render default is 10000

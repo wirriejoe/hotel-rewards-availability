@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Consecutive Hotel Stay Search</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/datatables.min.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h1>Consecutive Hotel Stay Search</h1>
+        <form id="consecutive-stays-form">
+            <div class="form-row">
+                <div class="form-group col-lg-3">
+                    <label for="cs-start-date">Start Date</label>
+                    <input type="date" id="cs-start-date" class="form-control">
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-end-date">End Date</label>
+                    <input type="date" id="cs-end-date" class="form-control">
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-length-of-stay">Number of nights</label>
+                    <input type="number" id="cs-length-of-stay" class="form-control">
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-points-budget">Budget per Night</label>
+                    <input type="number" id="cs-points-budget" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-lg-3">
+                    <label for="cs-rate-filter">Rate Type</label>
+                    <select class="form-control" id="cs-rate-filter">
+                        <option value="Standard">Standard</option>
+                        <option value="Premium">Premium</option>
+                    </select>
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-category">Category</label>
+                    <select class="form-control select2-multiple" id="cs-category" multiple="multiple">
+                        <!-- Add your options here -->
+                    </select>
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-hotel">Hotel</label>
+                    <select class="form-control select2-multiple" id="cs-hotel" multiple="multiple">
+                        <!-- Add your options here -->
+                    </select>
+                </div>
+                <div class="form-group col-lg-3">
+                    <label for="cs-city">City</label>
+                    <select class="form-control select2-multiple" id="cs-city" multiple="multiple">
+                        <!-- Add your options here -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-lg-3">
+                    <label for="cs-country">Country</label>
+                    <select class="form-control select2-multiple" id="cs-country" multiple="multiple">
+                        <!-- Add your options here -->
+                    </select>
+                </div>
+                <!-- 3 more form-group divs can go here if you need them -->
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>        
+        <table id="consecutive-stays-table" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Check-in Date</th>
+                    <th>Check-out Date</th>
+                    <th>Last Checked</th>
+                    <th>Hotel</th>
+                    <th>City</th>
+                    <!-- <th>Country</th> -->
+                    <th>Standard</th>
+                    <th>Premium</th>
+                    <th>Booking</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('.select2-multiple').select2();
+    });
+    </script>
+</body>
+</html>

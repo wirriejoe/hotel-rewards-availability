@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
-from datetime import timedelta
+from datetime import timedelta, datetime
 from dotenv import load_dotenv, find_dotenv
 from operator import itemgetter
 from itertools import groupby
-from datetime import timedelta
 import os
 
 # Load environment variables
@@ -23,18 +22,21 @@ meta.reflect(bind=engine)
 stays = meta.tables['stays']
 hotels = meta.tables['hotels']
 
-def fetch_stays(start_date, end_date, hotel_name_text = None, hotel_city=None, hotel_country=None, rate_filter=None):
+def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], hotel_countries=[], rate_filter=None):
     filter_conditions = [
         stays.c.check_in_date >= start_date,
         stays.c.check_out_date <= end_date
     ]
     
-    if hotel_name_text:
-        filter_conditions.append(hotels.c.hotel_name.contains(hotel_name_text))
-    if hotel_city:
-        filter_conditions.append(hotels.c.hotel_city.contains(hotel_city))
-    if hotel_country:
-        filter_conditions.append(hotels.c.hotel_country.contains(hotel_country))
+    if hotels_name_text != [None]:
+        for hotel_name_text in hotels_name_text:
+            filter_conditions.append(hotels.c.hotel_name.contains(hotel_name_text))
+    if hotel_cities != [None]:
+        for hotel_city in hotel_cities:
+            filter_conditions.append(hotels.c.hotel_city.contains(hotel_city))
+    if hotel_countries != [None]:
+        for hotel_country in hotel_countries:
+            filter_conditions.append(hotels.c.hotel_country.contains(hotel_country))
     if rate_filter == 'Standard':
         filter_conditions.append(stays.c.standard_rate > 0)
     elif rate_filter == 'Premium':
@@ -67,6 +69,7 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
         stays = list(group)
 
         for i in range(len(stays) - num_consecutive_days + 1):
+            result_stay = {}
             # Check if the dates are consecutive
             if all((stays[i + j + 1]['check_in_date'] - stays[i + j]['check_in_date'] == timedelta(days=1) for j in range(num_consecutive_days - 1))):
                 
@@ -96,13 +99,13 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
                 }
 
                 if rate_filter == 'Standard':
-                    if max_points_budget == 0 or standard_rate <= max_points_budget:
+                    if max_points_budget == 0 or (standard_rate <= max_points_budget and standard_rate != 0):
                         result.append(result_stay)
                 elif rate_filter == 'Premium':
-                    if max_points_budget == 0 or premium_rate <= max_points_budget:
+                    if max_points_budget == 0 or (premium_rate <= max_points_budget and premium_rate != 0):
                         result.append(result_stay)
                 else:
-                    if max_points_budget == 0 or standard_rate <= max_points_budget or premium_rate <= max_points_budget:
+                    if max_points_budget == 0 or (standard_rate <= max_points_budget and standard_rate != 0) or (premium_rate <= max_points_budget and premium_rate != 0):
                         result.append(result_stay)
                 
     return result
@@ -123,12 +126,12 @@ def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1
     return response_url, search_url
 
 
-def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=None, hotel_city=None, hotel_country=None, rate_filter=None, max_points_budget=0):
-    records = fetch_stays(start_date=start_date, end_date=end_date, hotel_name_text=hotel_name_text, hotel_city=hotel_city, hotel_country=hotel_country, rate_filter=rate_filter)
+def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], rate_filter=None, max_points_budget=0):
+    records = fetch_stays(start_date=start_date, end_date=end_date, hotels_name_text=hotel_name_text, hotel_cities=hotel_city, hotel_countries=hotel_country, rate_filter=rate_filter)
     print(len(records))
 
     consecutive_stays = get_consecutive_stays(records, length_of_stay, rate_filter, max_points_budget)
 
     return consecutive_stays
 
-# print(search_by_consecutive_nights(datetime(2023, 8, 1), datetime(2023,8,31), 16))
+# print(len(search_by_consecutive_nights(datetime(2023, 7, 12), datetime(2023,8,11), 3, max_points_budget=5000, rate_filter='Premium')))
