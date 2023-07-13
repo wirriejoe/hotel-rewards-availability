@@ -24,25 +24,26 @@ stays = meta.tables['stays']
 hotels = meta.tables['hotels']
 
 def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], hotel_countries=[], hotel_regions=[], award_categories=[], rate_filter=None):
+    
     filter_conditions = [
         stays.c.check_in_date >= start_date,
         stays.c.check_out_date <= end_date,
-        stays.c.last_checked_time < datetime.now().astimezone(utc) - timedelta(hours=48)
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48)
     ]
     
-    if hotels_name_text != [None]:
+    if hotels_name_text != [None] and hotels_name_text != []:
         for hotel_name_text in hotels_name_text:
             filter_conditions.append(hotels.c.hotel_name.contains(hotel_name_text))
-    if hotel_cities != [None]:
+    if hotel_cities != [None] and hotel_cities != []:
         for hotel_city in hotel_cities:
             filter_conditions.append(hotels.c.hotel_city.contains(hotel_city))
-    if hotel_countries != [None]:
+    if hotel_countries != [None] and hotel_countries != []:
         for hotel_country in hotel_countries:
             filter_conditions.append(hotels.c.hotel_country.contains(hotel_country))
-    if hotel_regions != [None]:
+    if hotel_regions != [None] and hotel_regions != []:
         for hotel_region in hotel_regions:
             filter_conditions.append(hotels.c.hotel_region.contains(hotel_region))
-    if award_categories != [None]:
+    if award_categories != [None] and award_categories != []:
         for award_category in award_categories:
             filter_conditions.append(hotels.c.award_category.contains(award_category))
     if rate_filter == 'Standard':
@@ -144,4 +145,14 @@ def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_nam
 
     return consecutive_stays
 
-# print(len(search_by_consecutive_nights(datetime(2023, 7, 12), datetime(2023,8,11), 3, max_points_budget=5000, rate_filter='Premium')))
+# print(len(search_by_consecutive_nights(
+#     start_date=datetime(2023, 7, 12), 
+#     end_date=datetime(2023,8,31), 
+#     length_of_stay=3, 
+#     max_points_budget=0, 
+#     rate_filter=None,
+#     hotel_city=['New York'],
+#     hotel_country=['United States'],
+#     hotel_region=[],
+#     award_category=[]
+# )))
