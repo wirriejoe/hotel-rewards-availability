@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import timedelta, datetime
+from pytz import utc
 from dotenv import load_dotenv, find_dotenv
 from operator import itemgetter
 from itertools import groupby
@@ -22,10 +23,11 @@ meta.reflect(bind=engine)
 stays = meta.tables['stays']
 hotels = meta.tables['hotels']
 
-def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], hotel_countries=[], rate_filter=None):
+def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], hotel_countries=[], hotel_regions=[], award_categories=[], rate_filter=None):
     filter_conditions = [
         stays.c.check_in_date >= start_date,
-        stays.c.check_out_date <= end_date
+        stays.c.check_out_date <= end_date,
+        stays.c.last_checked_time < datetime.now().astimezone(utc) - timedelta(hours=48)
     ]
     
     if hotels_name_text != [None]:
@@ -37,6 +39,12 @@ def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], ho
     if hotel_countries != [None]:
         for hotel_country in hotel_countries:
             filter_conditions.append(hotels.c.hotel_country.contains(hotel_country))
+    if hotel_regions != [None]:
+        for hotel_region in hotel_regions:
+            filter_conditions.append(hotels.c.hotel_region.contains(hotel_region))
+    if award_categories != [None]:
+        for award_category in award_categories:
+            filter_conditions.append(hotels.c.award_category.contains(award_category))
     if rate_filter == 'Standard':
         filter_conditions.append(stays.c.standard_rate > 0)
     elif rate_filter == 'Premium':
@@ -95,6 +103,8 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
                     'premium_rate': premium_rate,
                     'hotel_city': stays[i]["hotel_city"],
                     'hotel_country': stays[i]["hotel_country"],
+                    'hotel_region': stays[i]["hotel_region"],
+                    'award_category': stays[i]["award_category"],
                     'booking_url': booking_url
                 }
 
@@ -126,8 +136,8 @@ def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1
     return response_url, search_url
 
 
-def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], rate_filter=None, max_points_budget=0):
-    records = fetch_stays(start_date=start_date, end_date=end_date, hotels_name_text=hotel_name_text, hotel_cities=hotel_city, hotel_countries=hotel_country, rate_filter=rate_filter)
+def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], hotel_region=[], award_category=[], rate_filter=None, max_points_budget=0):
+    records = fetch_stays(start_date=start_date, end_date=end_date, hotels_name_text=hotel_name_text, hotel_cities=hotel_city, hotel_countries=hotel_country, hotel_regions=hotel_region, award_categories=award_category, rate_filter=rate_filter)
     print(len(records))
 
     consecutive_stays = get_consecutive_stays(records, length_of_stay, rate_filter, max_points_budget)

@@ -3,16 +3,6 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
 
-const rateFilterOptions = [
-    { value: 'Standard', label: 'Standard' },
-    { value: 'Premium', label: 'Premium' }
-];
-
-const rateFilterDefaultOptions = [
-    { value: 'Standard', label: 'Standard' },
-    { value: 'Premium', label: 'Premium' }
-];
-
 // Function to format the date to 'yyyy-mm-dd' format
 function formatDate(date) {
     var d = new Date(date),
@@ -28,63 +18,76 @@ function formatDate(date) {
     return [year, month, day].join('-');
 }
 
-function Form({ setStays }) {
+function Form({ setStays, isLoading, setIsLoading }) {
     const today = new Date();
     const thirtyDaysLater = new Date(today);
     thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+
+    const rateFilterOptions = [
+        { value: 'Standard', label: 'Standard' },
+        { value: 'Premium', label: 'Premium' }
+    ];
+    
+    const rateFilterDefaultOptions = [
+        { value: 'Standard', label: 'Standard' },
+        { value: 'Premium', label: 'Premium' }
+    ];
 
     const [startDate, setStartDate] = useState(formatDate(today));
     const [endDate, setEndDate] = useState(formatDate(thirtyDaysLater));
     const [lengthOfStay, setLengthOfStay] = useState(3);
     const [hotel, setHotel] = useState('');
-    const [city, setCity] = useState('');
-    const [country, setCountry] = useState('');
+    const [city, setCity] = useState([{ value: 'New York', label: 'New York' }]);
+    const [country, setCountry] = useState([{ value: 'United States', label: 'United States' }]);
+    const [region, setRegion] = useState([{ value: 'North America', label: 'North America' }]);
+    const [category, setCategory] = useState('');
     const [rateFilter, setRateFilter] = useState(rateFilterDefaultOptions);
     const [pointsBudget, setPointsBudget] = useState(0);
     
-    const hotelOptions = [];
-    const cityOptions = [];
-    const countryOptions = [];    
+    const [hotelOptions, setHotelOptions] = useState([]);
+    const [cityOptions, setCityOptions] = useState([]);
+    const [countryOptions, setCountryOptions] = useState([]);
+    const [regionOptions, setRegionOptions] = useState([]);
+    const [categoryOptions, setCategoryOptions] = useState([]);
 
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
-        axios.get('http://localhost:3000/api/hotels')
-            .then(res => {
-                const sortedHotels = res.data.sort();
-                sortedHotels.forEach(hotel => {
-                    hotelOptions.push({ value: hotel, label: hotel });
-                });
-            })
-            .catch(err => console.log(err));
-    
-        axios.get('http://localhost:3000/api/cities')
-            .then(res => {
-                const sortedCities = res.data.sort();
-                sortedCities.forEach(city => {
-                    cityOptions.push({ value: city, label: city });
-                });
-            })
-            .catch(err => console.log(err));
-    
-        axios.get('http://localhost:3000/api/countries')
-            .then(res => {
-                const sortedCountries = res.data.sort();
-                sortedCountries.forEach(country => {
-                    countryOptions.push({ value: country, label: country });
-                });
-            })
-            .catch(err => console.log(err));
+        Promise.all([
+            axios.get('https://burnmypoints.com/api/hotels'),
+            axios.get('https://burnmypoints.com/api/cities'),
+            axios.get('https://burnmypoints.com/api/countries'),
+            axios.get('https://burnmypoints.com/api/regions'),
+            axios.get('https://burnmypoints.com/api/award_categories')
+        ])
+        .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
+            setHotelOptions(hotelsRes.data.sort().map(hotel => ({ value: hotel, label: hotel })));
+            setCityOptions(citiesRes.data.sort().map(city => ({ value: city, label: city })));
+            setCountryOptions(countriesRes.data.sort().map(country => ({ value: country, label: country })));
+            setRegionOptions(regionsRes.data.sort().map(region => ({ value: region, label: region })));
+            setCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
+        })
+        .catch(err => {
+            console.log(err.message);
+            console.log(err.request);
+            console.log(err.response);
+        });
     }, []);
+
     
     const submitForm = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         const hotelArray = Array.isArray(hotel) ? hotel : [hotel];
         const cityArray = Array.isArray(city) ? city : [city];
-        const countryArray = Array.isArray(country) ? country : [country];    
+        const countryArray = Array.isArray(country) ? country : [country];
+        const regionArray = Array.isArray(region) ? region : [region];
+        const categoryArray = Array.isArray(category) ? category : [category];
 
         const hotelString = hotelArray.map(h => h.value);
         const cityString = cityArray.map(c => c.value);
         const countryString = countryArray.map(c => c.value);
+        const regionString = regionArray.map(r => r.value);
+        const categoryString = categoryArray.map(ca => ca.value);
         const rateFilterString = rateFilter.map(rf => rf.value).join(',').trim(',');
     
         console.log({
@@ -94,20 +97,29 @@ function Form({ setStays }) {
             hotelString,
             cityString,
             countryString,
+            regionString,
+            categoryString,
             rateFilterString,
             pointsBudget
         });
-        const response = await axios.post('http://localhost:3000/api/consecutive_stays', {
-            startDate,
-            endDate,
-            lengthOfStay,
-            hotel: hotelString,
-            city: cityString,
-            country: countryString,
-            rateFilter: rateFilterString,
-            pointsBudget
-        });
-        setStays(response.data);
+        try {
+            const response = await axios.post('https://burnmypoints.com/api/consecutive_stays', {
+                startDate,
+                endDate,
+                lengthOfStay,
+                hotel: hotelString,
+                city: cityString,
+                country: countryString,
+                region: regionString,
+                category: categoryString,
+                rateFilter: rateFilterString,
+                pointsBudget
+            });
+            setStays(response.data);
+        } catch (error) {
+            console.error(error);
+            setIsLoading(false);  // Make sure to set loading false in case of error
+        }
     };
 
     return (
@@ -134,26 +146,56 @@ function Form({ setStays }) {
                         onChange={setRateFilter} 
                     />
                 </div>
-            </div>
-            <div className="row">
                 <div className="col">
                     <label>Max Points per Night:</label>
                     <input type="number" value={pointsBudget} onChange={(e) => setPointsBudget(e.target.value)} className="form-control"/>
                 </div>
+            </div>
+            <div className="row">
                 <div className="col">
                     <label>Hotel:</label>
                     <Select isMulti options={hotelOptions} onChange={setHotel} />
                 </div>
                 <div className="col">
                     <label>City:</label>
-                    <Select isMulti options={cityOptions} onChange={setCity} />
+                    <Select
+                        isMulti
+                        options={cityOptions}
+                        value={city}
+                        onChange={setCity}
+                    />
                 </div>
                 <div className="col">
                     <label>Country:</label>
-                    <Select isMulti options={countryOptions} onChange={setCountry} />
+                    <Select
+                        isMulti 
+                        options={countryOptions} 
+                        value={country} 
+                        onChange={setCountry}
+                    />
+                </div>
+                <div className="col">
+                    <label>Region:</label>
+                    <Select
+                        isMulti 
+                        options={regionOptions} 
+                        value={region} 
+                        onChange={setRegion}
+                    />
+                </div>
+                <div className="col">
+                    <label>Category:</label>
+                    <Select
+                        isMulti 
+                        options={categoryOptions} 
+                        value={category} 
+                        onChange={setCategory}
+                    />
                 </div>
             </div>
-            <button type="search" className="btn btn-primary mt-3">Search</button>
+            <button type="search" className="btn btn-primary mt-3" disabled={isLoading}>
+                {isLoading ? 'Loading...' : 'Search'}
+            </button>
         </form>
     );
 }

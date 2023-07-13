@@ -50,11 +50,13 @@ def consecutive_stays():
     hotel_name_text = data.get('hotel', None)  # These are optional, so use .get() to return None if they are not present
     hotel_city = data.get('city', None)
     hotel_country = data.get('country', None)
+    hotel_region = data.get('region', None)
+    award_category = data.get('category', None)
     rate_filter = data.get('rateFilter', None)
     app.logger.info(data.get('pointsBudget'))
     max_points_budget = int(data.get('pointsBudget')) if data.get('pointsBudget') != '' else 0
 
-    stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, rate_filter, max_points_budget)
+    stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
 
     # Apply time_since function to every last_checked object in the list
     stays = [{**stay, 'last_checked': time_since(stay['last_checked'])} for stay in stays]
@@ -104,6 +106,20 @@ def get_cities():
 def get_countries():
     with engine.connect() as connection:
         s = select(hotels.c.hotel_country).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+    
+@app.route('/api/regions', methods=['GET'])
+def get_regions():
+    with engine.connect() as connection:
+        s = select(hotels.c.hotel_region).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+
+@app.route('/api/award_categories', methods=['GET'])
+def get_regions():
+    with engine.connect() as connection:
+        s = select(hotels.c.award_category).where(hotels.c.award_category != '').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 

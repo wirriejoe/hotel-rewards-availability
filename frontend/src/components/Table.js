@@ -41,6 +41,28 @@ const columns = [
         )
     }, 
     {
+        field: 'hotel_region', 
+        headerName: 'Region', 
+        sortable: true, 
+        flex: 8,
+        renderCell: (params) => (
+          <Tooltip title={params.value}>
+            <div>{params.value}</div>
+          </Tooltip>
+        )
+    }, 
+    {
+        field: 'award_category', 
+        headerName: 'Category', 
+        sortable: true, 
+        flex: 8,
+        renderCell: (params) => (
+          <Tooltip title={params.value}>
+            <div>{params.value}</div>
+          </Tooltip>
+        )
+    }, 
+    {
         field: 'standard_rate', 
         headerName: 'Standard', 
         sortable: true, 
