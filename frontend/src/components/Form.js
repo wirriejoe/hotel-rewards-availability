@@ -53,11 +53,11 @@ function Form({ setStays, isLoading, setIsLoading }) {
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://burnmypoints.com/api/hotels'),
-            axios.get('https://burnmypoints.com/api/cities'),
-            axios.get('https://burnmypoints.com/api/countries'),
-            axios.get('https://burnmypoints.com/api/regions'),
-            axios.get('https://burnmypoints.com/api/award_categories')
+            axios.get('https://hotel-rewards-availability-api.onrender..com/api/hotels'),
+            axios.get('https://hotel-rewards-availability-api.onrender..com/api/cities'),
+            axios.get('https://hotel-rewards-availability-api.onrender..com/api/countries'),
+            axios.get('https://hotel-rewards-availability-api.onrender..com/api/regions'),
+            axios.get('https://hotel-rewards-availability-api.onrender..com/api/award_categories')
         ])
         .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
             setHotelOptions(hotelsRes.data.sort().map(hotel => ({ value: hotel, label: hotel })));
@@ -103,7 +103,7 @@ function Form({ setStays, isLoading, setIsLoading }) {
             pointsBudget
         });
         try {
-            const response = await axios.post('https://burnmypoints.com/api/consecutive_stays', {
+            const response = await axios.post('https://hotel-rewards-availability-api.onrender..com/api/consecutive_stays', {
                 startDate,
                 endDate,
                 lengthOfStay,
