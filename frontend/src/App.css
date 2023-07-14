@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
+
 .App {
   text-align: center;
 }
@@ -38,7 +40,7 @@
 }
 
 .app-container {
-  padding:  0 2.5%; /* Top/bottom padding: 0, Left/Right padding: 5% */
+  padding:  0 2.5%; /* Top/bottom padding: 0, Left/Right padding: 2.5% */
 }
 
 .form-container {
@@ -58,4 +60,10 @@
 
 .header {
   margin-top: 20px;
+}
+
+.navbar-custom {
+  font-family: 'Open Sans', sans-serif;
+  padding-left: 20px;
+  padding-right: 20px;
 }

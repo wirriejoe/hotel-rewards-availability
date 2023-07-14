@@ -18,7 +18,7 @@ function formatDate(date) {
     return [year, month, day].join('-');
 }
 
-function Form({ setStays, isLoading, setIsLoading }) {
+function SearchForm({ setStays, isLoading, setIsLoading }) {
     const today = new Date();
     const thirtyDaysLater = new Date(today);
     thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
@@ -30,7 +30,7 @@ function Form({ setStays, isLoading, setIsLoading }) {
     
     const rateFilterDefaultOptions = [
         { value: 'Standard', label: 'Standard' },
-        { value: 'Premium', label: 'Premium' }
+        // { value: 'Premium', label: 'Premium' }
     ];
 
     const [startDate, setStartDate] = useState(formatDate(today));
@@ -200,4 +200,4 @@ function Form({ setStays, isLoading, setIsLoading }) {
     );
 }
 
-export default Form;
+export default SearchForm;
