@@ -50,7 +50,7 @@ function ExplorePage() {
     <div className="app-container">
       <div className="header">
         <h1>Explore</h1>
-        <p>Explore hotel stays across whole regions of supported Hyatt hotels over the next 60 days!</p>
+        <p>Explore hotel stays across award category and brand of supported Hyatt hotels over the next 60 days!</p>
       </div>
       <div className="form-container">
         <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />

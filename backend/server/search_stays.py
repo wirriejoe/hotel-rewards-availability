@@ -136,7 +136,6 @@ def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1
     print("Verification URL: " + search_url)
     return response_url, search_url
 
-
 def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], hotel_region=[], award_category=[], rate_filter=None, max_points_budget=0):
     records = fetch_stays(start_date=start_date, end_date=end_date, hotels_name_text=hotel_name_text, hotel_cities=hotel_city, hotel_countries=hotel_country, hotel_regions=hotel_region, award_categories=award_category, rate_filter=rate_filter)
     print(len(records))

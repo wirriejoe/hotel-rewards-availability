@@ -14,14 +14,14 @@ const CustomTooltip = styled(({ className, ...props }) => (
 });
 
 const columns = [
-    { field: 'date_range_start', headerName: 'Check In Date', sortable: true, flex: 6 },
-    { field: 'date_range_end', headerName: 'Check Out Date', sortable: true, flex: 6 },
+    { field: 'date_range_start', headerName: 'Check In Date', sortable: true, flex: 8 },
+    { field: 'date_range_end', headerName: 'Check Out Date', sortable: true, flex: 8 },
     { field: 'last_checked', headerName: 'Last Checked', sortable: true, flex: 6 },
     {
       field: 'hotel_name', 
       headerName: 'Hotel', 
       sortable: true, 
-      flex: 16,
+      flex: 12,
       renderCell: (params) => {
         const { row } = params;
         return (
@@ -41,7 +41,7 @@ const columns = [
         field: 'award_category', 
         headerName: 'Category', 
         sortable: true, 
-        flex: 8,
+        flex: 6,
         renderCell: (params) => (
           <Tooltip title={params.value}>
             <div>{params.value}</div>

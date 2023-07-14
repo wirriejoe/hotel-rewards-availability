@@ -14,14 +14,13 @@ const CustomTooltip = styled(({ className, ...props }) => (
 });
 
 const columns = [
-    { field: 'date_range_start', headerName: 'Check In Date', sortable: true, flex: 6 },
-    { field: 'date_range_end', headerName: 'Check Out Date', sortable: true, flex: 6 },
+    { field: 'check_in_date', headerName: 'Date', sortable: true, flex: 6 },
     { field: 'last_checked', headerName: 'Last Checked', sortable: true, flex: 6 },
     {
       field: 'hotel_name', 
       headerName: 'Hotel', 
       sortable: true, 
-      flex: 16,
+      flex: 12,
       renderCell: (params) => {
         const { row } = params;
         return (
@@ -37,53 +36,11 @@ const columns = [
         );
       },
     },
-    {
-        field: 'award_category', 
-        headerName: 'Category', 
-        sortable: true, 
-        flex: 8,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <div>{params.value}</div>
-          </Tooltip>
-        )
-    }, 
-    {
-        field: 'hotel_city', 
-        headerName: 'City', 
-        sortable: true, 
-        flex: 8,
-        renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <div>{params.value}</div>
-          </Tooltip>
-        )
-    },
-    // {
-    //     field: 'hotel_country', 
-    //     headerName: 'Country', 
-    //     sortable: true, 
-    //     flex: 8,
-    //     renderCell: (params) => (
-    //       <Tooltip title={params.value}>
-    //         <div>{params.value}</div>
-    //       </Tooltip>
-    //     )
-    // }, 
-    // {
-    //     field: 'hotel_region', 
-    //     headerName: 'Region', 
-    //     sortable: true, 
-    //     flex: 8,
-    //     renderCell: (params) => (
-    //       <Tooltip title={params.value}>
-    //         <div>{params.value}</div>
-    //       </Tooltip>
-    //     )
-    // }, 
+    { field: 'brand', headerName: 'Brand', sortable: true, flex: 6 },
+    { field: 'award_category', headerName: 'Award Category', sortable: true, flex: 6 },
     {
         field: 'standard_rate', 
-        headerName: 'Standard', 
+        headerName: 'Standard Rate', 
         sortable: true, 
         flex: 6,
         renderCell: (params) => (
@@ -99,7 +56,7 @@ const columns = [
     },
     { 
         field: 'premium_rate', 
-        headerName: 'Premium', 
+        headerName: 'Premium Rate', 
         sortable: true, 
         flex: 6,
         renderCell: (params) => (
@@ -115,7 +72,7 @@ const columns = [
     },
     {
         field: 'booking_url', 
-        headerName: 'Info', 
+        headerName: 'Booking URL', 
         flex: 6, 
         renderCell: (params) => (
           <Button 
@@ -132,11 +89,10 @@ const columns = [
     }    
 ];  
 
-function Table({ stays }) {
+function ExploreTable({ stays }) {
   stays = stays.map(stay => ({
     ...stay,
-    date_range_start: new Date(stay.date_range_start).toISOString().slice(0,10),
-    date_range_end: new Date(stay.date_range_end).toISOString().slice(0,10)
+    check_in_date: new Date(stay.check_in_date).toISOString().slice(0,10),
   }));
 
   return (
@@ -144,7 +100,7 @@ function Table({ stays }) {
       <DataGrid
         rows={stays}
         columns={columns}
-        getRowId={(row) => row.booking_url}
+        getRowId={(row) => row.stay_id}
         pageSize={100}
         rowsPerPageOptions={[10, 20, 50, 100]}
         disableColumnMenu
@@ -153,4 +109,4 @@ function Table({ stays }) {
   );
 }
 
-export default Table;
+export default ExploreTable;

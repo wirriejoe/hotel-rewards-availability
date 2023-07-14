@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from .search_stays import search_by_consecutive_nights
-from sqlalchemy import create_engine, MetaData, select, join, or_
+from .search_stays import search_by_consecutive_nights, build_url
+from sqlalchemy import create_engine, MetaData, select, join, and_, or_
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
@@ -63,19 +63,39 @@ def consecutive_stays():
 
     return jsonify(stays)  # Convert list of stays to JSON
 
-@app.route('/api/search', methods=['POST'])
-def search():
+from datetime import datetime, timedelta
+
+@app.route('/api/explore', methods=['POST'])
+def explore():
     data = request.json
+    today = datetime.now()
+    future_date = today + timedelta(days=60)
+
+    filter_conditions = [
+        stays.c.check_in_date >= today + timedelta(days=1),
+        stays.c.check_in_date < future_date,
+        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0)
+    ]
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
-    query = select(stays.c.check_in_date, stays.c.last_checked_time, hotels.c.hotel_name, hotels.c.hotel_city, hotels.c.hotel_country, stays.c.standard_rate, stays.c.premium_rate, stays.c.booking_url).select_from(j).where(
-        or_(stays.c.check_in_date >= data['startDate'], data['startDate'] == None),
-        or_(stays.c.check_in_date < data['endDate'], data['endDate'] == None),
-        hotels.c.hotel_name.ilike(f"%{data['hotel']}%"),
-        or_(hotels.c.hotel_city.ilike(f"%{data['city']}%"), data['city'] == None),
-        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0)
-    )
+    filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
+    if data['brand'] != [None] and data['brand'] != "":
+        filter_conditions.append(hotels.c.brand.in_(data['brand']))
+        
+    query = select(
+        stays.c.stay_id, 
+        stays.c.check_in_date, 
+        stays.c.last_checked_time, 
+        hotels.c.hotel_name, 
+        hotels.c.hotel_city, 
+        hotels.c.hotel_country, 
+        hotels.c.hotel_region,
+        hotels.c.brand,
+        hotels.c.award_category,
+        stays.c.standard_rate, 
+        stays.c.premium_rate, 
+        stays.c.booking_url).select_from(j).where(and_(*filter_conditions))
 
     with engine.connect() as connection:
         result = connection.execute(query)
@@ -84,8 +104,8 @@ def search():
     # Apply time_since function to every last_checked_time object in the list
     stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in stay_results]
 
+    print(stay_results)
     connection.close()
-    # print(stay_results)
     return jsonify(stay_results)
 
 @app.route('/api/hotels', methods=['GET'])
@@ -120,6 +140,13 @@ def get_regions():
 def get_categories():
     with engine.connect() as connection:
         s = select(hotels.c.award_category).where(hotels.c.award_category != '').distinct()
+        result = connection.execute(s)
+        return jsonify([row[0] for row in result])
+    
+@app.route('/api/brands', methods=['GET'])
+def get_brands():
+    with engine.connect() as connection:
+        s = select(hotels.c.brand).where(hotels.c.award_category != '').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
