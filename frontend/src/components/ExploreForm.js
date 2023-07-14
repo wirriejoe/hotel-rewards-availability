@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
 
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
-    const [search, setSearch] = useState("");
     const [awardCategory, setAwardCategory] = useState({ value: '8', label: '8' });
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState("");
@@ -27,15 +26,11 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
         });
     }, []);
 
-    const submitForm = async (e) => {
-        e.preventDefault();
+    // Note: setIsLoading and setStays are omitted from the deps array intentionally.
+    // This is safe here because they're guaranteed to be stable and won't cause re-renders.
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
-        
-        console.log({
-            award_category: [awardCategory.value],
-            brand: [brand.value]
-        });
-        
+
         const searchData = {
             award_category: [awardCategory.value],
             brand: [brand.value]
@@ -44,15 +39,24 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
         try {
             const response = await axios.post('https://hotel-rewards-availability-api.onrender.com/api/explore', searchData);
             setStays(response.data);
-            setIsLoading(false);
         } catch (error) {
             console.error(error);
-            setIsLoading(false);  // Make sure to set loading false in case of error
+        } finally {
+            setIsLoading(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [awardCategory, brand]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
-        <form onSubmit={submitForm} className="form-group">
+        <div className="form-group">
             <div className="row">
                 <div className="col">
                     <label>Award Category:</label>
@@ -70,15 +74,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                         onChange={setBrand}
                     />
                 </div>
-                <div className="col">
-                    <label>Search:</label>
-                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} className="form-control" placeholder="Search..." />
-                </div>
             </div>
-            <button type="search" className="btn btn-primary mt-3" disabled={isLoading}>
-                {isLoading ? 'Loading...' : 'Search'}
-            </button>
-        </form>
+        </div>
     );
 }
 

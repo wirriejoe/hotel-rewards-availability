@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import { styled } from '@mui/system';
+import TextField from '@mui/material/TextField';
 
 const CustomTooltip = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -90,15 +91,36 @@ const columns = [
 ];  
 
 function ExploreTable({ stays }) {
+  const [search, setSearch] = useState("");
   stays = stays.map(stay => ({
     ...stay,
     check_in_date: new Date(stay.check_in_date).toISOString().slice(0,10),
   }));
 
+  const filteredStays = stays.filter(stay =>
+    Object.keys(stay).some(
+      (key) =>
+        stay[key]
+          .toString()
+          .toLowerCase()
+          .includes(search.toLowerCase())
+    )
+  );
+
   return (
     <div style={{ height: 'auto', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1em', alignItems: 'center' }}>
+          <span style={{ marginRight: '0.5em' }}>Search:</span>
+          <TextField 
+              sx={{ width: '15%', '& .MuiInputBase-input': { height: '0.2em' } }}  // Decrease the width to make the search box 40% shorter
+              label="" 
+              variant="outlined"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+          />
+      </div>
       <DataGrid
-        rows={stays}
+        rows={filteredStays}
         columns={columns}
         getRowId={(row) => row.stay_id}
         pageSize={100}

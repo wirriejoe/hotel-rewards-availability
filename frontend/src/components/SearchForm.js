@@ -60,6 +60,8 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
             axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories')
         ])
         .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
+        // .then(([citiesRes, countriesRes, categoriesRes]) => {
+
             setHotelOptions(hotelsRes.data.sort().map(hotel => ({ value: hotel, label: hotel })));
             setCityOptions(citiesRes.data.sort().map(city => ({ value: city, label: city })));
             setCountryOptions(countriesRes.data.sort().map(country => ({ value: country, label: country })));
@@ -138,24 +140,15 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
                     <input type="number" value={lengthOfStay} onChange={(e) => setLengthOfStay(e.target.value)} className="form-control"/>
                 </div>
                 <div className="col">
-                    <label>Rate:</label>
-                    <Select 
-                        isMulti 
-                        options={rateFilterOptions} 
-                        value={rateFilter}
-                        onChange={setRateFilter} 
-                    />
-                </div>
-                <div className="col">
                     <label>Max Points per Night:</label>
                     <input type="number" value={pointsBudget} onChange={(e) => setPointsBudget(e.target.value)} className="form-control"/>
                 </div>
             </div>
             <div className="row">
-                <div className="col">
+                {/* <div className="col">
                     <label>Hotel:</label>
                     <Select isMulti options={hotelOptions} onChange={setHotel} />
-                </div>
+                </div> */}
                 <div className="col">
                     <label>City:</label>
                     <Select
@@ -174,13 +167,22 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
                         onChange={setCountry}
                     />
                 </div>
-                <div className="col">
+                {/* <div className="col">
                     <label>Region:</label>
                     <Select
                         isMulti 
                         options={regionOptions} 
                         value={region} 
                         onChange={setRegion}
+                    />
+                </div> */}
+                <div className="col">
+                    <label>Rate:</label>
+                    <Select 
+                        isMulti 
+                        options={rateFilterOptions} 
+                        value={rateFilter}
+                        onChange={setRateFilter} 
                     />
                 </div>
                 <div className="col">
