@@ -13,7 +13,7 @@ import stytch
 load_dotenv(find_dotenv())
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 stytch = stytch.Client(
     project_id=os.getenv('STYTCH_PROJECT_ID'),
@@ -48,12 +48,37 @@ def time_since(last_checked_time):
         days = difference // timedelta(days=1)
         return f"{days} days ago"
 
+# Custom authentication error
+class AuthenticationError(Exception):
+    pass
+
+def authenticate_session():
+    session_token = request.cookies.get('session_token')
+    session_duration_minutes = 43200 # 1440 minutes = 1 day
+
+    if not session_token:
+        raise AuthenticationError('No session token provided.')
+
+    try:
+        # Authenticate the session first
+        auth_resp = stytch.sessions.authenticate(session_token=session_token, session_duration_minutes=session_duration_minutes)
+        user_id = auth_resp.user_id
+        return user_id
+
+    except Exception as e:
+        raise AuthenticationError('Session authentication failed.')
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/api/consecutive_stays', methods=['POST'])
 def consecutive_stays():
+    try:
+        stytchUserID = authenticate_session()
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+
     data = request.json
 
     print(data)
@@ -79,6 +104,11 @@ def consecutive_stays():
 
 @app.route('/api/explore', methods=['POST'])
 def explore():
+    try:
+        stytchUserID = authenticate_session()
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+    
     data = request.json
     today = datetime.now()
     future_date = today + timedelta(days=60)
@@ -174,11 +204,13 @@ def create_user(stytch_user_id, user_email, created_at):
 def authenticate_user():
     token = request.args.get('token')
     token_type = request.args.get('token_type')
+    session_duration_minutes = 43200 # 1440 minutes = 1 day
+
     try:
         if token_type == 'oauth':
-            auth_resp = stytch.oauth.authenticate(token)
+            auth_resp = stytch.oauth.authenticate(token=token, session_duration_minutes=session_duration_minutes)
         elif token_type == 'magic_links':
-            auth_resp = stytch.magic_links.authenticate(token)
+            auth_resp = stytch.magic_links.authenticate(token=token, session_duration_minutes=session_duration_minutes)
     except Exception as e:
         return jsonify({'message': 'Failed to authenticate user.', 'error': str(e)}), 401
     
@@ -197,10 +229,26 @@ def authenticate_user():
         print("creating user")
         create_user(stytch_user_id, user_email, created_at)
 
-    # Session management, which can be done via Stytch or manually
-    # stytch.sessions.create(user_id=user.id)
+    # Save the session token and session jwt
+    session_token = auth_resp.session_token
+    session_jwt = auth_resp.session_jwt
 
-    return jsonify({'message': 'User authenticated successfully.'}), 200
+    return jsonify({'message': 'User authenticated successfully.', 'session_token': session_token, 'session_jwt': session_jwt}), 200
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    try:
+        # Retrieve the session token from the request body
+        session_token = request.json.get('session_token')
+        print(session_token)
+
+        # Delete the session using the Stytch API
+        print(stytch.sessions.revoke(session_token=session_token))
+
+        # Return a success message
+        return jsonify({'message': 'Logged out successfully.'}), 200
+    except Exception as e:
+        return jsonify({'message': 'Failed to log out.', 'error': str(e)}), 500
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

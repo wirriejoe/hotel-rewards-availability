@@ -54,10 +54,16 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
     useEffect(() => {
         Promise.all([
             // axios.get('https://hotel-rewards-availability-api.onrender.com/api/hotels'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries'),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities', {
+                withCredentials: true
+            }),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries', {
+                withCredentials: true
+            }),
             // axios.get('https://hotel-rewards-availability-api.onrender.com/api/regions'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories')
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories', {
+                withCredentials: true
+            })
         ])
         // .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
         .then(([citiesRes, countriesRes, categoriesRes]) => {
@@ -115,7 +121,8 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
                 region: '',
                 category: categoryString,
                 rateFilter: rateFilterString,
-                pointsBudget
+                pointsBudget,
+                withCredentials: true
             });
             setStays(response.data);
         } catch (error) {

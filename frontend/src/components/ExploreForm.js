@@ -12,8 +12,12 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
     // Fetch award categories and brands on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/brands')
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories', {
+                withCredentials: true
+            }),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/brands', {
+                withCredentials: true
+            })
         ])
         .then(([categoriesRes, brandsRes]) => {
             setAwardCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
@@ -33,7 +37,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
 
         const searchData = {
             award_category: [awardCategory.value],
-            brand: [brand.value]
+            brand: [brand.value],
+            withCredentials: true
         };
 
         try {
