@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
+import Login from './components/Login';
+import Authenticate from './components/Authenticate'
 import './App.css';
 import logo from './logo.png';
 
@@ -29,6 +31,7 @@ function App() {
             <Nav className="mr-auto">
               <Nav.Link as={Link} to="/search">Search</Nav.Link>
               <Nav.Link as={Link} to="/explore">Explore</Nav.Link>
+              <Nav.Link as={Link} to="/login">Login</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
@@ -36,6 +39,8 @@ function App() {
         <Routes>
           <Route path="/search" element={<SearchPage />} />
           <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/authenticate" element={<Authenticate />} />
           <Route path="/" element={<HomePage />} />
         </Routes>
       </Router>

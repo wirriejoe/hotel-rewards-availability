@@ -8,11 +8,18 @@ from datetime import datetime, timedelta
 from pytz import utc
 import os
 import logging
+import stytch
 
 load_dotenv(find_dotenv())
 
 app = Flask(__name__)
 CORS(app)
+
+stytch = stytch.Client(
+    project_id=os.getenv('STYTCH_PROJECT_ID'),
+    secret=os.getenv('STYTCH_SECRET'),
+    environment='test',
+)
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')
@@ -23,20 +30,27 @@ session = Session()
 meta = MetaData()
 meta.reflect(bind=engine)
 
+users = meta.tables['users']
 stays = meta.tables['stays']
 hotels = meta.tables['hotels']
+
+def time_since(last_checked_time):
+    now = datetime.now().astimezone(utc)
+    last_checked_time = last_checked_time.astimezone(utc)
+    difference = now - last_checked_time
+
+    if difference < timedelta(hours=1):
+        return "Just now"
+    elif difference < timedelta(days=1):
+        hours = difference // timedelta(hours=1)
+        return f"{hours} hours ago"
+    else:
+        days = difference // timedelta(days=1)
+        return f"{days} days ago"
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/explore')
-def explore_page():
-    return render_template('explore.html')
-
-@app.route('/search')
-def search_page():
-    return render_template('search.html')
 
 @app.route('/api/consecutive_stays', methods=['POST'])
 def consecutive_stays():
@@ -62,8 +76,6 @@ def consecutive_stays():
     stays = [{**stay, 'last_checked': time_since(stay['last_checked'])} for stay in stays]
 
     return jsonify(stays)  # Convert list of stays to JSON
-
-from datetime import datetime, timedelta
 
 @app.route('/api/explore', methods=['POST'])
 def explore():
@@ -149,20 +161,46 @@ def get_brands():
         s = select(hotels.c.brand).where(hotels.c.award_category != '').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
+    
+def create_user(stytch_user_id, user_email, created_at):
+    # create user using stytch_user_id
+    ins = users.insert().values(stytchUserID=stytch_user_id, email=user_email, created_at=created_at)
+    conn = engine.connect()
+    conn.execute(ins)
+    conn.commit()
+    conn.close()
 
-def time_since(last_checked_time):
-    now = datetime.now().astimezone(utc)
-    last_checked_time = last_checked_time.astimezone(utc)
-    difference = now - last_checked_time
+@app.route('/api/authenticate', methods=['GET'])
+def authenticate_user():
+    token = request.args.get('token')
+    token_type = request.args.get('token_type')
+    try:
+        if token_type == 'oauth':
+            auth_resp = stytch.oauth.authenticate(token)
+        elif token_type == 'magic_links':
+            auth_resp = stytch.magic_links.authenticate(token)
+    except Exception as e:
+        return jsonify({'message': 'Failed to authenticate user.', 'error': str(e)}), 401
+    
+    stytch_user_id = auth_resp.user_id
+    user_email = auth_resp.user.emails[0].email
+    created_at = auth_resp.user.created_at
 
-    if difference < timedelta(hours=1):
-        return "Just now"
-    elif difference < timedelta(days=1):
-        hours = difference // timedelta(hours=1)
-        return f"{hours} hours ago"
-    else:
-        days = difference // timedelta(days=1)
-        return f"{days} days ago"
+    sel = users.select().where(users.c.stytchUserID == stytch_user_id)
+    conn = engine.connect()
+    result = conn.execute(sel)
+    user = result.fetchone()
+    print(user)
+    conn.close()
+
+    if not user:
+        print("creating user")
+        create_user(stytch_user_id, user_email, created_at)
+
+    # Session management, which can be done via Stytch or manually
+    # stytch.sessions.create(user_id=user.id)
+
+    return jsonify({'message': 'User authenticated successfully.'}), 200
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
