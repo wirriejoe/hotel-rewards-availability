@@ -61,7 +61,7 @@ def authenticate_session(session_token):
     try:
         # Authenticate the session first
         auth_resp = stytch.sessions.authenticate(session_token=session_token, session_duration_minutes=session_duration_minutes)
-        user_id = auth_resp.user_id
+        user_id = auth_resp.user.user_id
         return user_id
 
     except Exception as e:
