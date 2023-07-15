@@ -15,11 +15,12 @@ function Authenticate() {
   const token_type = query.get("stytch_token_type");
   const [message, setMessage] = useState("Authenticating...");
   const [error, setError] = useState(null);
+  const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
   let navigate = useNavigate();
 
   useEffect(() => {
     // Send a request to your server to authenticate the token
-    fetch(`https://hotel-rewards-availability-api.onrender.com/api/authenticate?token=${token}&token_type=${token_type}`)
+    fetch(api_url + `/api/authenticate?token=${token}&token_type=${token_type}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.message === 'User authenticated successfully.') {
@@ -43,7 +44,7 @@ function Authenticate() {
           setMessage("Failed to authenticate.");
         }
       });
-  }, [token, token_type, navigate, setIsAuthenticated]); // Make sure to include setIsAuthenticated in the dependency array
+  }, [token, token_type, navigate, setIsAuthenticated, api_url]); // Make sure to include setIsAuthenticated in the dependency array
 
   useEffect(() => {
     console.log(isAuthenticated);

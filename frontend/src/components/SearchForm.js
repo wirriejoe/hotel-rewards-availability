@@ -46,12 +46,14 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
     const [countryOptions, setCountryOptions] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
 
+    const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
+
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories')
+            axios.get(api_url + '/api/cities'),
+            axios.get(api_url + '/api/countries'),
+            axios.get(api_url + '/api/award_categories')
         ])
         .then(([citiesRes, countriesRes, categoriesRes]) => {
             setCityOptions(citiesRes.data.sort().map(city => ({ value: city, label: city })));
@@ -63,7 +65,7 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
             console.log(err.request);
             console.log(err.response);
         });
-    }, []);
+    }, [api_url]);
 
     
     const submitForm = async (e) => {
@@ -91,7 +93,7 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
             pointsBudget
         });
         try {
-            const response = await axios.post('https://hotel-rewards-availability-api.onrender.com/api/consecutive_stays', {
+            const response = await axios.post(api_url + '/api/consecutive_stays', {
                 startDate,
                 endDate,
                 lengthOfStay,

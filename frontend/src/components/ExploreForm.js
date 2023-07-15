@@ -10,11 +10,13 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
     const [brand, setBrand] = useState("");
     const [brandOptions, setBrandOptions] = useState([]);
 
+    const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
+
     // Fetch award categories and brands on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/brands')
+            axios.get(api_url + '/api/award_categories'),
+            axios.get(api_url + '/api/brands')
         ])
         .then(([categoriesRes, brandsRes]) => {
             setAwardCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
@@ -25,7 +27,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
             console.log(err.request);
             console.log(err.response);
         });
-    }, []);
+    }, [api_url]);
 
     // Note: setIsLoading and setStays are omitted from the deps array intentionally.
     // This is safe here because they're guaranteed to be stable and won't cause re-renders.
@@ -40,7 +42,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
         };
 
         try {
-            const response = await axios.post('https://hotel-rewards-availability-api.onrender.com/api/explore', searchData);
+            const response = await axios.post(api_url + '/api/explore', searchData);
             setStays(response.data);
         } catch (error) {
             console.error(error);
