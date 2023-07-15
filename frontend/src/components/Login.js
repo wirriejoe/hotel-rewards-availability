@@ -10,9 +10,9 @@ const Login = () => {
       "emailMagicLinks"
     ],
     "emailMagicLinksOptions": {
-      "loginRedirectURL": "http://localhost:3000/authenticate",
+      "loginRedirectURL": "https://burnmypoints.com/authenticate",
       "loginExpirationMinutes": 30,
-      "signupRedirectURL": "http://localhost:3000/authenticate",
+      "signupRedirectURL": "https://burnmypoints.com/authenticate",
       "signupExpirationMinutes": 30
     },
     "oauthOptions": {
@@ -21,8 +21,8 @@ const Login = () => {
           "type": "google"
         }
       ],
-      "loginRedirectURL": "http://localhost:3000/authenticate",
-      "signupRedirectURL": "http://localhost:3000/authenticate"
+      "loginRedirectURL": "https://burnmypoints.com/authenticate",
+      "signupRedirectURL": "https://burnmypoints.com/authenticate"
     },
   };
     const styles = {

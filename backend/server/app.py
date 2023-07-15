@@ -16,8 +16,8 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 stytch = stytch.Client(
-    project_id=os.getenv('STYTCH_PROJECT_ID'),
-    secret=os.getenv('STYTCH_SECRET'),
+    project_id=os.getenv('STYTCH_LIVE_PROJECT_ID'),
+    secret=os.getenv('STYTCH_LIVE_SECRET_ID'),
     environment='test',
 )
 

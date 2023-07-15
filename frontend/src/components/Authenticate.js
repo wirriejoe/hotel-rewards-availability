@@ -20,7 +20,7 @@ function Authenticate() {
 
   useEffect(() => {
     // Send a request to your server to authenticate the token
-    fetch(`http://localhost:3001/api/authenticate?token=${token}&token_type=${token_type}`, {
+    fetch(`https://hotel-rewards-availability-api.onrender.com/api/authenticate?token=${token}&token_type=${token_type}`, {
       credentials: 'include', // Ensure cookies are sent with the request
     })
       .then((res) => res.json())

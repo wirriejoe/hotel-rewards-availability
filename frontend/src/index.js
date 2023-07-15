@@ -7,7 +7,7 @@ import 'react-data-table-component-extensions/dist/index.css';
 import { StytchProvider } from '@stytch/react';
 import { StytchUIClient } from '@stytch/vanilla-js';
 
-const stytch = new StytchUIClient('public-token-test-0f5d9937-c6d4-48e0-86da-ce3673286203');
+const stytch = new StytchUIClient('public-token-live-bdb99070-4e2b-4052-8a9a-0d99197ebe22');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
