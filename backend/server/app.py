@@ -7,7 +7,6 @@ from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
 from pytz import utc
 import os
-import logging
 import stytch
 
 load_dotenv(find_dotenv())
@@ -52,8 +51,8 @@ def time_since(last_checked_time):
 class AuthenticationError(Exception):
     pass
 
-def authenticate_session():
-    session_token = request.cookies.get('session_token')
+def authenticate_session(session_token):
+    # session_token = request.cookies.get('session_token')
     session_duration_minutes = 43200 # 1440 minutes = 1 day
 
     if not session_token:
@@ -74,14 +73,13 @@ def index():
 
 @app.route('/api/consecutive_stays', methods=['POST'])
 def consecutive_stays():
-    try:
-        stytchUserID = authenticate_session()
-    except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
-
     data = request.json
 
-    print(data)
+    session_token = data['session_token']
+    try:
+        stytchUserID = authenticate_session(session_token)
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
 
     start_date = data['startDate']
     end_date = data['endDate']
@@ -92,7 +90,7 @@ def consecutive_stays():
     hotel_region = data.get('region', None)
     award_category = data.get('category', None)
     rate_filter = data.get('rateFilter', None)
-    app.logger.info(data.get('pointsBudget'))
+    print(data.get('pointsBudget'))
     max_points_budget = int(data.get('pointsBudget')) if data.get('pointsBudget') != '' else 0
 
     stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
@@ -104,12 +102,14 @@ def consecutive_stays():
 
 @app.route('/api/explore', methods=['POST'])
 def explore():
+    data = request.json
+
+    session_token = data['session_token']
     try:
-        stytchUserID = authenticate_session()
+        stytchUserID = authenticate_session(session_token)
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
-    data = request.json
     today = datetime.now()
     future_date = today + timedelta(days=60)
 
@@ -251,5 +251,4 @@ def logout():
         return jsonify({'message': 'Failed to log out.', 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     app.run(port=3000) #locally, i've been using port 3000, but render default is 10000

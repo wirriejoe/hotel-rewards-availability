@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
+import Cookies from 'js-cookie';
 
 // Function to format the date to 'yyyy-mm-dd' format
 function formatDate(date) {
@@ -54,16 +55,10 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
     useEffect(() => {
         Promise.all([
             // axios.get('https://hotel-rewards-availability-api.onrender.com/api/hotels'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities', {
-                withCredentials: true
-            }),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries', {
-                withCredentials: true
-            }),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities'),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries'),
             // axios.get('https://hotel-rewards-availability-api.onrender.com/api/regions'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories', {
-                withCredentials: true
-            })
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories')
         ])
         // .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
         .then(([citiesRes, countriesRes, categoriesRes]) => {
@@ -97,6 +92,8 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
         // const regionString = regionArray.map(r => r.value);
         const categoryString = categoryArray.map(ca => ca.value);
         const rateFilterString = rateFilter.map(rf => rf.value).join(',').trim(',');
+
+        const session_token = Cookies.get('session_token')
     
         console.log({
             startDate,
@@ -121,8 +118,8 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
                 region: '',
                 category: categoryString,
                 rateFilter: rateFilterString,
-                pointsBudget,
-                withCredentials: true
+                pointsBudget: pointsBudget,
+                session_token: session_token
             });
             setStays(response.data);
         } catch (error) {

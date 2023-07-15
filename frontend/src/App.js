@@ -58,9 +58,7 @@ function App() {
       try {
         const session_token = Cookies.get('session_token');
         console.log(session_token)
-        const response = await axios.post('https://hotel-rewards-availability-api.onrender.com/api/logout', { session_token }, {
-          withCredentials: true
-        });
+        const response = await axios.post('https://hotel-rewards-availability-api.onrender.com/api/logout', { session_token });
         if (response.data.message === 'Logged out successfully.') {
           Cookies.remove('session_token');
           Cookies.remove('session_jwt');

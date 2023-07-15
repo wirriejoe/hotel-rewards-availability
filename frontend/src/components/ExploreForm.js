@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
+import Cookies from 'js-cookie';
 
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
     const [awardCategory, setAwardCategory] = useState({ value: '8', label: '8' });
@@ -12,12 +13,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
     // Fetch award categories and brands on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories', {
-                withCredentials: true
-            }),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/brands', {
-                withCredentials: true
-            })
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories'),
+            axios.get('https://hotel-rewards-availability-api.onrender.com/api/brands')
         ])
         .then(([categoriesRes, brandsRes]) => {
             setAwardCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
@@ -35,10 +32,11 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
 
+        const session_token = Cookies.get('session_token')
         const searchData = {
             award_category: [awardCategory.value],
             brand: [brand.value],
-            withCredentials: true
+            session_token: session_token
         };
 
         try {
