@@ -37,8 +37,10 @@ const columns = [
         );
       },
     },
-    { field: 'brand', headerName: 'Brand', sortable: true, flex: 6 },
-    { field: 'award_category', headerName: 'Award Category', sortable: true, flex: 6 },
+    // { field: 'brand', headerName: 'Brand', sortable: true, flex: 6 },
+    { field: 'hotel_city', headerName: 'City', sortable: true, flex: 8 },
+    { field: 'hotel_country', headerName: 'Country', sortable: true, flex: 8 },
+    // { field: 'award_category', headerName: 'Award Category', sortable: true, flex: 6 },
     {
         field: 'standard_rate', 
         headerName: 'Standard Rate', 

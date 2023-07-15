@@ -1,65 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
-import SearchForm from './components/SearchForm';
-import SearchTable from './components/SearchTable';
-import ExploreForm from './components/ExploreForm';
-import ExploreTable from './components/ExporeTable';
+import SearchPage from './components/SearchPage';
+import ExplorePage from './components/ExplorePage';
 import './App.css';
 import logo from './logo.png';
 
-function SearchPage() {
-  const [stays, setStays] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleStaysUpdate = (newData) => {
-    setStays(newData);
-    setIsLoading(false);
-  };
-
-  return (
-    <div className="app-container">
-      <div className="header">
-        <h1>Search</h1>
-        <p>Instantly search for availability for hotel stays across all of our supported Hyatt hotels at once!</p>
-      </div>
-      <div className="form-container">
-        <SearchForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />
-      </div>
-      <div className="table-container">
-        <SearchTable stays={stays} />
-      </div>
-    </div>
-  );
-}
-
 function HomePage() {
   return <h1>Hello World</h1>;
-}
-
-function ExplorePage() {
-  const [stays, setStays] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleStaysUpdate = (newData) => {
-    setStays(newData);
-    setIsLoading(false);
-  };
-
-  return (
-    <div className="app-container">
-      <div className="header">
-        <h1>Explore</h1>
-        <p>Explore hotel stays across award category and brand for supported Hyatt hotels over the next 60 days!</p>
-      </div>
-      <div className="form-container">
-        <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />
-      </div>
-      <div className="table-container">
-        <ExploreTable stays={stays} />
-      </div>
-    </div>
-  );
 }
 
 function App() {

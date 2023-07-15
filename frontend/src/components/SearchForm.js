@@ -36,36 +36,36 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
     const [startDate, setStartDate] = useState(formatDate(today));
     const [endDate, setEndDate] = useState(formatDate(thirtyDaysLater));
     const [lengthOfStay, setLengthOfStay] = useState(3);
-    const [hotel, setHotel] = useState('');
+    // const [hotel, setHotel] = useState('');
     const [city, setCity] = useState([{ value: 'New York', label: 'New York' }]);
     const [country, setCountry] = useState([{ value: 'United States', label: 'United States' }]);
-    const [region, setRegion] = useState([{ value: 'North America', label: 'North America' }]);
+    // const [region, setRegion] = useState([{ value: 'North America', label: 'North America' }]);
     const [category, setCategory] = useState('');
     const [rateFilter, setRateFilter] = useState(rateFilterDefaultOptions);
     const [pointsBudget, setPointsBudget] = useState(0);
     
-    const [hotelOptions, setHotelOptions] = useState([]);
+    // const [hotelOptions, setHotelOptions] = useState([]);
     const [cityOptions, setCityOptions] = useState([]);
     const [countryOptions, setCountryOptions] = useState([]);
-    const [regionOptions, setRegionOptions] = useState([]);
+    // const [regionOptions, setRegionOptions] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
 
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
         Promise.all([
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/hotels'),
+            // axios.get('https://hotel-rewards-availability-api.onrender.com/api/hotels'),
             axios.get('https://hotel-rewards-availability-api.onrender.com/api/cities'),
             axios.get('https://hotel-rewards-availability-api.onrender.com/api/countries'),
-            axios.get('https://hotel-rewards-availability-api.onrender.com/api/regions'),
+            // axios.get('https://hotel-rewards-availability-api.onrender.com/api/regions'),
             axios.get('https://hotel-rewards-availability-api.onrender.com/api/award_categories')
         ])
-        .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
-        // .then(([citiesRes, countriesRes, categoriesRes]) => {
+        // .then(([hotelsRes, citiesRes, countriesRes, regionsRes, categoriesRes]) => {
+        .then(([citiesRes, countriesRes, categoriesRes]) => {
 
-            setHotelOptions(hotelsRes.data.sort().map(hotel => ({ value: hotel, label: hotel })));
+            // setHotelOptions(hotelsRes.data.sort().map(hotel => ({ value: hotel, label: hotel })));
             setCityOptions(citiesRes.data.sort().map(city => ({ value: city, label: city })));
             setCountryOptions(countriesRes.data.sort().map(country => ({ value: country, label: country })));
-            setRegionOptions(regionsRes.data.sort().map(region => ({ value: region, label: region })));
+            // setRegionOptions(regionsRes.data.sort().map(region => ({ value: region, label: region })));
             setCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
         })
         .catch(err => {
@@ -78,17 +78,17 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
     
     const submitForm = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        const hotelArray = Array.isArray(hotel) ? hotel : [hotel];
+        // setIsLoading(true);
+        // const hotelArray = Array.isArray(hotel) ? hotel : [hotel];
         const cityArray = Array.isArray(city) ? city : [city];
         const countryArray = Array.isArray(country) ? country : [country];
-        const regionArray = Array.isArray(region) ? region : [region];
+        // const regionArray = Array.isArray(region) ? region : [region];
         const categoryArray = Array.isArray(category) ? category : [category];
 
-        const hotelString = hotelArray.map(h => h.value);
+        // const hotelString = hotelArray.map(h => h.value);
         const cityString = cityArray.map(c => c.value);
         const countryString = countryArray.map(c => c.value);
-        const regionString = regionArray.map(r => r.value);
+        // const regionString = regionArray.map(r => r.value);
         const categoryString = categoryArray.map(ca => ca.value);
         const rateFilterString = rateFilter.map(rf => rf.value).join(',').trim(',');
     
@@ -96,10 +96,10 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
             startDate,
             endDate,
             lengthOfStay,
-            hotelString,
+            // hotelString,
             cityString,
             countryString,
-            regionString,
+            // regionString,
             categoryString,
             rateFilterString,
             pointsBudget
@@ -109,10 +109,10 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
                 startDate,
                 endDate,
                 lengthOfStay,
-                hotel: hotelString,
+                hotel: '',
                 city: cityString,
                 country: countryString,
-                region: regionString,
+                region: '',
                 category: categoryString,
                 rateFilter: rateFilterString,
                 pointsBudget
