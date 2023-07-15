@@ -3,16 +3,17 @@ import React from 'react';
 import { StytchLogin } from '@stytch/react';
 
 const Login = () => {
-              
+  const redirectURL = process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate"
+
   const config = {
     "products": [
       "oauth",
       "emailMagicLinks"
     ],
     "emailMagicLinksOptions": {
-      "loginRedirectURL": "https://burnmypoints.com/authenticate",
+      "loginRedirectURL": redirectURL,
       "loginExpirationMinutes": 30,
-      "signupRedirectURL": "https://burnmypoints.com/authenticate",
+      "signupRedirectURL": redirectURL,
       "signupExpirationMinutes": 30
     },
     "oauthOptions": {
@@ -21,8 +22,8 @@ const Login = () => {
           "type": "google"
         }
       ],
-      "loginRedirectURL": "https://burnmypoints.com/authenticate",
-      "signupRedirectURL": "https://burnmypoints.com/authenticate"
+      "loginRedirectURL": redirectURL,
+      "signupRedirectURL": redirectURL
     },
   };
     const styles = {
