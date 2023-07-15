@@ -17,8 +17,8 @@ CORS(app, supports_credentials=True)
 
 stytch = stytch.Client(
     project_id=os.getenv('STYTCH_LIVE_PROJECT_ID'),
-    secret=os.getenv('STYTCH_LIVE_SECRET_ID'),
-    environment='test',
+    secret=os.getenv('STYTCH_LIVE_SECRET'),
+    environment='live',
 )
 
 # Initialize connection and Session
