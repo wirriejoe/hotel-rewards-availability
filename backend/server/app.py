@@ -110,7 +110,7 @@ def consecutive_stays():
     stays = [{**stay, 'last_checked': time_since(stay['last_checked'])} for stay in stays]
 
     print(f"Search finished! Found {len(stays)} results!")
-    log_event('Search', stytchUserID, json.dumps(data), f"Returned {len(stays)} results.")
+    log_event('search', stytchUserID, json.dumps(data), f"Returned {len(stays)} results.")
     return jsonify(stays)  # Convert list of stays to JSON
 
 @app.route('/api/explore', methods=['POST'])
@@ -165,7 +165,7 @@ def explore():
     connection.close()
 
     print(f"Explore finished! Found {len(stay_results)} results!")
-    log_event('Explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
+    log_event('explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
     return jsonify(stay_results)
 
 @app.route('/api/hotels', methods=['GET'])
@@ -232,10 +232,10 @@ def authenticate_user():
             log_event('oauth_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
         elif token_type == 'magic_links':
             auth_resp = stytch.magic_links.authenticate(token=token, session_duration_minutes=session_duration_minutes)
-            log_event('magic_links', auth_resp.user_id, auth_resp.user.emails[0].email)
+            log_event('magic_link_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
         # elif token_type == 'passwords':
         #     auth_resp = stytch.passwords.authenticate(token=token, session_duration_minutes=session_duration_minutes)
-        #     log_event('passwords', auth_resp.user_id, auth_resp.user.emails[0].email)
+        #     log_event('password_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
     except Exception as e:
         return jsonify({'message': 'Failed to authenticate user.', 'error': str(e)}), 401
     
