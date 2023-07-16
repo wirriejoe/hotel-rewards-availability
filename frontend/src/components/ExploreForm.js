@@ -5,7 +5,7 @@ import Select from 'react-select';
 import Cookies from 'js-cookie';
 
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
-    const [awardCategory, setAwardCategory] = useState({ value: '8', label: '8' });
+    const [awardCategory, setAwardCategory] = useState("");
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState("");
     const [brandOptions, setBrandOptions] = useState([]);
