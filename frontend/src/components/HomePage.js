@@ -66,7 +66,7 @@ function HomePage() {
         <div className="features-container">
           {features.map((feature, index) => (
             <div className="feature" key={index}>
-              <h4>{feature.title}</h4>
+              <h5>{feature.title}</h5>
               <p>{feature.description}</p>
             </div>
           ))}
