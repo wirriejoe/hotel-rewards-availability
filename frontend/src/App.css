@@ -47,8 +47,8 @@
   border: 1px solid lightgrey;
   background-color: #f8f9fa;
   padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
 }
 
 .table-container {
@@ -145,4 +145,14 @@
   flex: 0 0 25%; /* Adjust as necessary */
   margin-bottom: 0px;
   text-align: left;
+}
+
+.dataTables_wrapper .rdt_TableCell {
+  font-size: 1.1em;
+}
+
+.rdt_TableCol div:first-child {
+  white-space: normal !important;
+  overflow: visible !important;
+  font-size: 1.1em;
 }

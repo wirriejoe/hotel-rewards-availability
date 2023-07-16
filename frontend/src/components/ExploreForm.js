@@ -83,7 +83,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
     return (
         <form onSubmit={submitForm} className="form-group">
             <div className="row">
-                <div className="col">
+                <div className="col-md-4">
                     <label>Award Category:</label>
                     <Select
                         options={awardCategoryOptions} 
@@ -92,7 +92,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                         isMulti
                     />
                 </div>
-                <div className="col">
+                <div className="col-md-4">
                     <label>Brand:</label>
                     <Select
                         options={brandOptions} 
@@ -101,13 +101,15 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                         isMulti
                     />
                 </div>
+                <div className="col-md-4 d-flex align-items-end">
+                    <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
+                        {isLoading ? 'Loading...' : 'Explore'}
+                    </button>
+                </div>
             </div>
             {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-            <button type="submit" className="btn btn-primary mt-3" disabled={isLoading}>
-                {isLoading ? 'Loading...' : 'Search'}
-            </button>
         </form>
-    );
+    );      
 }
 
 export default ExploreForm;
