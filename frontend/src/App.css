@@ -117,6 +117,7 @@
   color: white; 
   font-family: 'Open Sans', sans-serif;
   font-size: 100%; 
+  text-align: center;
   background-color: rgba(0, 0, 0, 0.7); /* Black background with some transparency */
   position: absolute; 
   top: 0;
