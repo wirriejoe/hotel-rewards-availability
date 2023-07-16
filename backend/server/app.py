@@ -107,7 +107,7 @@ def consecutive_stays():
     stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
 
     # Apply time_since function to every last_checked object in the list
-    stays = [{**stay, 'last_checked': time_since(stay['last_checked'])} for stay in stays]
+    stays = [{**stay, 'last_checked_string': time_since(stay['last_checked'])} for stay in stays]
 
     print(f"Search finished! Found {len(stays)} results!")
     log_event('search', stytchUserID, json.dumps(data), f"Returned {len(stays)} results.")
@@ -125,8 +125,8 @@ def explore():
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
-    today = datetime.now()
-    future_date = today + timedelta(days=60)
+    today = datetime.now() + timedelta(days=1)
+    future_date = today + timedelta(days=61)
 
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),

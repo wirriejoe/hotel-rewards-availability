@@ -23,7 +23,7 @@ const CustomTooltip = styled(({ className, ...props }) => (
 const columns = [
     { name: 'Check In', selector: 'date_range_start', grow: '0.75', sortable: true },
     { name: 'Check Out', selector: 'date_range_end', grow: '0.75', sortable: true },
-    { name: 'Last Checked', selector: 'last_checked', grow: '0.75', sortable: true },
+    { name: 'Last Checked', selector: 'last_checked', grow: '0.75', sortable: true, format: row => row.last_checked_string},
     {
       name: 'Hotel', 
       selector: 'hotel_name', 
@@ -108,7 +108,8 @@ function StaysTable({ stays }) {
   stays = stays.map(stay => ({
     ...stay,
     date_range_start: new Date(stay.date_range_start).toISOString().slice(0,10),
-    date_range_end: new Date(stay.date_range_end).toISOString().slice(0,10)
+    date_range_end: new Date(stay.date_range_end).toISOString().slice(0,10),
+    last_checked: new Date(stay.last_checked), 
   }));
 
   const filteredItems = stays.filter(item =>
