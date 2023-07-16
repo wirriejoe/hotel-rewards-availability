@@ -4,6 +4,8 @@ import { StytchLogin } from '@stytch/react';
 
 const Login = () => {
   const redirectURL = process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate"
+  console.log(process.env.REACT_APP_TEST_REDIRECT_URL)
+  console.log(redirectURL)
 
   const config = {
     "products": [

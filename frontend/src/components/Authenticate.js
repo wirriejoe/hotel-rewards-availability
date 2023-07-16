@@ -38,7 +38,7 @@ function Authenticate() {
           // Redirect to the home page after a delay
           setTimeout(() => {
             navigate("/"); 
-          }, 2000);
+          }, 0);
         } else {          
           setError(data.error);
           setMessage("Failed to authenticate.");
