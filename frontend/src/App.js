@@ -44,7 +44,7 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/login" element={<Login />} />
-                      <Route path="/reset" element={<Reset />} />
+                      {/* <Route path="/reset" element={<Reset />} /> */}
                       <Route path="/authenticate" element={<Authenticate />} />
                       <Route path="/" element={<HomePage />} />
                   </Routes>
