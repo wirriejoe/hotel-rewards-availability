@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
 import Cookies from 'js-cookie';
 
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
-    const [awardCategory, setAwardCategory] = useState({ value: '8', label: '8' });
+    const [awardCategory, setAwardCategory] = useState([{ value: '7', label: '7' }, { value: '8', label: '8' }]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
-    const [brand, setBrand] = useState("");
+    const [brand, setBrand] = useState([{ value: 'Park Hyatt', label: 'Park Hyatt' }]);
     const [brandOptions, setBrandOptions] = useState([]);
+    const [errorMessage, setErrorMessage] = useState(null);
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
@@ -19,8 +20,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
             axios.get(api_url + '/api/brands')
         ])
         .then(([categoriesRes, brandsRes]) => {
-            let awardCategories = [{value: '', label: 'None'}, ...categoriesRes.data.sort().map(category => ({ value: category, label: category }))];
-            setAwardCategoryOptions(awardCategories);
+            setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
             setBrandOptions(brandsRes.data.sort().map(brand => ({ value: brand, label: brand })));
         })
         .catch(err => {
@@ -30,46 +30,66 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
         });
     }, [api_url]);
 
-    // Note: setIsLoading and setStays are omitted from the deps array intentionally.
-    // This is safe here because they're guaranteed to be stable and won't cause re-renders.
-    const fetchData = useCallback(async () => {
+    const sortSelectedOptions = (selectedOptions, options) => {
+        return selectedOptions.sort((a, b) => {
+            return options.indexOf(a) - options.indexOf(b);
+        });
+    };
+
+    const handleAwardCategoryChange = (selectedOptions) => {
+        const sortedOptions = sortSelectedOptions(selectedOptions, awardCategoryOptions);
+        setAwardCategory(sortedOptions);
+    };
+
+    const handleBrandChange = (selectedOptions) => {
+        const sortedOptions = sortSelectedOptions(selectedOptions, brandOptions);
+        setBrand(sortedOptions);
+    };
+
+    const submitForm = async (e) => {
+        e.preventDefault();
+
+        // Validation
+        if (awardCategory.length < 1 || brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
+            setErrorMessage('Please select at least one brand and one category, and no more than three options per category.');
+            return;
+        }
+
         setIsLoading(true);
+        setErrorMessage(null);  // Clear any previous error message
+
+        const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
+        const brandArray = Array.isArray(brand) ? brand : [brand];
+
+        const awardCategoryString = awardCategoryArray.map(category => category.value);
+        const brandString = brandArray.map(brand => brand.value);
 
         const session_token = Cookies.get('session_token')
-        const searchData = {
-            award_category: [awardCategory.value],
-            brand: [brand.value],
-            session_token: session_token
-        };
 
         try {
-            const response = await axios.post(api_url + '/api/explore', searchData);
+            const response = await axios.post(api_url + '/api/explore', {
+                award_category: awardCategoryString,
+                brand: brandString,
+                session_token: session_token
+            });
             setStays(response.data);
         } catch (error) {
             console.error(error);
         } finally {
             setIsLoading(false);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [awardCategory, brand]);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
+    };
 
     return (
-        <div className="form-group">
+        <form onSubmit={submitForm} className="form-group">
             <div className="row">
                 <div className="col">
                     <label>Award Category:</label>
                     <Select
                         options={awardCategoryOptions} 
                         value={awardCategory}
-                        onChange={setAwardCategory}
+                        onChange={handleAwardCategoryChange}
+                        isMulti
                     />
                 </div>
                 <div className="col">
@@ -77,11 +97,16 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                     <Select
                         options={brandOptions} 
                         value={brand}
-                        onChange={setBrand}
+                        onChange={handleBrandChange}
+                        isMulti
                     />
                 </div>
             </div>
-        </div>
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+            <button type="submit" className="btn btn-primary mt-3" disabled={isLoading}>
+                {isLoading ? 'Loading...' : 'Search'}
+            </button>
+        </form>
     );
 }
 

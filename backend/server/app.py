@@ -136,9 +136,9 @@ def explore():
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
-    if data['award_category'] != [None] and data['award_category'] != "":
+    if data['award_category'] and data['award_category'] != [None]:
         filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
-    if data['brand'] != [None] and data['brand'] != "":
+    if data['brand'] and data['brand'] != [None]:
         filter_conditions.append(hotels.c.brand.in_(data['brand']))
         
     query = select(
