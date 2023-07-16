@@ -31,24 +31,19 @@ def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], ho
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48)
     ]
     
-    if hotels_name_text != [None] and hotels_name_text != []:
-        for hotel_name_text in hotels_name_text:
-            filter_conditions.append(hotels.c.hotel_name.contains(hotel_name_text))
-    if hotel_cities != [None] and hotel_cities != []:
-        for hotel_city in hotel_cities:
-            filter_conditions.append(hotels.c.hotel_city.contains(hotel_city))
-    if hotel_countries != [None] and hotel_countries != []:
-        for hotel_country in hotel_countries:
-            filter_conditions.append(hotels.c.hotel_country.contains(hotel_country))
-    if hotel_regions != [None] and hotel_regions != []:
-        for hotel_region in hotel_regions:
-            filter_conditions.append(hotels.c.hotel_region.contains(hotel_region))
-    if award_categories != [None] and award_categories != []:
-        for award_category in award_categories:
-            filter_conditions.append(hotels.c.award_category.contains(award_category))
+    if [name for name in hotels_name_text if name]:
+        filter_conditions.append(hotels.c.hotel_name.in_(hotels_name_text))
+    if [name for name in hotel_cities if name]:
+        filter_conditions.append(hotels.c.hotel_city.in_(hotel_cities))
+    if [name for name in hotel_countries if name]:
+        filter_conditions.append(hotels.c.hotel_country.in_(hotel_countries))
+    if [name for name in hotel_regions if name]:
+        filter_conditions.append(hotels.c.hotel_region.in_(hotel_regions))
+    if [name for name in award_categories if name]:
+        filter_conditions.append(hotels.c.award_category.in_(award_categories))
     if rate_filter == 'Standard':
         filter_conditions.append(stays.c.standard_rate > 0)
-    elif rate_filter == 'Premium':
+    if rate_filter == 'Premium':
         filter_conditions.append(stays.c.premium_rate > 0)
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)

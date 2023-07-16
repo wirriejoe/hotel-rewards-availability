@@ -131,6 +131,7 @@ def explore():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0)
     ]
 
