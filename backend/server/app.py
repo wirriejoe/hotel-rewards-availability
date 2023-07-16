@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pytz import utc
 import os
 import stytch
+import json
 
 load_dotenv(find_dotenv())
 
@@ -32,6 +33,7 @@ meta.reflect(bind=engine)
 users = meta.tables['users']
 stays = meta.tables['stays']
 hotels = meta.tables['hotels']
+events = meta.tables['events']
 
 def time_since(last_checked_time):
     now = datetime.now().astimezone(utc)
@@ -66,6 +68,14 @@ def authenticate_session(session_token):
 
     except Exception as e:
         raise AuthenticationError('Session authentication failed.')
+    
+def log_event(event_name, user_id, request = "", response = ""):
+    # Insert a new row into the event_logs table
+    ins = events.insert().values(event_name=event_name, stytchUserID=user_id, request=request, response = response)
+    conn = engine.connect()
+    conn.execute(ins)
+    conn.commit()
+    conn.close()
 
 @app.route('/')
 def index():
@@ -74,6 +84,7 @@ def index():
 @app.route('/api/consecutive_stays', methods=['POST'])
 def consecutive_stays():
     data = request.json
+    print(data)
 
     session_token = data['session_token']
     try:
@@ -90,7 +101,7 @@ def consecutive_stays():
     hotel_region = data.get('region', None)
     award_category = data.get('category', None)
     rate_filter = data.get('rateFilter', None)
-    print(data.get('pointsBudget'))
+    # print(data.get('pointsBudget'))
     max_points_budget = int(data.get('pointsBudget')) if data.get('pointsBudget') != '' else 0
 
     stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
@@ -98,11 +109,15 @@ def consecutive_stays():
     # Apply time_since function to every last_checked object in the list
     stays = [{**stay, 'last_checked': time_since(stay['last_checked'])} for stay in stays]
 
+    print(f"Search finished! Found {len(stays)} results!")
+    log_event('Search', stytchUserID, json.dumps(data), f"Returned {len(stays)} results.")
     return jsonify(stays)  # Convert list of stays to JSON
 
 @app.route('/api/explore', methods=['POST'])
 def explore():
     data = request.json
+    print(data)
+    print(request)
 
     session_token = data['session_token']
     try:
@@ -147,8 +162,10 @@ def explore():
     # Apply time_since function to every last_checked_time object in the list
     stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in stay_results]
 
-    print(stay_results)
     connection.close()
+
+    print(f"Explore finished! Found {len(stay_results)} results!")
+    log_event('Explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
     return jsonify(stay_results)
 
 @app.route('/api/hotels', methods=['GET'])
@@ -200,6 +217,7 @@ def create_user(stytch_user_id, user_email, created_at):
     conn.execute(ins)
     conn.commit()
     conn.close()
+    log_event('create_user', stytch_user_id, user_email)
 
 @app.route('/api/authenticate', methods=['GET'])
 def authenticate_user():
@@ -208,10 +226,16 @@ def authenticate_user():
     session_duration_minutes = 43200 # 1440 minutes = 1 day
 
     try:
+        print(f"Session token type: {token_type}")
         if token_type == 'oauth':
             auth_resp = stytch.oauth.authenticate(token=token, session_duration_minutes=session_duration_minutes)
+            log_event('oauth_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
         elif token_type == 'magic_links':
             auth_resp = stytch.magic_links.authenticate(token=token, session_duration_minutes=session_duration_minutes)
+            log_event('magic_links', auth_resp.user_id, auth_resp.user.emails[0].email)
+        # elif token_type == 'passwords':
+        #     auth_resp = stytch.passwords.authenticate(token=token, session_duration_minutes=session_duration_minutes)
+        #     log_event('passwords', auth_resp.user_id, auth_resp.user.emails[0].email)
     except Exception as e:
         return jsonify({'message': 'Failed to authenticate user.', 'error': str(e)}), 401
     
@@ -223,7 +247,7 @@ def authenticate_user():
     conn = engine.connect()
     result = conn.execute(sel)
     user = result.fetchone()
-    print(user)
+    # print(user)
     conn.close()
 
     if not user:
@@ -241,10 +265,13 @@ def logout():
     try:
         # Retrieve the session token from the request body
         session_token = request.json.get('session_token')
-        print(session_token)
+        # print(session_token)
 
         # Delete the session using the Stytch API
-        print(stytch.sessions.revoke(session_token=session_token))
+        response = stytch.sessions.revoke(session_token=session_token)
+
+        log_event('create_user', "", f"session_token: {session_token}")
+        print("User session deleted: " + str(response))
 
         # Return a success message
         return jsonify({'message': 'Logged out successfully.'}), 200

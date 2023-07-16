@@ -132,13 +132,13 @@ def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1
     search_base_url = search_base_url_dict[hotel_brand] + hotel_code
     response_url = base_url + f'?spiritCode={hotel_code}&rooms={room_qty}&adults={adults}&checkinDate={checkin_date}&checkoutDate={checkout_date}&kids={kids}'
     search_url = search_base_url + f'?checkinDate={checkin_date}&checkoutDate={checkout_date}&rateFilter=woh'
-    print("Response URL: " + response_url)
-    print("Verification URL: " + search_url)
+    # print("Response URL: " + response_url)
+    # print("Verification URL: " + search_url)
     return response_url, search_url
 
 def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], hotel_region=[], award_category=[], rate_filter=None, max_points_budget=0):
     records = fetch_stays(start_date=start_date, end_date=end_date, hotels_name_text=hotel_name_text, hotel_cities=hotel_city, hotel_countries=hotel_country, hotel_regions=hotel_region, award_categories=award_category, rate_filter=rate_filter)
-    print(len(records))
+    # print(len(records))
 
     consecutive_stays = get_consecutive_stays(records, length_of_stay, rate_filter, max_points_budget)
 
