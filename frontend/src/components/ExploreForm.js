@@ -5,7 +5,7 @@ import Select from 'react-select';
 import Cookies from 'js-cookie';
 
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
-    const [awardCategory, setAwardCategory] = useState("");
+    const [awardCategory, setAwardCategory] = useState({ value: '8', label: '8' });
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState("");
     const [brandOptions, setBrandOptions] = useState([]);
@@ -19,7 +19,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
             axios.get(api_url + '/api/brands')
         ])
         .then(([categoriesRes, brandsRes]) => {
-            setAwardCategoryOptions(categoriesRes.data.sort().map(category => ({ value: category, label: category })));
+            let awardCategories = [{value: '', label: 'None'}, ...categoriesRes.data.sort().map(category => ({ value: category, label: category }))];
+            setAwardCategoryOptions(awardCategories);
             setBrandOptions(brandsRes.data.sort().map(brand => ({ value: brand, label: brand })));
         })
         .catch(err => {
