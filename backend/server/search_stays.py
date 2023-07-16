@@ -103,6 +103,7 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
                     'standard_rate': standard_rate,
                     'premium_rate': premium_rate,
                     'hotel_city': stays[i]["hotel_city"],
+                    'hotel_province': stays[i]["hotel_province"],
                     'hotel_country': stays[i]["hotel_country"],
                     'hotel_region': stays[i]["hotel_region"],
                     'award_category': stays[i]["award_category"],

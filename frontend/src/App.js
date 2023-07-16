@@ -7,6 +7,7 @@ import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
 import Login from './components/Login';
+import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
 import { UserContext, UserContextProvider } from './components/UserContext';
 import './App.css';
@@ -43,6 +44,7 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/login" element={<Login />} />
+                      <Route path="/reset" element={<Reset />} />
                       <Route path="/authenticate" element={<Authenticate />} />
                       <Route path="/" element={<HomePage />} />
                   </Routes>

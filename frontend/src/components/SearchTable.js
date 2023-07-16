@@ -15,9 +15,9 @@ const CustomTooltip = styled(({ className, ...props }) => (
 });
 
 const columns = [
-    { field: 'date_range_start', headerName: 'Check In Date', sortable: true, flex: 8 },
-    { field: 'date_range_end', headerName: 'Check Out Date', sortable: true, flex: 8 },
-    { field: 'last_checked', headerName: 'Last Checked', sortable: true, flex: 6 },
+    { field: 'date_range_start', headerName: 'Check In', sortable: true, flex: 6 },
+    { field: 'date_range_end', headerName: 'Check Out', sortable: true, flex: 6 },
+    { field: 'last_checked', headerName: 'Last Checked', sortable: true, flex: 8 },
     {
       field: 'hotel_name', 
       headerName: 'Hotel', 
@@ -28,8 +28,9 @@ const columns = [
         return (
           <CustomTooltip title={
             <React.Fragment>
-              <div>{row.hotel_name}</div>
-              <div>{row.hotel_city}, {row.hotel_country}, {row.hotel_region}</div>
+              <div>Hotel: {row.hotel_name}</div>
+              <div>Location: {row.hotel_city}, {row.hotel_province}, {row.hotel_country}</div>
+              <div>Region: {row.hotel_region}</div>
               <div>Award Category: {row.award_category}</div>
             </React.Fragment>
           }>
@@ -52,6 +53,17 @@ const columns = [
     {
         field: 'hotel_city', 
         headerName: 'City', 
+        sortable: true, 
+        flex: 8,
+        renderCell: (params) => (
+          <Tooltip title={params.value}>
+            <div>{params.value}</div>
+          </Tooltip>
+        )
+    },
+    {
+        field: 'hotel_province', 
+        headerName: 'State/Province', 
         sortable: true, 
         flex: 8,
         renderCell: (params) => (

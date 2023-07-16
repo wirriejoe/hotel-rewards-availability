@@ -27,8 +27,9 @@ const columns = [
         return (
           <CustomTooltip title={
             <React.Fragment>
-              <div>{row.hotel_name}</div>
-              <div>{row.hotel_city}, {row.hotel_country}, {row.hotel_region}</div>
+              <div>Hotel: {row.hotel_name}</div>
+              <div>Location: {row.hotel_city}, {row.hotel_province}, {row.hotel_country}</div>
+              <div>Region: {row.hotel_region}</div>
               <div>Award Category: {row.award_category}</div>
             </React.Fragment>
           }>
@@ -39,6 +40,7 @@ const columns = [
     },
     // { field: 'brand', headerName: 'Brand', sortable: true, flex: 6 },
     { field: 'hotel_city', headerName: 'City', sortable: true, flex: 8 },
+    { field: 'hotel_province', headerName: 'State/Province', sortable: true, flex: 8 },
     { field: 'hotel_country', headerName: 'Country', sortable: true, flex: 8 },
     // { field: 'award_category', headerName: 'Award Category', sortable: true, flex: 6 },
     {

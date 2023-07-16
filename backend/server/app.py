@@ -147,7 +147,8 @@ def explore():
         stays.c.last_checked_time, 
         hotels.c.hotel_name, 
         hotels.c.hotel_city, 
-        hotels.c.hotel_country, 
+        hotels.c.hotel_province,
+        hotels.c.hotel_country,
         hotels.c.hotel_region,
         hotels.c.brand,
         hotels.c.award_category,
@@ -270,7 +271,7 @@ def logout():
         # Delete the session using the Stytch API
         response = stytch.sessions.revoke(session_token=session_token)
 
-        log_event('create_user', "", f"session_token: {session_token}")
+        log_event('log_out', "", f"session_token: {session_token}")
         print("User session deleted: " + str(response))
 
         # Return a success message
