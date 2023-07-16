@@ -81,7 +81,7 @@ for stay_id, stay_info in new_stays.items():
     print(stay_id)
     query = """
     INSERT INTO stays (stay_id, hotel_id, hotel_code, check_in_date, check_out_date, status, last_checked_time)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (stay_id) DO UPDATE
     SET status = excluded.status, last_checked_time = excluded.last_checked_time;
     """

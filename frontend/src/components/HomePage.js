@@ -27,15 +27,15 @@ function HomePage() {
     {title: "Unlimited alerts 🔔 (Coming Soon)", description: "No more repetitive searches. Create alerts to be notified when the best seats are released."},
     {title: "Discord community 🤝", description: 
       <span>
-      Join our Discord community to talk about travel, request new features, and more.{' '}
       <a href="https://discord.gg/M6zexyPYk" target="_blank" rel="noreferrer">
-        Join now 👈🏻
+        Join our Discord
       </a>
+      {' '}community to talk about travel, request new features, or just come hang out.
     </span>
     },
-    {title: "Booking links 🔗", description: "Save time and jump directly into the booking flow to lock in your rate."},
-    {title: "Fresh results 🤩", description: "Results update themselves with fresh data from hotel website as you view it in Search and Explore."},
-    {title: "Deals tracker 🤑 (Coming Soon)", description: "Compare point redemptions with cash rates to get the best deal every time."},
+    {title: "Booking links 🔗", description: "Save time and jump directly into the booking flow on the hotel website to lock in your rate."},
+    {title: "Fresh results 🤩", description: "Results update regularly with the latest award availability from hotel websites. No more checking each rate one at a time."},
+    {title: "Deals tracker 🤑 (Coming Soon)", description: "Compare point redemptions with cash rates to find the best bang for your buck every time."},
 ];
 
   // Handle logo click
@@ -75,7 +75,7 @@ function HomePage() {
 
       <div className="home-container"> {/* New Section */}
         <h2>Supported reward programs</h2>
-        <p>The hotel rewards programs we currently support and soon to support in the coming weeks! Hop on Discord today and tell us what program you think we should add next.{' '}
+        <p>The hotel rewards programs we currently support and will support soon in the coming weeks! Come tell us on Discord what program we should add next.{' '}
         <a href="https://discord.gg/M6zexyPYk" target="_blank" rel="noreferrer">
           Join here 👈🏻
         </a>
