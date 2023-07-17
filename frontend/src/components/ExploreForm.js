@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select, { components } from 'react-select';
@@ -19,96 +19,98 @@ const Option = (props) => {
     );
 };
 
+function usePrevious(value) {
+    const ref = useRef();
+    useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
+}
+
 function ExploreForm({ setStays, isLoading, setIsLoading }) {
     const [awardCategory, setAwardCategory] = useState([{ value: '7', label: '7' }, { value: '8', label: '8' }]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState([{ value: 'Park Hyatt', label: 'Park Hyatt' }]);
     const [brandOptions, setBrandOptions] = useState([]);
     const [errorMessage, setErrorMessage] = useState(null);
-
-    const prevAwardCategory = useRef(awardCategory);
-    const prevBrand = useRef(brand);
+    const [initialLoad, setInitialLoad] = useState(true);
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
+    const prevAwardCategory = usePrevious(awardCategory);
+    const prevBrand = usePrevious(brand);
+
+    const submitForm = useCallback(async () => {
+        if (awardCategory.length < 1 || brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
+            setErrorMessage('Please select at least one brand and one category, and no more than three options per category.');
+            return;
+        }
+
+        setIsLoading(true);
+        setErrorMessage(null);  // Clear any previous error message
+
+        const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
+        const brandArray = Array.isArray(brand) ? brand : [brand];
+
+        const awardCategoryString = awardCategoryArray.map(category => category.value);
+        const brandString = brandArray.map(brand => brand.value);
+
+        const session_token = Cookies.get('session_token')
+
+        try {
+            const response = await axios.post(api_url + '/api/explore', {
+                award_category: awardCategoryString,
+                brand: brandString,
+                session_token: session_token
+            });
+            setStays(response.data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [awardCategory, brand, setIsLoading, setStays, api_url]);
+
     // Fetch award categories and brands on component mount
     useEffect(() => {
-        Promise.all([
-            axios.get(api_url + '/api/award_categories'),
-            axios.get(api_url + '/api/brands')
-        ])
-        .then(([categoriesRes, brandsRes]) => {
-            setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
-            setBrandOptions(brandsRes.data.sort().map(brand => ({ value: brand, label: brand })));
-        })
-        .catch(err => {
-            console.log(err.message);
-            console.log(err.request);
-            console.log(err.response);
-        });
-    }, [api_url]);
+        const fetchData = async () => {
+            try {
+                const [categoriesRes, brandsRes] = await Promise.all([
+                    axios.get(api_url + '/api/award_categories'),
+                    axios.get(api_url + '/api/brands')
+                ]);
 
-    const sortSelectedOptions = (selectedOptions, options) => {
-        return selectedOptions.sort((a, b) => {
-            return options.indexOf(a) - options.indexOf(b);
-        });
-    };
+                setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
+                setBrandOptions(brandsRes.data.sort().map(brand => ({ value: brand, label: brand })));
+
+                // Call submitForm after initial load.
+                if (initialLoad) {
+                    submitForm();
+                    setInitialLoad(false);
+                }
+            } catch (err) {
+                console.log(err.message);
+                console.log(err.request);
+                console.log(err.response);
+            }
+        }
+
+        fetchData();
+    }, [submitForm, api_url, initialLoad]);  // Include initialLoad in the dependencies.
+
+    // Call submitForm whenever awardCategory or brand changes
+    useEffect(() => {
+        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand)) {
+            submitForm();
+        }
+    }, [prevAwardCategory, prevBrand, awardCategory, brand, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
 
     const handleAwardCategoryChange = (selectedOptions) => {
-        const sortedOptions = sortSelectedOptions(selectedOptions, awardCategoryOptions);
-        setAwardCategory(sortedOptions);
+        setAwardCategory(selectedOptions);
     };
 
     const handleBrandChange = (selectedOptions) => {
-        const sortedOptions = sortSelectedOptions(selectedOptions, brandOptions);
-        setBrand(sortedOptions);
-    };
-
-    const handleMenuClose = () => {
-        const submitForm = async () => {
-            // Validation
-            if (awardCategory.length < 1 || brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
-                setErrorMessage('Please select at least one brand and one category, and no more than three options per category.');
-                return;
-            }
-
-            // Check if the values have changed
-            if (JSON.stringify(prevAwardCategory.current) === JSON.stringify(awardCategory) && JSON.stringify(prevBrand.current) === JSON.stringify(brand)) {
-                return;
-            }
-
-            setIsLoading(true);
-            setErrorMessage(null);  // Clear any previous error message
-
-            const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
-            const brandArray = Array.isArray(brand) ? brand : [brand];
-
-            const awardCategoryString = awardCategoryArray.map(category => category.value);
-            const brandString = brandArray.map(brand => brand.value);
-
-            const session_token = Cookies.get('session_token')
-
-            try {
-                const response = await axios.post(api_url + '/api/explore', {
-                    award_category: awardCategoryString,
-                    brand: brandString,
-                    session_token: session_token
-                });
-                setStays(response.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (awardCategory.length > 0 && brand.length > 0) {
-            submitForm();
-        }
-
-        // Update the previous values
-        prevAwardCategory.current = awardCategory;
-        prevBrand.current = brand;
+        setBrand(selectedOptions);
     };
 
     return (
@@ -126,7 +128,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                                 options={awardCategoryOptions} 
                                 value={awardCategory}
                                 onChange={handleAwardCategoryChange}
-                                onMenuClose={handleMenuClose}
                                 isMulti
                                 closeMenuOnSelect={false}
                                 hideSelectedOptions={false}
@@ -140,7 +141,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
                                 options={brandOptions} 
                                 value={brand}
                                 onChange={handleBrandChange}
-                                onMenuClose={handleMenuClose}
                                 isMulti
                                 closeMenuOnSelect={false}
                                 hideSelectedOptions={false}
