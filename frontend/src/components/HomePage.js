@@ -61,6 +61,11 @@ function HomePage() {
         </Link>
       </div>
 
+      <div class="alert alert-info">
+        <strong>BETA! </strong>
+        BurnMyPoints currently scans next 60 days of award availability for Hyatt. Extended availability and more hotels coming soon! Join the conversation in our <a href="https://discord.gg/M6zexyPYk">Discord</a>.
+      </div>
+
       <div className= "home-container">
         <h2>Highlights</h2>
         <div className="features-container">
