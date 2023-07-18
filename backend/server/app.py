@@ -86,7 +86,7 @@ def consecutive_stays():
     data = request.json
     print(data)
 
-    session_token = data['session_token']
+    session_token = data.get('session_token', 'default_value')
     try:
         stytchUserID = authenticate_session(session_token)
     except AuthenticationError as e:
@@ -119,7 +119,7 @@ def explore():
     print(data)
     print(request)
 
-    session_token = data['session_token']
+    session_token = data.get('session_token', 'default_value')
     try:
         stytchUserID = authenticate_session(session_token)
     except AuthenticationError as e:
