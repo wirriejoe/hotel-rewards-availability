@@ -126,7 +126,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
             'status': 'Active'
         })
 
-        time.sleep(random.randint(0.5, 1))
+        time.sleep(random.randint(0, 1))
     upsert(session, awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
     awardsearch.quit()
