@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
-import RequestPage from './components/RequestPage';
+// import RequestPage from './components/RequestPage';
 import Login from './components/Login';
 // import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
@@ -45,7 +45,7 @@ function App() {
                   <Routes>
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
-                      <Route path="/request" element={<RequestPage />} />
+                      {/* <Route path="/request" element={<RequestPage />} /> */}
                       <Route path="/login" element={<Login />} />
                       {/* <Route path="/reset" element={<Reset />} /> */}
                       <Route path="/authenticate" element={<Authenticate />} />
