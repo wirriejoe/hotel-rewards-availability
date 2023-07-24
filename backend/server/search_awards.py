@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, MetaData, select, and_, update, func
+from sqlalchemy import create_engine, MetaData, select, and_, update, func, case, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
@@ -126,7 +126,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
             'status': 'Active'
         })
 
-        time.sleep(random.randint(1, 2))
+        time.sleep(random.randint(0, 1))
     upsert(session, awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
     awardsearch.quit()
@@ -134,32 +134,36 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 def update_rates():
     logging.info("Starting batch update of rates...")
 
-    # Subqueries to calculate the min rates for each room_category
-    subquery_standard = select(awards.c.stay_id, func.min(awards.c.lowest_points_rate).label('standard_rate')).where(and_(awards.c.room_category == 'STANDARD')).group_by(awards.c.stay_id).alias('standard_awards')
-    subquery_premium = select(awards.c.stay_id, func.min(awards.c.lowest_points_rate).label('premium_rate')).where(and_(awards.c.room_category == 'PREMIUM')).group_by(awards.c.stay_id).alias('premium_awards')
+    # Define "24 hours ago"
+    one_day_ago = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
 
-    # Batch update stays with min standard_rate and premium_rate
-    update_query_standard = update(stays).values(
-        standard_rate = subquery_standard.c.standard_rate
-    ).where(stays.c.stay_id == subquery_standard.c.stay_id)
+    # Prepare the raw SQL statement
+    stmt = text("""
+        UPDATE stays
+        SET 
+            standard_rate = subquery.min_standard_rate,
+            premium_rate = subquery.min_premium_rate
+        FROM (
+            SELECT 
+                stay_id,
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time <= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time <= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_premium_rate
+            FROM awards
+            GROUP BY stay_id
+        ) AS subquery
+        WHERE stays.stay_id = subquery.stay_id
+    """)
 
-    update_query_premium = update(stays).values(
-        premium_rate = subquery_premium.c.premium_rate
-    ).where(stays.c.stay_id == subquery_premium.c.stay_id)
-
-    # Execute the update queries
-    result_standard = session.execute(update_query_standard)
-    result_premium = session.execute(update_query_premium)
-    
-    logging.info("Batch update completed. {} rows affected.".format(result_standard.rowcount + result_premium.rowcount))
-
-    # Commit the changes
+    # Execute the UPDATE statement
+    result = session.execute(stmt, {'one_day_ago': one_day_ago})
     session.commit()
+
+    logging.info("Batch update completed. {} rows affected.".format(result.rowcount))
     logging.info("Changes committed to the database.")
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=1500)
+        # search_awards(search_frequency_hours=24, search_batch_size=1500)
         update_rates()
     except Exception as e:
         logging.error("Error in main function: %s", str(e))  # Log exceptions
