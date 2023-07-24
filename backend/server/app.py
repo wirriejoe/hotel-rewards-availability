@@ -3,6 +3,7 @@ from flask_cors import CORS
 from .search_stays import search_by_consecutive_nights, build_url
 from sqlalchemy import create_engine, MetaData, select, join, and_, or_
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime, timedelta
 from pytz import utc
@@ -125,7 +126,7 @@ def explore():
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
-    today = datetime.now() + timedelta(days=1)
+    today = datetime.now()
     future_date = today + timedelta(days=61)
 
     filter_conditions = [
@@ -265,9 +266,7 @@ def authenticate_user():
 @app.route('/api/logout', methods=['POST'])
 def logout():
     try:
-        # Retrieve the session token from the request body
         session_token = request.json.get('session_token')
-        # print(session_token)
 
         # Delete the session using the Stytch API
         response = stytch.sessions.revoke(session_token=session_token)
@@ -275,10 +274,67 @@ def logout():
         log_event('log_out', "", f"session_token: {session_token}")
         print("User session deleted: " + str(response))
 
-        # Return a success message
         return jsonify({'message': 'Logged out successfully.'}), 200
     except Exception as e:
         return jsonify({'message': 'Failed to log out.', 'error': str(e)}), 500
+
+@app.route('/api/stays', methods=['POST'])
+def create_stay():
+    data = request.json
+    print(data)
+    
+    session_token = data.get('session_token')
+    try:
+        stytchUserID = authenticate_session(session_token)
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+    
+    # Extract stay details from the POST request
+    check_in_date = data['check_in_date']
+    last_checked_time = data['last_checked_time']
+    hotel_id = data['hotel_id']
+    standard_rate = data['standard_rate']
+    premium_rate = data['premium_rate']
+    booking_url = data['booking_url']
+    
+    
+    # Insert a new row into the stays table
+    ins = stays.insert().values(check_in_date=check_in_date, last_checked_time=last_checked_time, 
+                                hotel_id=hotel_id, standard_rate=standard_rate, 
+                                premium_rate=premium_rate, booking_url=booking_url)
+    conn = engine.connect()
+    conn.execute(ins)
+    conn.commit()
+    conn.close()
+    log_event('create_stay', stytchUserID, json.dumps(data), "Stay created.")
+    
+    return jsonify({'message': 'Stay created successfully.'}), 201
+
+
+@app.route('/api/stays', methods=['GET'])
+def get_stays():
+    session_token = request.args.get('session_token')
+    try:
+        stytchUserID = authenticate_session(session_token)
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+    
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
+
+    # Retrieve all stays from the stays table
+    sel = select(
+        hotels.c.hotel_name,
+        func.count(stays.c.check_in_date).label('num_night_monitored')).select_from(j).where(
+            stays.c.status.in_(['Active', 'Queued']),
+            stays.c.check_in_date >= datetime.now() + timedelta(days=1)
+        ).group_by(hotels.c.hotel_name)
+    conn = engine.connect()
+    result = conn.execute(sel)
+    stay_results = [dict(row._mapping) for row in result]
+    conn.close()
+    
+    log_event('get_stays', stytchUserID, "Requested all stays.", f"Returned {len(stay_results)} results.")
+    return jsonify(stay_results)
 
 if __name__ == '__main__':
     app.run(port=3000) #locally, i've been using port 3000, but render default is 10000
