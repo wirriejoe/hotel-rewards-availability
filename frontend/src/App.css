@@ -155,3 +155,30 @@
   overflow: visible !important;
   font-size: 1.1em;
 }
+
+.alert.alert-info {
+  /* Change the background color to an even lighter shade of purple */
+  background-color: #e6e6fa;  /* Lavender */
+
+  /* Change the font color to a darker shade for better contrast */
+  color: #3d3d3d;
+
+  /* Add border color */
+  border: 1px solid #c8a2c8;  /* Lilac */
+
+  /* Change padding */
+  padding: 15px;
+  
+  /* Add some border radius for rounded corners */
+  border-radius: 5px;
+}
+
+.btn.btn-primary.btn-lg.btn-space {
+  background-color: #800080;  /* Lavender */
+  border: 1px solid #c8a2c8;  /* Lilac */
+}
+
+.btn.btn-primary.mt-3 {
+  background-color: #800080;  /* Lavender */
+  border: 1px solid #c8a2c8;  /* Lilac */
+}

@@ -54,7 +54,7 @@ function HomePage() {
         <h2>Discover the best hotels for your points.</h2>
         <p>BurnMyPoints is the fastest search engine for hotel awards. Explore availability across entire award categories or brands and search with instant results to find the best hotels for your points.</p>
         <Link to='/explore' className='btn btn-primary btn-lg btn-space' role='button'>
-            🌐 Explore
+            🌐 Discover
         </Link>
         <Link to='/search' className='btn btn-secondary btn-lg' role='button'>
             🔍 Search
@@ -64,6 +64,7 @@ function HomePage() {
       <div class="alert alert-info">
         <strong>BETA! </strong>
         BurnMyPoints currently scans next 60 days of award availability for Hyatt. Extended availability and more hotels coming soon! Join the conversation in our <a href="https://discord.gg/M6zexyPYk">Discord</a>.
+        <strong> Disclaimer:</strong> BurnMyPoints is not partnered or affiliated with Seats.aero.
       </div>
 
       <div className= "home-container">

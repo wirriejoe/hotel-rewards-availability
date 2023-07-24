@@ -18,8 +18,8 @@ function ExplorePage() {
       isAuthenticated ? (
         <div>
           <div className="header">
-            <h1>Explore</h1>
-            <p>Explore hotel stays across award category and brand for supported Hyatt hotels over the next 60 days!</p>
+            <h1>Discover</h1>
+            <p>Discover hotel stays across award category and brand for supported Hyatt hotels over the next 60 days!</p>
           </div>
           <div className="form-container">
             <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />

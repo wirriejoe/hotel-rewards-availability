@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
+import RequestPage from './components/RequestPage';
 import Login from './components/Login';
 // import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
@@ -32,7 +33,8 @@ function App() {
                   <Navbar.Collapse id="basic-navbar-nav" className="justify-content-between">
                       <Nav>
                           <Nav.Link as={Link} to="/search">Search</Nav.Link>
-                          <Nav.Link as={Link} to="/explore">Explore</Nav.Link>
+                          <Nav.Link as={Link} to="/explore">Discover</Nav.Link>
+                          {/* <Nav.Link as={Link} to="/request">Request</Nav.Link> */}
                       </Nav>
                       <Nav>
                           <NavigationLinks />
@@ -43,6 +45,7 @@ function App() {
                   <Routes>
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
+                      <Route path="/request" element={<RequestPage />} />
                       <Route path="/login" element={<Login />} />
                       {/* <Route path="/reset" element={<Reset />} /> */}
                       <Route path="/authenticate" element={<Authenticate />} />
