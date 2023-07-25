@@ -64,7 +64,8 @@ function HomePage() {
       <div class="alert alert-info">
         <strong>BETA! </strong>
         BurnMyPoints currently scans next 60 days of award availability for Hyatt. Extended availability and more hotels coming soon! Join the conversation in our <a href="https://discord.gg/M6zexyPYk">Discord</a>.
-        <strong> Disclaimer:</strong> BurnMyPoints is not partnered or affiliated with Seats.aero.
+        <br/>
+        <strong> 🚨Disclaimer:</strong> BurnMyPoints is not partnered or affiliated with Seats.aero.
       </div>
 
       <div className= "home-container">
