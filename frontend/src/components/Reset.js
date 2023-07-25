@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Products } from '@stytch/vanilla-js';
 import { StytchPasswordReset } from '@stytch/react';
 
-
 const config = {
   passwordOptions: {
     loginExpirationMinutes: 30,
     loginRedirectURL: process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate",
     resetPasswordExpirationMinutes: 30,
-    resetPasswordRedirectURL: 'http://localhost:3000/reset' || 'https://burnmypoints/reset'
+    resetPasswordRedirectURL: process.env.REACT_APP_TEST_RESET_URL || 'https://burnmypoints/reset'
   },
   products: [
     Products.passwords,

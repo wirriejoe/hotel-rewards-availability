@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 
 const Login = () => {
   const redirectURL = process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate"
+  const resetURL = process.env.REACT_APP_TEST_RESET_URL || "https://burnmypoints.com/authenticate"
   const { session } = useStytchSession();
   const { setIsAuthenticated } = useContext(UserContext);
   let navigate = useNavigate();
@@ -45,7 +46,7 @@ const Login = () => {
     },
     "passwordOptions": {
       "loginRedirectURL": redirectURL,
-      "resetPasswordRedirectURL": "http://localhost:3000/reset" || "https://burnmypoints.com/reset"
+      "resetPasswordRedirectURL": resetURL
     }
     
   };
