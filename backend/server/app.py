@@ -267,11 +267,19 @@ def authenticate_user():
 def logout():
     try:
         session_token = request.json.get('session_token')
+        session_id = request.json.get('session_id')
+        print(session_token)
+        print(session_id)
+        response = {}
 
         # Delete the session using the Stytch API
-        response = stytch.sessions.revoke(session_token=session_token)
+        if session_token:
+            response = stytch.sessions.revoke(session_token=session_token)
+            log_event('log_out', "", f"session_token: {session_token}")
+        elif session_id:
+            response = stytch.sessions.revoke(session_id=session_id)
+            log_event('log_out', "", f"session_id: {session_id}")
 
-        log_event('log_out', "", f"session_token: {session_token}")
         print("User session deleted: " + str(response))
 
         return jsonify({'message': 'Logged out successfully.'}), 200

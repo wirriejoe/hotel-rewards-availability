@@ -1,16 +1,36 @@
-// login.jsx
-import React from 'react';
-import { StytchLogin } from '@stytch/react';
+import React, { useEffect, useContext } from 'react';
+import { useNavigate } from "react-router-dom";
+import { StytchLogin, useStytchSession } from '@stytch/react';
+import { UserContext } from "./UserContext";
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const redirectURL = process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate"
-  console.log(process.env.REACT_APP_TEST_REDIRECT_URL)
-  console.log(redirectURL)
+  const { session } = useStytchSession();
+  const { setIsAuthenticated } = useContext(UserContext);
+  let navigate = useNavigate();
+  // console.log(process.env.REACT_APP_TEST_REDIRECT_URL)
+  // console.log(redirectURL)
+
+  useEffect(() => {
+    if (session) {
+      console.log('Successfully logged in!');
+      console.log(session)
+      setIsAuthenticated(true);
+      // Save the session token and JWT in cookies
+      Cookies.set('session_id', session.session_id, { secure: true, sameSite: 'lax' });
+      // Cookies.set('session_jwt', data.session_jwt, { secure: true, sameSite: 'lax' });
+      setTimeout(() => {
+        navigate("/"); 
+      }, 0);
+    }
+  }, [session, navigate, setIsAuthenticated]);
 
   const config = {
     "products": [
       "oauth",
-      "emailMagicLinks"
+      "emailMagicLinks",
+      "passwords"
     ],
     "emailMagicLinksOptions": {
       "loginRedirectURL": redirectURL,
@@ -27,6 +47,11 @@ const Login = () => {
       "loginRedirectURL": redirectURL,
       "signupRedirectURL": redirectURL
     },
+    "passwordOptions": {
+      "loginRedirectURL": redirectURL,
+      "resetPasswordRedirectURL": "http://localhost:3000/reset" || "https://burnmypoints.com/reset"
+    }
+    
   };
     const styles = {
     "container": {
@@ -61,13 +86,12 @@ const Login = () => {
       "logoImageUrl": ""
     }
   }  
-
-const containerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  height: '80vh', // This will make the container take the full height of the viewport
-};
+  const containerStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '80vh', // This will make the container take the full height of the viewport
+  };
                             
   return (
     <div style={containerStyle}>

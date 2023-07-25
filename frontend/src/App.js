@@ -8,7 +8,7 @@ import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
 // import RequestPage from './components/RequestPage';
 import Login from './components/Login';
-// import Reset from './components/Reset';
+import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
 import { UserContext, UserContextProvider } from './components/UserContext';
 import './App.css';
@@ -34,7 +34,7 @@ function App() {
                       <Nav>
                           <Nav.Link as={Link} to="/search">Search</Nav.Link>
                           <Nav.Link as={Link} to="/explore">Discover</Nav.Link>
-                          {/* <Nav.Link as={Link} to="/request">Request</Nav.Link> */}
+                          {/* <Nav.Link as={Link} to="/request">Request</Nav.Link>  */}
                       </Nav>
                       <Nav>
                           <NavigationLinks />
@@ -47,7 +47,7 @@ function App() {
                       <Route path="/explore" element={<ExplorePage />} />
                       {/* <Route path="/request" element={<RequestPage />} /> */}
                       <Route path="/login" element={<Login />} />
-                      {/* <Route path="/reset" element={<Reset />} /> */}
+                      <Route path="/reset" element={<Reset />} />
                       <Route path="/authenticate" element={<Authenticate />} />
                       <Route path="/" element={<HomePage />} />
                   </Routes>
@@ -63,21 +63,29 @@ function NavigationLinks() {
   const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com';
 
   const handleLogout = async () => {
-      try {
-          const session_token = Cookies.get('session_token');
-          console.log(session_token);
-          const response = await axios.post(api_url + '/api/logout', { session_token });
-          if (response.data.message === 'Logged out successfully.') {
-              Cookies.remove('session_token');
-              Cookies.remove('session_jwt');
-              setIsAuthenticated(false);  // Reset the user context
-              navigate('/');  // Redirect the user to home page
-          } else {
-              console.error(response.data.error);
-          }
-      } catch (error) {
-          console.error('Failed to log out.', error);
-      }
+        try {
+            const session_token = Cookies.get('session_token');
+            const session_id = Cookies.get('session_id');
+            console.log(session_id)
+            const data = {
+            session_token: session_token,
+            session_id: session_id,
+        };
+        const response = await axios.post(api_url + '/api/logout', data);
+
+        if (response.data.message === 'Logged out successfully.') {
+        Cookies.remove('session_token');
+        Cookies.remove('session_jwt');
+        Cookies.remove('session_id');
+        setIsAuthenticated(false);  // Reset the user context
+        navigate('/');  // Redirect the user to home page
+        window.location.reload();  // Force a page reload
+        } else {
+            console.error(response.data.error);
+        }
+        } catch (error) {
+            console.error('Failed to log out.', error);
+        }
   };
 
   if (isAuthenticated) {
