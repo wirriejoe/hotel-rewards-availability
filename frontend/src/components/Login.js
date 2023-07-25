@@ -9,17 +9,13 @@ const Login = () => {
   const { session } = useStytchSession();
   const { setIsAuthenticated } = useContext(UserContext);
   let navigate = useNavigate();
-  // console.log(process.env.REACT_APP_TEST_REDIRECT_URL)
-  // console.log(redirectURL)
 
   useEffect(() => {
     if (session) {
       console.log('Successfully logged in!');
       console.log(session)
       setIsAuthenticated(true);
-      // Save the session token and JWT in cookies
       Cookies.set('session_id', session.session_id, { secure: true, sameSite: 'lax' });
-      // Cookies.set('session_jwt', data.session_jwt, { secure: true, sameSite: 'lax' });
       setTimeout(() => {
         navigate("/"); 
       }, 0);

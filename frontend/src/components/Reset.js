@@ -8,7 +8,7 @@ const config = {
     loginExpirationMinutes: 30,
     loginRedirectURL: process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate",
     resetPasswordExpirationMinutes: 30,
-    resetPasswordRedirectURL: 'http://localhost:3000/reset'
+    resetPasswordRedirectURL: 'http://localhost:3000/reset' || 'https://burnmypoints/reset'
   },
   products: [
     Products.passwords,
