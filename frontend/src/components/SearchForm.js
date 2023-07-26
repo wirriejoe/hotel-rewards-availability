@@ -20,9 +20,10 @@ function formatDate(date) {
 }
 
 function SearchForm({ setStays, isLoading, setIsLoading }) {
-    const today = new Date();
-    const thirtyDaysLater = new Date(today);
-    thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+    const tomorrow = new Date(); //new Date() returns today's date
+    const thirtyDaysLater = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 31);
 
     const rateFilterOptions = [
         { value: 'Standard', label: 'Standard' },
@@ -33,7 +34,7 @@ function SearchForm({ setStays, isLoading, setIsLoading }) {
         { value: 'Standard', label: 'Standard' },
     ];
 
-    const [startDate, setStartDate] = useState(formatDate(today));
+    const [startDate, setStartDate] = useState(formatDate(tomorrow));
     const [endDate, setEndDate] = useState(formatDate(thirtyDaysLater));
     const [lengthOfStay, setLengthOfStay] = useState(3);
     const [city, setCity] = useState([{ value: 'New York', label: 'New York' }]);
