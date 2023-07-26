@@ -9,6 +9,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import Cookies from 'js-cookie';
 import '../App.css';
 
 const CustomTooltip = styled(({ className, ...props }) => (
@@ -87,12 +88,31 @@ const columns = [
               target="_blank" 
               rel="noopener noreferrer"
               style={{fontWeight: 'bold', fontSize: '0.8em'}} // Adjust the value as needed
+              onClick={() => logEvent(row.booking_url)}
           >
             Book
           </Button>
         ) 
     }    
 ];  
+
+function logEvent(url) {
+  const session_token = Cookies.get("session_token");
+  
+  const data = {
+    event_name: "explore_booking_click",
+    event_details: url,
+    session_token: session_token
+  };
+
+  fetch("https://burnmypoints.com/api/log_event", {  // Python API endpoint
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  }).catch(error => console.error('Error:', error));
+}
 
 function ExploreTable({ stays }) {
   const [filterText, setFilterText] = useState("");

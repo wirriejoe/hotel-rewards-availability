@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from .search_stays import search_by_consecutive_nights, build_url
-from sqlalchemy import create_engine, MetaData, select, join, and_, or_
+from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from dotenv import load_dotenv, find_dotenv
@@ -77,6 +77,28 @@ def log_event(event_name, user_id, request = "", response = ""):
     conn.execute(ins)
     conn.commit()
     conn.close()
+
+@app.route('/api/log_event', methods=['POST'])
+def log_user_event():
+    """
+    This endpoint logs user events such as button clicks.
+    The data to be logged is received as JSON in the POST request.
+    """
+
+    data = request.json  # get data from POST request
+
+    session_token = data.get('session_token')
+    try:
+        stytchUserID = authenticate_session(session_token)
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+
+    event_name = data['event_name']  # extract event name from the data
+    event_details = data.get('event_details', '')  
+
+    log_event(event_name, stytchUserID, event_details)  # log event
+
+    return jsonify({'message': f'Event {event_name} logged successfully.'}), 200
 
 @app.route('/')
 def index():
@@ -335,7 +357,8 @@ def get_stays():
         func.count(stays.c.check_in_date).label('num_night_monitored')).select_from(j).where(
             stays.c.status.in_(['Active', 'Queued']),
             stays.c.check_in_date >= datetime.now() + timedelta(days=1)
-        ).group_by(hotels.c.hotel_name)
+        ).group_by(hotels.c.hotel_name).order_by(desc('num_night_monitored'),hotels.c.hotel_name)
+
     conn = engine.connect()
     result = conn.execute(sel)
     stay_results = [dict(row._mapping) for row in result]
