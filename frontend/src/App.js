@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
-// import RequestPage from './components/RequestPage';
+// import RequestsPage from './components/RequestsPage';
 import Login from './components/Login';
 import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
@@ -45,7 +45,7 @@ function App() {
                   <Routes>
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
-                      {/* <Route path="/request" element={<RequestPage />} /> */}
+                      {/* <Route path="/request" element={<RequestsPage />} /> */}
                       <Route path="/login" element={<Login />} />
                       <Route path="/reset" element={<Reset />} />
                       <Route path="/authenticate" element={<Authenticate />} />
@@ -65,24 +65,22 @@ function NavigationLinks() {
   const handleLogout = async () => {
         try {
             const session_token = Cookies.get('session_token');
-            const session_id = Cookies.get('session_id');
-            console.log(session_id)
             const data = {
-            session_token: session_token,
-            session_id: session_id,
-        };
-        const response = await axios.post(api_url + '/api/logout', data);
+            session_token: session_token
+            };
+            const response = await axios.post(api_url + '/api/logout', data);
 
-        if (response.data.message === 'Logged out successfully.') {
-        Cookies.remove('session_token');
-        Cookies.remove('session_jwt');
-        Cookies.remove('session_id');
-        setIsAuthenticated(false);  // Reset the user context
-        navigate('/');  // Redirect the user to home page
-        window.location.reload();  // Force a page reload
-        } else {
-            console.error(response.data.error);
-        }
+            if (response.data.message === 'Logged out successfully.') {
+                Cookies.remove('session_token');
+                Cookies.remove('session_jwt');
+                Cookies.remove('stytch_session')
+                Cookies.remove('stytch_session_jwt')
+                setIsAuthenticated(false);  // Reset the user context
+                navigate('/');  // Redirect the user to home page
+                window.location.reload();  // Force a page reload
+            } else {
+                console.error(response.data.error);
+            }
         } catch (error) {
             console.error('Failed to log out.', error);
         }

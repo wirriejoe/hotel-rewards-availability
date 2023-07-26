@@ -14,9 +14,9 @@ const Login = () => {
   useEffect(() => {
     if (session) {
       console.log('Successfully logged in!');
-      console.log(session)
+      // console.log(session)
       setIsAuthenticated(true);
-      Cookies.set('session_id', session.session_id, { secure: true, sameSite: 'lax' });
+      Cookies.set('session_token', Cookies.get('stytch_session'), { secure: true, sameSite: 'lax' });
       setTimeout(() => {
         navigate("/"); 
       }, 0);
