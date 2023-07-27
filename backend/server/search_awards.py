@@ -130,13 +130,16 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     awardsearch.quit()
 
 def update_rates():
-    logging.log("Starting batch update of rates...")
+    print("Starting batch update of rates...")
 
     # Define "24 hours ago"
     one_day_ago = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
+    # print(one_day_ago)
+
+    stmt = stays.update().values(standard_rate=0, premium_rate=0)
 
     # Prepare the raw SQL statement
-    stmt = text("""
+    stmt2 = text("""
         UPDATE stays
         SET 
             standard_rate = subquery.min_standard_rate,
@@ -144,8 +147,8 @@ def update_rates():
         FROM (
             SELECT 
                 stay_id,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time <= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time <= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_premium_rate
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_premium_rate
             FROM awards
             GROUP BY stay_id
         ) AS subquery
@@ -153,15 +156,16 @@ def update_rates():
     """)
 
     # Execute the UPDATE statement
-    result = session.execute(stmt, {'one_day_ago': one_day_ago})
+    result = session.execute(stmt)
+    result = session.execute(stmt2, {'one_day_ago': one_day_ago})
     session.commit()
 
-    logging.log("Batch update completed. {} rows affected.".format(result.rowcount))
-    logging.log("Changes committed to the database.")
+    print("Batch update completed. {} rows affected.".format(result.rowcount))
+    print("Changes committed to the database.")
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=1200)
+        search_awards(search_frequency_hours=24, search_batch_size=0)
         update_rates()
     except Exception as e:
         logging.error("Error in main function: %s", str(e))  # Log exceptions
