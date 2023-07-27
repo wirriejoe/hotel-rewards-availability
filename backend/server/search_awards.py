@@ -165,7 +165,7 @@ def update_rates():
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=0)
+        search_awards(search_frequency_hours=24, search_batch_size=1200)
         update_rates()
     except Exception as e:
         logging.error("Error in main function: %s", str(e))  # Log exceptions
