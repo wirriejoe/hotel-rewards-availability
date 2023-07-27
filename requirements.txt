@@ -55,13 +55,11 @@ pyparsing==3.1.0
 PySocks==1.7.1
 pytest==7.4.0
 pytest-flask==1.2.0
-python-cdp @ git+https://github.com/HMaker/python-cdp.git@18e3d2e649d106c4ff227476d15ff763ab332638
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 pytz==2023.3
 requests==2.31.0
 selenium==4.10.0
-selenium-driverless==1.2.2
 selenium-injector==2.3
 selenium-interceptor==1.0.2
 selenium-profiles==2.2.8
