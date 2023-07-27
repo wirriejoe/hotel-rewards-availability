@@ -15,13 +15,12 @@ import logging
 load_dotenv(find_dotenv())
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.ERROR)
 
 # Initialize connection and Session
 database_url = os.getenv('POSTGRES_DB_URL')
-logging.debug("Database URL: %s", database_url)  # Use lazy logging format
-engine = create_engine(database_url, echo=True)
+print("Database URL: %s", database_url)  # Use lazy logging format
+engine = create_engine(database_url) # add , echo=True for logging
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -105,6 +104,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     session.commit()
 
     for stay in stay_records:
+        time.sleep(random.randint(0, 1))
         search_counter += 1
         print(f"Searching #{search_counter} stay! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         stay = stay._asdict()
@@ -125,14 +125,12 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
             'last_checked_time': datetime.now(pytz.UTC),
             'status': 'Active'
         })
-
-        time.sleep(random.randint(1, 3))
     upsert(session, awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
     awardsearch.quit()
 
 def update_rates():
-    logging.info("Starting batch update of rates...")
+    logging.log("Starting batch update of rates...")
 
     # Define "24 hours ago"
     one_day_ago = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
@@ -158,8 +156,8 @@ def update_rates():
     result = session.execute(stmt, {'one_day_ago': one_day_ago})
     session.commit()
 
-    logging.info("Batch update completed. {} rows affected.".format(result.rowcount))
-    logging.info("Changes committed to the database.")
+    logging.log("Batch update completed. {} rows affected.".format(result.rowcount))
+    logging.log("Changes committed to the database.")
 
 if __name__ == "__main__":
     try:

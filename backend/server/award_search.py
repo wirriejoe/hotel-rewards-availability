@@ -1,11 +1,14 @@
 import json
 from dotenv import load_dotenv, find_dotenv
 import os
+import traceback
+import time
 from selenium_profiles.webdriver import Chrome
 from selenium.webdriver.common.by import By  # locate elements
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup  # for parsing HTML
 
 class AwardSearch:
     @staticmethod
@@ -13,14 +16,15 @@ class AwardSearch:
         # Load Selenium profile
         load_dotenv(find_dotenv())
         profile = json.loads(os.getenv('SELENIUM_PROFILE'))
-
         
         options = ChromeOptions()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        mydriver = Chrome(profile, options=options, uc_driver=False)
-        driver = mydriver.start() 
+        driver = Chrome(profile=profile, options=options,uc_driver=True,injector_options=True)
+        driver.execute_cdp_cmd('Runtime.disable',{})
+        injector = driver.profiles.injector
+
         return driver
 
     def __init__(self):
@@ -47,9 +51,14 @@ class AwardSearch:
 
             # Get award stays
             self.driver.get(url)
-            wait = WebDriverWait(self.driver, 5)
-            pre_element = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'pre')))
-            json_data = json.loads(pre_element.text)
+            time.sleep(0.5)
+            # wait = WebDriverWait(self.driver, 20)
+            # pre_element = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'pre')))
+
+            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+            pre_element_text = soup.find('pre').text
+
+            json_data = json.loads(pre_element_text)
 
             room_rates = json_data.get('roomRates', {})  # Using get to avoid KeyError
             awards_list = []
@@ -71,6 +80,7 @@ class AwardSearch:
             return awards_list
         except Exception as e:
             print(f"An error occurred while getting award stays: {e}")
+            traceback.print_exc()
             return []
 
     def quit(self):
