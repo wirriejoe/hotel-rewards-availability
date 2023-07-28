@@ -142,13 +142,13 @@ def update_rates():
     stmt2 = text("""
         UPDATE stays
         SET 
-            standard_rate = subquery.min_standard_rate,
-            premium_rate = subquery.min_premium_rate
+            standard_rate = coalesce(subquery.min_standard_rate,0),
+            premium_rate = coalesce(subquery.min_premium_rate,0)
         FROM (
             SELECT 
                 stay_id,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= :one_day_ago THEN lowest_points_rate ELSE 0 END) AS min_premium_rate
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= '7/27/2023' THEN lowest_points_rate END) AS min_standard_rate,
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= '7/27/2023' THEN lowest_points_rate END) AS min_premium_rate
             FROM awards
             GROUP BY stay_id
         ) AS subquery
@@ -165,7 +165,7 @@ def update_rates():
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=1200)
+        search_awards(search_frequency_hours=24, search_batch_size=0)
         update_rates()
     except Exception as e:
         logging.error("Error in main function: %s", str(e))  # Log exceptions
