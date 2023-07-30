@@ -60,8 +60,9 @@ pytz==2023.3
 requests==2.31.0
 selenium==4.10.0
 selenium-driverless==1.2.2
+selenium-injector==2.3
 selenium-interceptor==1.0.2
-selenium-profiles==2.2.6
+selenium-profiles==2.2.8
 selenium-stealth==1.0.6
 selenium-wire==5.1.0
 six==1.16.0
