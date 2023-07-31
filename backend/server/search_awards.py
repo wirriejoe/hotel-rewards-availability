@@ -167,5 +167,7 @@ if __name__ == "__main__":
     try:
         search_awards(search_frequency_hours=24, search_batch_size=1200)
         update_rates()
+        session.close()
     except Exception as e:
+        session.close()
         logging.error("Error in main function: %s", str(e))  # Log exceptions

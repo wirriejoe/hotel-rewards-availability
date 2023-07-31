@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+# from flask_wtf.csrf import CSRFProtect
 from .search_stays import search_by_consecutive_nights, build_url
 from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc
 from sqlalchemy.orm import sessionmaker
@@ -9,12 +10,14 @@ from datetime import datetime, timedelta
 from pytz import utc
 import os
 import stytch
+# import stripe
 import json
 
 load_dotenv(find_dotenv())
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+# csrf = CSRFProtect(app)
 
 stytch = stytch.Client(
     project_id=os.getenv('STYTCH_PROJECT_ID'),
@@ -127,7 +130,10 @@ def consecutive_stays():
     # print(data.get('pointsBudget'))
     max_points_budget = int(data.get('pointsBudget')) if data.get('pointsBudget') != '' else 0
 
-    stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
+    try:
+        stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
+    except Exception as e:
+        return jsonify({'message': str(e)}), 401
 
     # Apply time_since function to every last_checked object in the list
     stays = [{**stay, 'last_checked_string': time_since(stay['last_checked'])} for stay in stays]
@@ -366,6 +372,34 @@ def get_stays():
     
     log_event('get_stays', stytchUserID, "Requested all stays.", f"Returned {len(stay_results)} results.")
     return jsonify(stay_results)
+
+# stripe.api_key = 'sk_test_51NSPsXENEec8k5kF92Xx9e0sKRaqnbbsgE6qpp1pXMN19wyYiSBrJsVKXaQ5QibzldeeEELw6LJCXXKr33sxhrk600hIucyHTs'
+
+# @csrf.exempt
+# @app.route('/webhook', methods=['POST'])
+# def my_webhook_view():
+#     payload = request.data
+#     event = None
+
+#     try:
+#         event = stripe.Event.construct_from(
+#             json.loads(payload), stripe.api_key
+#         )
+#     except ValueError as e:
+#         # Invalid payload, return 400 status (bad request)
+#         return jsonify({'error': 'Invalid payload'}), 400
+
+#     # Handle the event
+#     if event.type == 'payment_intent.succeeded':
+#         payment_intent = event.data.object  # contains a stripe.PaymentIntent
+#         print('PaymentIntent was successful!')
+#     elif event.type == 'payment_method.attached':
+#         payment_method = event.data.object  # contains a stripe.PaymentMethod
+#         print('PaymentMethod was attached to a Customer!')
+#     else:
+#         print('Unhandled event type {}'.format(event.type))
+
+#     return jsonify({'message': 'Success'}), 200
 
 if __name__ == '__main__':
     app.run(port=3000) #locally, i've been using port 3000, but render default is 10000
