@@ -13,9 +13,7 @@ import os
 import stytch
 import stripe
 import json
-import gevent.monkey
 
-gevent.monkey.patch_all()
 load_dotenv(find_dotenv())
 
 app = Flask(__name__)
