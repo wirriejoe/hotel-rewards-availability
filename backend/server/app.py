@@ -26,7 +26,7 @@ stripe.api_key = os.getenv('STRIPE_API_KEY')
 stytch = stytch.Client(
     project_id=os.getenv('STYTCH_PROJECT_ID'),
     secret=os.getenv('STYTCH_SECRET'),
-    environment=os.getenv('STYTCH_ENV'),
+    environment=os.getenv('STYTCH_ENV')
 )
 
 # Initialize connection and Session
@@ -88,10 +88,7 @@ def log_event(event_name, user_id, request = "", response = ""):
 
 @app.route('/api/log_event', methods=['POST'])
 def log_user_event():
-    """
-    This endpoint logs user events such as button clicks.
-    The data to be logged is received as JSON in the POST request.
-    """
+    # This endpoint logs user events such as button clicks. The data to be logged is received as JSON in the POST request.
 
     data = request.json  # get data from POST request
 
@@ -476,8 +473,8 @@ def test_disconnect():
 @socketio.on('get_status')
 def handle_get_status(message):
     now = datetime.now().astimezone(utc)
-    session_token = message.get('session_token')
     try:
+        session_token = message.get('session_token')
         user_id = authenticate_session(session_token)
     except Exception as e:
         return jsonify({'message': str(e)}), 401

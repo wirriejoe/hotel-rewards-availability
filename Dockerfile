@@ -35,6 +35,3 @@ RUN pip install --upgrade pip && \
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
-
-# Run server/search_awards.py when the container launches
-CMD ["python", "backend/server/search_awards.py"]
