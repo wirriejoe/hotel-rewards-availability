@@ -477,7 +477,10 @@ def test_disconnect():
 def handle_get_status(message):
     now = datetime.now().astimezone(utc)
     session_token = message.get('session_token')
-    user_id = authenticate_session(session_token)
+    try:
+        user_id = authenticate_session(session_token)
+    except Exception as e:
+        return jsonify({'message': str(e)}), 401
     sel = select(users.c.customer_status).where(users.c.stytchUserID == user_id, users.c.customer_expiration_time >= now).limit(1)
     conn = engine.connect()
     user = conn.execute(sel)
