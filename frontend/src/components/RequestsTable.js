@@ -51,7 +51,7 @@ function RequestsTable({ isLoading, setIsLoading, isCustomer }) {
       }
     };
     fetchRequestsAndHotels();
-  }, [setIsLoading]);
+  }, [setIsLoading, api_url]);
   
   const columns = [
     {

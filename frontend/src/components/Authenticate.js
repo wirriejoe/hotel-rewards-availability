@@ -20,7 +20,7 @@ function Authenticate() {
 
   useEffect(() => {
     // Send a request to your server to authenticate the token
-    fetch(api_url + `/api/authenticate?token=${token}&token_type=${token_type}`)
+    fetch(`${api_url}/api/authenticate?token=${token}&token_type=${token_type}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.message === 'User authenticated successfully.') {
