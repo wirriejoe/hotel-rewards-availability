@@ -27,9 +27,6 @@ function Authenticate() {
           // Update the authentication state
           setIsAuthenticated(true);
           
-          // console.log(data.session_token)
-          // console.log(data.session_jwt)
-
           // Save the session token and JWT in cookies
           Cookies.set('session_token', data.session_token, { secure: true, sameSite: 'lax' });
           Cookies.set('session_jwt', data.session_jwt, { secure: true, sameSite: 'lax' });

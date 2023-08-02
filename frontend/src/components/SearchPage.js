@@ -7,7 +7,7 @@ import Login from './Login';
 function SearchPage() {
     const [stays, setStays] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { isAuthenticated } = useContext(UserContext);
+    const { isAuthenticated, isCustomer } = useContext(UserContext);
   
     const handleStaysUpdate = (newData) => {
       setStays(newData);
@@ -22,7 +22,7 @@ function SearchPage() {
             <p>Instantly search for availability for hotel stays across all of our supported Hyatt hotels at once!</p>
           </div>
           <div className="form-container">
-            <SearchForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />
+            <SearchForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} />
           </div>
           <div className="table-container">
             <SearchTable stays={stays} />

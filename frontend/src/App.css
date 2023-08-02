@@ -182,3 +182,7 @@
   background-color: #800080;  /* Lavender */
   border: 1px solid #c8a2c8;  /* Lilac */
 }
+
+.error{
+  color: red
+}

@@ -27,7 +27,7 @@ function usePrevious(value) {
     return ref.current;
 }
 
-function ExploreForm({ setStays, isLoading, setIsLoading }) {
+function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const [awardCategory, setAwardCategory] = useState([{ value: '7', label: '7' }, { value: '8', label: '8' }]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState([{ value: 'Park Hyatt', label: 'Park Hyatt' }]);
@@ -61,7 +61,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
             const response = await axios.post(api_url + '/api/explore', {
                 award_category: awardCategoryString,
                 brand: brandString,
-                session_token: session_token
+                session_token: session_token,
+                isCustomer: isCustomer
             });
             setStays(response.data);
         } catch (error) {
@@ -69,7 +70,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading }) {
         } finally {
             setIsLoading(false);
         }
-    }, [awardCategory, brand, setIsLoading, setStays, api_url]);
+    }, [awardCategory, brand, setIsLoading, setStays, api_url, isCustomer]);
 
     // Fetch award categories and brands on component mount
     useEffect(() => {

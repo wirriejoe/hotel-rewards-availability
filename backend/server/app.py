@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-# from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO, emit
 from .search_stays import search_by_consecutive_nights, build_url
 from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc
 from sqlalchemy.orm import sessionmaker
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 from pytz import utc
 import os
 import stytch
-# import stripe
+import stripe
 import json
 
 load_dotenv(find_dotenv())
@@ -18,6 +19,9 @@ load_dotenv(find_dotenv())
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 # csrf = CSRFProtect(app)
+socketio = SocketIO(app, cors_allowed_origins="*")  # enable CORS
+
+stripe.api_key = os.getenv('STRIPE_API_KEY')
 
 stytch = stytch.Client(
     project_id=os.getenv('STYTCH_PROJECT_ID'),
@@ -38,6 +42,7 @@ users = meta.tables['users']
 stays = meta.tables['stays']
 hotels = meta.tables['hotels']
 events = meta.tables['events']
+requests = meta.tables['requests']
 
 def time_since(last_checked_time):
     now = datetime.now().astimezone(utc)
@@ -153,9 +158,13 @@ def explore():
         stytchUserID = authenticate_session(session_token)
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
-    
-    today = datetime.now()
-    future_date = today + timedelta(days=61)
+
+    isCustomer = data.get('isCustomer')
+    today = datetime.now().astimezone(utc)
+    if isCustomer:
+        future_date = today + timedelta(days=360)
+    else:    
+        future_date = today + timedelta(days=61)
 
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
@@ -314,38 +323,50 @@ def logout():
     except Exception as e:
         return jsonify({'message': 'Failed to log out.', 'error': str(e)}), 500
 
-@app.route('/api/stays', methods=['POST'])
-def create_stay():
+@app.route('/api/request', methods=['POST'])
+def make_request():
     data = request.json
+    now = datetime.now().astimezone(utc)
     print(data)
-    
+
     session_token = data.get('session_token')
     try:
         stytchUserID = authenticate_session(session_token)
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
-    # Extract stay details from the POST request
-    check_in_date = data['check_in_date']
-    last_checked_time = data['last_checked_time']
-    hotel_id = data['hotel_id']
-    standard_rate = data['standard_rate']
-    premium_rate = data['premium_rate']
-    booking_url = data['booking_url']
-    
-    
-    # Insert a new row into the stays table
-    ins = stays.insert().values(check_in_date=check_in_date, last_checked_time=last_checked_time, 
-                                hotel_id=hotel_id, standard_rate=standard_rate, 
-                                premium_rate=premium_rate, booking_url=booking_url)
+    sel = select(users.c.customer_status).where(users.c.stytchUserID == stytchUserID, users.c.customer_expiration_time >= now, users.c.customer_status == 'pro').limit(1)
     conn = engine.connect()
-    conn.execute(ins)
-    conn.commit()
-    conn.close()
-    log_event('create_stay', stytchUserID, json.dumps(data), "Stay created.")
-    
-    return jsonify({'message': 'Stay created successfully.'}), 201
+    user = conn.execute(sel).fetchone()
+    print(type(user))
+    print(user)
+    if user:
+        hotel_id = data.get('hotel_id')
+        hotel_code = data.get('hotel_code')
+        ins = requests.insert().values(hotel_id=hotel_id, hotel_code = hotel_code, request_user_id=stytchUserID)
+        conn.execute(ins)
+        conn.commit()
+        conn.close()
+        return jsonify({'message': f'Request made successfully for {hotel_code}. Stays will start tracking within the next 24 hours.'}), 200
+    else:
+        conn.close()
+        return jsonify({'message': f'Failed to make request for {hotel_code}. Please try again or contact Willie in Discord.'}), 500
 
+@app.route('/api/requests', methods=['GET'])
+def get_requests():
+    session_token = request.args.get('session_token')
+    try:
+        stytchUserID = authenticate_session(session_token)
+    except AuthenticationError as e:
+        return jsonify({'message': str(e)}), 401
+
+    # Retrieve all requests from the requests table
+    sel = select(requests.c.hotel_code).distinct().where(requests.c.request_user_id == stytchUserID)
+    conn = engine.connect()
+    result = conn.execute(sel)
+    conn.close()
+    request_results = [dict(row._mapping) for row in result]
+    return jsonify(request_results)
 
 @app.route('/api/stays', methods=['GET'])
 def get_stays():
@@ -360,46 +381,117 @@ def get_stays():
     # Retrieve all stays from the stays table
     sel = select(
         hotels.c.hotel_name,
+        hotels.c.hotel_id,
+        hotels.c.hotel_code,
         func.count(stays.c.check_in_date).label('num_night_monitored')).select_from(j).where(
             stays.c.status.in_(['Active', 'Queued']),
             stays.c.check_in_date >= datetime.now() + timedelta(days=1)
-        ).group_by(hotels.c.hotel_name).order_by(desc('num_night_monitored'),hotels.c.hotel_name)
+        ).group_by(hotels.c.hotel_name, hotels.c.hotel_id, hotels.c.hotel_code).order_by(desc('num_night_monitored'),hotels.c.hotel_name)
 
     conn = engine.connect()
     result = conn.execute(sel)
-    stay_results = [dict(row._mapping) for row in result]
     conn.close()
+    stay_results = [dict(row._mapping) for row in result]
     
     log_event('get_stays', stytchUserID, "Requested all stays.", f"Returned {len(stay_results)} results.")
     return jsonify(stay_results)
 
-# stripe.api_key = 'sk_test_51NSPsXENEec8k5kF92Xx9e0sKRaqnbbsgE6qpp1pXMN19wyYiSBrJsVKXaQ5QibzldeeEELw6LJCXXKr33sxhrk600hIucyHTs'
-
 # @csrf.exempt
-# @app.route('/webhook', methods=['POST'])
-# def my_webhook_view():
-#     payload = request.data
-#     event = None
+@app.route('/webhook', methods=['POST'])
+def handle_webhook():
+    payload = request.data
+    event = None
+    ins = ""
 
-#     try:
-#         event = stripe.Event.construct_from(
-#             json.loads(payload), stripe.api_key
-#         )
-#     except ValueError as e:
-#         # Invalid payload, return 400 status (bad request)
-#         return jsonify({'error': 'Invalid payload'}), 400
+    try:
+        event = stripe.Event.construct_from(
+            json.loads(payload), stripe.api_key
+        )
+    except ValueError as e:
+        # Invalid payload, return 400 status (bad request)
+        return jsonify({'error': 'Invalid payload'}), 400
 
-#     # Handle the event
-#     if event.type == 'payment_intent.succeeded':
-#         payment_intent = event.data.object  # contains a stripe.PaymentIntent
-#         print('PaymentIntent was successful!')
-#     elif event.type == 'payment_method.attached':
-#         payment_method = event.data.object  # contains a stripe.PaymentMethod
-#         print('PaymentMethod was attached to a Customer!')
-#     else:
-#         print('Unhandled event type {}'.format(event.type))
+    # Handle the event
+    if event.type == 'invoice.paid':
+        if event.data.object.status == 'paid':
+            invoice_paid = event.data.object
+            ins = users.update().values(
+                stripe_user_id = invoice_paid.customer,
+                customer_status = 'pro',
+                customer_expiration_time = datetime.fromtimestamp(invoice_paid.lines.data[0].period.end)
+            ).where(
+                users.c.email == invoice_paid.customer_email
+            )
+            event_type = 'customer_paid'
+            event_user = invoice_paid.customer
+            event_msg = f'Invoice Paid! Customer {invoice_paid.customer_email} with Stripe customer ID {invoice_paid.customer} paid {invoice_paid.amount_paid/100} {invoice_paid.currency} to subscribe until {datetime.fromtimestamp(invoice_paid.lines.data[0].period.end)}'
+            print(event_msg)
+    elif event.type == 'customer.subscription.updated':
+        print(f'Subscription updated: {event.data.object.status}')
+        if event.data.object.status == 'canceled' or event.data.object.status == 'unpaid' or event.data.object.cancel_at_period_end:
+            ins = users.update().values(
+                customer_status = 'churned'
+            ).where(
+                users.c.stripe_user_id == event.data.object.customer
+            )
+            event_type = 'customer_churned'
+            event_user = event.data.object.customer
+            event_msg = f'Customer just churned! Stripe customer ID {event.data.object.customer}'
+            print(event_msg)
+    elif event.type == 'charge.refunded':
+        charge_refunded = event.data.object
+        print(f'Refund status: {charge_refunded.refunded}')
+        if charge_refunded.refunded:
+            ins = users.update().values(
+                customer_status = 'churned',
+                customer_expiration_time = datetime.now()
+            ).where(
+                users.c.stripe_user_id == charge_refunded.customer
+            )
+            event_type = 'customer_refunded'
+            event_user = charge_refunded.customer
+            event_msg = f'Stripe customer ID {charge_refunded.customer} just got a refund for {charge_refunded.amount_refunded/100} {charge_refunded.currency}! Remove their access immediately!'
+            print(event_msg)
+    else:
+        print('Unhandled event type {}'.format(event.type))
+    
+    if ins != "":
+        conn = engine.connect()
+        conn.execute(ins)
+        conn.commit()
+        conn.close()
+        log_event(event_type, event_user, "", event_msg)
 
-#     return jsonify({'message': 'Success'}), 200
+    return jsonify({'message': 'Success'}), 200
+
+@socketio.on('connect')
+def test_connect():
+    print('Client connected')
+    emit('connected', {'data': 'Connected'})
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
+
+@socketio.on('get_status')
+def handle_get_status(message):
+    now = datetime.now().astimezone(utc)
+    session_token = message.get('session_token')
+    user_id = authenticate_session(session_token)
+    sel = select(users.c.customer_status).where(users.c.stytchUserID == user_id, users.c.customer_expiration_time >= now).limit(1)
+    conn = engine.connect()
+    user = conn.execute(sel)
+    conn.close()
+    customer_status = [row[0] for row in user]
+    try:
+        if customer_status[0] == 'pro':
+            emit('customer_status', {'customer_status': True})
+        else:
+            emit('customer_status', {'customer_status': False})
+    except Exception as e:
+        emit('customer_status', {'customer_status': False})
+        return jsonify({'message': str(e)}), 401
 
 if __name__ == '__main__':
-    app.run(port=3000) #locally, i've been using port 3000, but render default is 10000
+    app.run(port=3001) #locally, i've been using port 3000, but render default is 10000
+    socketio.run(app)
