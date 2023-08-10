@@ -143,14 +143,16 @@ def update_rates():
         UPDATE stays
         SET 
             standard_rate = coalesce(subquery.min_standard_rate,0),
-            premium_rate = coalesce(subquery.min_premium_rate,0)
+            premium_rate = coalesce(subquery.min_premium_rate,0),
+            booking_url = search_url
         FROM (
             SELECT 
                 stay_id,
                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= '7/27/2023' THEN lowest_points_rate END) AS min_standard_rate,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= '7/27/2023' THEN lowest_points_rate END) AS min_premium_rate
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= '7/27/2023' THEN lowest_points_rate END) AS min_premium_rate,
+                search_url
             FROM awards
-            GROUP BY stay_id
+            GROUP BY stay_id, search_url
         ) AS subquery
         WHERE stays.stay_id = subquery.stay_id
     """)
