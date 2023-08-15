@@ -46,7 +46,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const prevBrand = usePrevious(brand);
 
     const submitForm = useCallback(async () => {
-        if (awardCategory.length < 1 && brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
+        if ((awardCategory.length < 1 && brand.length < 1) || awardCategory.length > 3 || brand.length > 3) {
             setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
             return;
         }
