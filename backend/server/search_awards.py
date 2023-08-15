@@ -94,7 +94,8 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
                 stays.c.last_checked_time < datetime.now(pytz.UTC) - timedelta(hours=search_frequency_hours),
                 stays.c.check_in_date >= datetime.now(pytz.UTC).date()
             )
-        ).limit(search_batch_size)
+        ).order_by(stays.c.last_checked_time)
+        .limit(search_batch_size)
     ).fetchall()
 
     # Update status of fetched stay_records to 'Queued'
