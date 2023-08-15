@@ -28,9 +28,14 @@ function usePrevious(value) {
 }
 
 function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
-    const [awardCategory, setAwardCategory] = useState([{ value: '7', label: '7' }, { value: '8', label: '8' }]);
+    const [awardCategory, setAwardCategory] = useState([
+        { value: '7', label: '7' }, 
+        { value: '8', label: '8' }
+    ]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
-    const [brand, setBrand] = useState([{ value: 'Park Hyatt', label: 'Park Hyatt' }]);
+    const [brand, setBrand] = useState([
+        { value: 'Park Hyatt', label: 'Park Hyatt' }
+    ]);
     const [brandOptions, setBrandOptions] = useState([]);
     const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -41,8 +46,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const prevBrand = usePrevious(brand);
 
     const submitForm = useCallback(async () => {
-        if (awardCategory.length < 1 || brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
-            setErrorMessage('Please select at least one brand and one category, and no more than three options per category.');
+        if (awardCategory.length < 1 && brand.length < 1 || awardCategory.length > 3 || brand.length > 3) {
+            setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
             return;
         }
 

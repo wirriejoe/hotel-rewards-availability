@@ -31,13 +31,15 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         { value: 'Premium', label: 'Premium' }
     ];
     const rateFilterDefaultOptions = [
-        { value: 'Standard', label: 'Standard' },
+        // { value: 'Standard', label: 'Standard' },
     ];
     const [startDate, setStartDate] = useState(formatDate(tomorrow));
     const [endDate, setEndDate] = useState(formatDate(thirtyDaysLater));
     const [lengthOfStay, setLengthOfStay] = useState(3);
     const [city, setCity] = useState([{ value: 'New York', label: 'New York' }]);
-    const [country, setCountry] = useState([{ value: 'United States', label: 'United States' }]);
+    const [country, setCountry] = useState([
+        // { value: 'United States', label: 'United States' }
+    ]);
     const [category, setCategory] = useState('');
     const [rateFilter, setRateFilter] = useState(rateFilterDefaultOptions);
     const [pointsBudget, setPointsBudget] = useState(0);
