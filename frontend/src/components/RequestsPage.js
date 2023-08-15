@@ -14,7 +14,7 @@ function RequestsPage({ isPro }) {
         <div>
           <h1>Request</h1>
           <p>This page shows the hotels that are being tracked for availability. Availability won't show up on BurnMyPoints.com unless they are single night Standard or Premium awards. Tracking requests are processed within 24 hours. If you have any questions, feel free to message @snorlax on {' '}
-            <a href="https://discord.gg/M6zexyPYk" target="_blank" rel="noreferrer">
+            <a href="https://discord.gg/faCDme7M3A" target="_blank" rel="noreferrer">
               Discord!
             </a>
           </p>
