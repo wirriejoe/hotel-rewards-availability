@@ -14,18 +14,19 @@ RUN apt-get update \
         default-jdk \
         wget \
         libpq-dev \
-    && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    # && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb \
     && (dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install) \
     && apt-get upgrade -y
 
 
 # Chrome Driver
-# RUN wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip \
-# && unzip chromedriver_linux64.zip \
-# && mv chromedriver /usr/bin/chromedriver \
-RUN wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/116.0.5845.96/linux64/chromedriver-linux64.zip \
-    && unzip chromedriver-linux64.zip \
-    && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver \
+RUN wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip \
+    && unzip chromedriver_linux64.zip \
+    && mv chromedriver /usr/bin/chromedriver \
+# RUN wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/116.0.5845.96/linux64/chromedriver-linux64.zip \
+#     && unzip chromedriver-linux64.zip \
+#     && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver \
     && chown root:root /usr/bin/chromedriver \
     && chmod +x /usr/bin/chromedriver
 
