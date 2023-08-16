@@ -10,7 +10,6 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup  # for parsing HTML
-from retry import retry
 
 class AwardSearch:
     @staticmethod
@@ -47,44 +46,54 @@ class AwardSearch:
         print("Verification URL: " + search_url)
         return response_url, search_url
 
-    @retry(tries=5, delay=1, backoff=2)
     def get_award_stays(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
-        try:
-            url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
+        max_retries = 5
+        delay = 1
+        backoff_factor = 2
+        for attempt in range(max_retries):
+            try:
+                url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
 
-            # Get award stays
-            # self.driver.implicitly_wait(5)
-            self.driver.get(url)
-            # wait = WebDriverWait(self.driver, 20)
-            time.sleep(random.randint(0, 1))
-            # pre_element = wait.until(EC.visibility_of_element_located((By.TAG_NAME, 'pre')))
+                # Get award stays
+                # self.driver.implicitly_wait(5)
+                self.driver.get(url)
+                # wait = WebDriverWait(self.driver, 20)
+                time.sleep(random.randint(2, 5))
+                # pre_element = wait.until(EC.visibility_of_element_located((By.TAG_NAME, 'pre')))
 
-            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-            pre_element_text = soup.find('pre').text
+                soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+                pre_element_text = soup.find('pre').text
 
-            json_data = json.loads(pre_element_text)
+                json_data = json.loads(pre_element_text)
 
-            room_rates = json_data.get('roomRates', {})  # Using get to avoid KeyError
-            awards_list = []
+                room_rates = json_data.get('roomRates', {})  # Using get to avoid KeyError
+                awards_list = []
 
-            for room, room_data in room_rates.items():
-                if room_data.get('lowestPointValue') is not None:  # Using get to avoid KeyError
-                    room_details = {
-                        "Room Name": room,
-                        "Room Type Code": room_data.get('roomTypeCode'),
-                        "Room Category": room_data.get('roomCategory'),
-                        "Room Quantity": room_data.get('roomQuantity'),
-                        "Lowest Point Value": room_data.get('lowestPointValue'),
-                        "Lowest Public Rate": room_data.get('lowestPublicRate'),
-                        "Currency Code": room_data.get('currencyCode'),
-                        "Search URL": search_url
-                    }
-                    awards_list.append(room_details)
-            return awards_list
-        except Exception as e:
-            print(f"An error occurred while getting award stays: {e}")
-            traceback.print_exc()            
-            return []  # Return empty list after max retries
+                for room, room_data in room_rates.items():
+                    if room_data.get('lowestPointValue') is not None:  # Using get to avoid KeyError
+                        room_details = {
+                            "Room Name": room,
+                            "Room Type Code": room_data.get('roomTypeCode'),
+                            "Room Category": room_data.get('roomCategory'),
+                            "Room Quantity": room_data.get('roomQuantity'),
+                            "Lowest Point Value": room_data.get('lowestPointValue'),
+                            "Lowest Public Rate": room_data.get('lowestPublicRate'),
+                            "Currency Code": room_data.get('currencyCode'),
+                            "Search URL": search_url
+                        }
+                        awards_list.append(room_details)
+                
+                return awards_list
+            except Exception as e:
+                print(f"An error occurred while getting award stays: {e}. Attempt {attempt + 1} of {max_retries}")
+                traceback.print_exc()
+                if attempt < max_retries - 1:
+                    sleep_time = delay * (backoff_factor ** attempt)
+                    print(f"Retrying in {sleep_time} seconds...")
+                    time.sleep(sleep_time)  # Wait before retrying
+            
+        print("Max retries reached. Returning an empty list.")
+        return []  # Return empty list after max retries
 
     def quit(self):
         self.driver.quit()

@@ -168,7 +168,7 @@ def update_rates():
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=1200)
+        search_awards(search_frequency_hours=24, search_batch_size=750)
         update_rates()
         session.close()
     except Exception as e:
