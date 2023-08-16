@@ -56,7 +56,7 @@ class AwardSearch:
             # self.driver.implicitly_wait(5)
             self.driver.get(url)
             # wait = WebDriverWait(self.driver, 20)
-            time.sleep(random.randint(1, 3))
+            time.sleep(random.randint(0, 1))
             # pre_element = wait.until(EC.visibility_of_element_located((By.TAG_NAME, 'pre')))
 
             soup = BeautifulSoup(self.driver.page_source, 'html.parser')
