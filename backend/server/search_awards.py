@@ -6,8 +6,8 @@ from dotenv import load_dotenv, find_dotenv
 from award_search import AwardSearch
 import os
 import pytz
-import time
-import random
+# import time
+# import random
 import logging
 
 # Load environment variables
@@ -105,7 +105,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     session.commit()
 
     for stay in stay_records:
-        time.sleep(random.randint(0, 1))
+        # time.sleep(random.randint(0, 1))
         search_counter += 1
         print(f"Searching #{search_counter} stay! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         stay = stay._asdict()

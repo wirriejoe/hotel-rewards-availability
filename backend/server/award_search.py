@@ -1,4 +1,5 @@
 import json
+import random
 from dotenv import load_dotenv, find_dotenv
 import os
 import traceback
@@ -46,15 +47,15 @@ class AwardSearch:
         return response_url, search_url
 
     def get_award_stays(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
-        # try:
+        try:
             url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
 
             # Get award stays
             # self.driver.implicitly_wait(5)
             self.driver.get(url)
-            time.sleep(1)
             # wait = WebDriverWait(self.driver, 20)
-            # pre_element = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'pre')))
+            time.sleep(random.randint(1, 3))
+            # pre_element = wait.until(EC.visibility_of_element_located((By.TAG_NAME, 'pre')))
 
             soup = BeautifulSoup(self.driver.page_source, 'html.parser')
             pre_element_text = soup.find('pre').text
@@ -79,10 +80,10 @@ class AwardSearch:
                     awards_list.append(room_details)
             
             return awards_list
-        # except Exception as e:
-        #     print(f"An error occurred while getting award stays: {e}")
-        #     traceback.print_exc()
-        #     return []
+        except Exception as e:
+            print(f"An error occurred while getting award stays: {e}")
+            traceback.print_exc()
+            return []
 
     def quit(self):
         self.driver.quit()
