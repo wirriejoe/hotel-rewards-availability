@@ -58,6 +58,7 @@ python-dateutil==2.8.2
 python-dotenv==1.0.0
 pytz==2023.3
 requests==2.31.0
+retry==0.9.2
 selenium==4.10.0
 selenium-driverless==1.2.2
 selenium-injector==2.3
