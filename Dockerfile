@@ -16,7 +16,8 @@ RUN apt-get update \
         libpq-dev \
     # && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb \
-    && (dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install) \
+    # && (dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install) \
+    && (dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb || apt-get -fy install) \
     && apt-get upgrade -y
 
 
