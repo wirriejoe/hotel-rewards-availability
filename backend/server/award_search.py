@@ -46,7 +46,7 @@ class AwardSearch:
         return response_url, search_url
 
     def get_award_stays(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
-        try:
+        # try:
             url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
 
             # Get award stays
@@ -79,10 +79,10 @@ class AwardSearch:
                     awards_list.append(room_details)
             
             return awards_list
-        except Exception as e:
-            print(f"An error occurred while getting award stays: {e}")
-            traceback.print_exc()
-            return []
+        # except Exception as e:
+        #     print(f"An error occurred while getting award stays: {e}")
+        #     traceback.print_exc()
+        #     return []
 
     def quit(self):
         self.driver.quit()
