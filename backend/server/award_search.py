@@ -50,9 +50,9 @@ class AwardSearch:
             url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
 
             # Get award stays
-            self.driver.implicitly_wait(5)
+            # self.driver.implicitly_wait(5)
             self.driver.get(url)
-            # time.sleep(0.5)
+            time.sleep(1)
             # wait = WebDriverWait(self.driver, 20)
             # pre_element = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'pre')))
 
