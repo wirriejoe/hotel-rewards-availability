@@ -138,7 +138,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                                 closeMenuOnSelect={false}
                                 hideSelectedOptions={false}
                                 components={{ Option }}
-                                maxMenuHeight={150}  // Adjust this value to your liking
+                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
                             />
                         </div>
                         <div className="col-md-6">
@@ -151,7 +151,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                                 closeMenuOnSelect={false}
                                 hideSelectedOptions={false}
                                 components={{ Option }}
-                                maxMenuHeight={150}  // Adjust this value to your liking
+                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
                             />
                         </div>
                     </div>
