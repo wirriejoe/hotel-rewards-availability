@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
@@ -50,25 +50,6 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
-    useEffect(() => {
-        const parsed = queryString.parse(window.location.search);
-        
-        if (Object.keys(parsed).length > 0) {
-            // Parse the parameters and set the state
-            if (parsed.startDate) setStartDate(parsed.startDate);
-            if (parsed.endDate) setEndDate(parsed.endDate);
-            if (parsed.lengthOfStay) setLengthOfStay(Number(parsed.lengthOfStay));
-            if (parsed.city) setCity(parsed.city.split(',').map(city => ({ value: city, label: city })));
-            if (parsed.country) setCountry(parsed.country.split(',').map(country => ({ value: country, label: country })));
-            if (parsed.category) setCategory(parsed.category.split(',').map(category => ({ value: category, label: category })));
-            if (parsed.rateFilter) setRateFilter(parsed.rateFilter.split(',').map(rate => ({ value: rate, label: rate })));
-            if (parsed.pointsBudget) setPointsBudget(Number(parsed.pointsBudget));
-    
-            // Trigger the search
-            performSearch();
-        }    
-    }, []);
-
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
         Promise.all([
@@ -88,7 +69,7 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         });
     }, [api_url]);
 
-    const performSearch = async () => {
+    const performSearch = useCallback(async () => {
         const sixtyDaysFromNow = new Date();
         sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
     
@@ -154,8 +135,27 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         } finally {
             setIsLoading(false);  // Always set loading to false at the end
         }
-    };
+    }, [api_url, startDate, endDate, lengthOfStay, city, country, category, rateFilter, pointsBudget, isCustomer, setStays, setIsLoading]);
     
+    useEffect(() => {
+        const parsed = queryString.parse(window.location.search);
+        
+        if (Object.keys(parsed).length > 0) {
+            // Parse the parameters and set the state
+            if (parsed.startDate) setStartDate(parsed.startDate);
+            if (parsed.endDate) setEndDate(parsed.endDate);
+            if (parsed.lengthOfStay) setLengthOfStay(Number(parsed.lengthOfStay));
+            if (parsed.city) setCity(parsed.city.split(',').map(city => ({ value: city, label: city })));
+            if (parsed.country) setCountry(parsed.country.split(',').map(country => ({ value: country, label: country })));
+            if (parsed.category) setCategory(parsed.category.split(',').map(category => ({ value: category, label: category })));
+            if (parsed.rateFilter) setRateFilter(parsed.rateFilter.split(',').map(rate => ({ value: rate, label: rate })));
+            if (parsed.pointsBudget) setPointsBudget(Number(parsed.pointsBudget));
+    
+            // Trigger the search
+            performSearch();
+        }    
+    }, [performSearch]);
+
     const submitForm = (e) => {
         e.preventDefault();
         performSearch();

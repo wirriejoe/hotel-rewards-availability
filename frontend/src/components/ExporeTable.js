@@ -9,6 +9,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import CelebrationIcon from '@mui/icons-material/Celebration'; // Import the weekend icon https://mui.com/material-ui/material-icons/?query=weekend
 import Cookies from 'js-cookie';
 import '../App.css';
 
@@ -22,7 +23,27 @@ const CustomTooltip = styled(({ className, ...props }) => (
 });
 
 const columns = [
-    { name: 'Date', selector: 'check_in_date', grow: '0.75', sortable: true },
+    {
+      name: 'Date', 
+      selector: 'check_in_date', 
+      grow: '0.9', 
+      sortable: true,
+      cell: row => {
+        const date = new Date(row.check_in_date);
+        const day = date.getDay();
+        const isWeekend = day === 5 || day === 6; // Friday or Saturday
+        const weekendDay = day === 5 ? 'Friday' : 'Saturday';
+
+        return (
+          <CustomTooltip title={isWeekend ? `The Check-in Date for this stay is on ${weekendDay}!` : ''}>
+            <div style={{ display: 'flex', alignItems: 'center', fontWeight: isWeekend ? 'bold' : 'normal', color: isWeekend ? '#9c27b0' : 'inherit' }}>
+              {isWeekend && <CelebrationIcon style={{ fontSize: '1em', marginRight: '0.5em' }} />} 
+              {date.toISOString().slice(0,10)}
+            </div>
+          </CustomTooltip>
+        );
+      }
+    },
     { name: 'Last Checked', selector: 'last_checked_time', grow: '0.75', sortable: true , format: row => row.last_checked},
     {
       name: 'Hotel', 
