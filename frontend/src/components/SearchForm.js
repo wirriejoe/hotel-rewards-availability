@@ -3,6 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
 import Cookies from 'js-cookie';
+import queryString from 'query-string';
 
 // Function to format the date to 'yyyy-mm-dd' format
 function formatDate(date) {
@@ -49,6 +50,25 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
+    useEffect(() => {
+        const parsed = queryString.parse(window.location.search);
+        
+        if (Object.keys(parsed).length > 0) {
+            // Parse the parameters and set the state
+            if (parsed.startDate) setStartDate(parsed.startDate);
+            if (parsed.endDate) setEndDate(parsed.endDate);
+            if (parsed.lengthOfStay) setLengthOfStay(Number(parsed.lengthOfStay));
+            if (parsed.city) setCity(parsed.city.split(',').map(city => ({ value: city, label: city })));
+            if (parsed.country) setCountry(parsed.country.split(',').map(country => ({ value: country, label: country })));
+            if (parsed.category) setCategory(parsed.category.split(',').map(category => ({ value: category, label: category })));
+            if (parsed.rateFilter) setRateFilter(parsed.rateFilter.split(',').map(rate => ({ value: rate, label: rate })));
+            if (parsed.pointsBudget) setPointsBudget(Number(parsed.pointsBudget));
+    
+            // Trigger the search
+            performSearch();
+        }    
+    }, []);
+
     // Fetch hotel names, cities, and countries on component mount
     useEffect(() => {
         Promise.all([
@@ -68,9 +88,7 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         });
     }, [api_url]);
 
-    const submitForm = async (e) => {
-        e.preventDefault();
-
+    const performSearch = async () => {
         const sixtyDaysFromNow = new Date();
         sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
     
@@ -97,7 +115,24 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         const rateFilterString = rateFilter.map(rf => rf.value).join(',').trim(',');
 
         const session_token = Cookies.get('session_token')
-    
+
+        const queryObj = {
+            startDate,
+            endDate,
+            lengthOfStay,
+            city: cityString,
+            country: countryString,
+            category: categoryString,
+            rateFilter: rateFilterString,
+            pointsBudget
+        };
+        
+        // Remove properties with undefined or empty values
+        const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
+        
+        const queryStr = queryString.stringify(filteredQueryObj);
+        window.history.pushState({}, '', '?' + queryStr);
+        
         try {
             const response = await axios.post(api_url + '/api/consecutive_stays', {
                 startDate,
@@ -119,6 +154,11 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         } finally {
             setIsLoading(false);  // Always set loading to false at the end
         }
+    };
+    
+    const submitForm = (e) => {
+        e.preventDefault();
+        performSearch();
     };
 
     return (
