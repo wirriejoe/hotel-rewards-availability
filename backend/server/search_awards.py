@@ -146,8 +146,8 @@ def update_rates():
             standard_rate = coalesce(subquery.min_standard_rate,0),
             premium_rate = coalesce(subquery.min_premium_rate,0),
             currency_code = subquery.currency_code,
-            premium_cash = coalesce(subquery.min_standard_cash::decimal,0),
-            standard_cash = coalesce(subquery.min_premium_cash::decimal,0),
+            premium_cash = coalesce(subquery.min_premium_cash::decimal,0),
+            standard_cash = coalesce(subquery.min_standard_cash::decimal,0),
             booking_url = search_url
         FROM (
             SELECT 
