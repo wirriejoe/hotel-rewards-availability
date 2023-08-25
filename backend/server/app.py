@@ -189,7 +189,13 @@ def explore():
         hotels.c.brand,
         hotels.c.award_category,
         stays.c.standard_rate, 
-        stays.c.premium_rate, 
+        stays.c.premium_rate,
+        stays.c.currency_code,
+        stays.c.standard_cash,
+        stays.c.premium_cash,
+        stays.c.available_inventory,
+        stays.c.standard_cash_usd,
+        stays.c.premium_cash_usd,
         stays.c.booking_url).select_from(j).where(and_(*filter_conditions))
 
     with engine.connect() as connection:

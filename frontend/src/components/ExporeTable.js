@@ -63,38 +63,48 @@ const columns = [
         </CustomTooltip>
       ),
     },
-    { name: 'City', selector: 'hotel_city', grow: '1', sortable: true },
-    { name: 'Region', selector: 'hotel_province', grow: '1', sortable: true },
+    // { name: 'City', selector: 'hotel_city', grow: '1', sortable: true },
+    // { name: 'Region', selector: 'hotel_province', grow: '1', sortable: true },
     { name: 'Country', selector: 'hotel_country', grow: '1', sortable: true },
     {
-        name: 'Standard', 
-        selector: 'standard_rate', 
-        grow: '0.75', 
-        sortable: true, 
-        cell: row => (
-          row.standard_rate > 0 ?
-          <div style={{backgroundColor: 'green', color: 'white', padding: '5px', borderRadius: '5px', fontWeight: 'bold', fontSize: '0.8em'}}>
-              {`${parseInt(row.standard_rate).toLocaleString()} pts`}
+      name: 'Standard', 
+      selector: 'standard_rate', 
+      grow: '1.5', 
+      sortable: true, 
+      cell: row => (
+        <div className = "column-container">
+          <div className="rate-container">
+            <div className={`rate-block ${row.standard_rate > 0 ? 'green-background' : 'grey-background'}`}>
+              {row.standard_rate > 0 ? `${parseInt(row.standard_rate).toLocaleString()} pts` : 'N/A'}
+            </div>
+            <div className={`rate-block ${row.standard_cash > 0 ? 'green-background' : 'grey-background'}`}>
+              {row.standard_cash > 0 ? `${parseInt(row.standard_cash).toLocaleString()} ${row.currency_code}` : 'N/A'}
+            </div>
           </div>
-          :
-          <div style={{backgroundColor: 'grey', color: 'white', padding: '5px', borderRadius: '5px', fontWeight: 'bold', fontSize: '0.7em'}}>
-              {'Not Available'}
+          <div className="point-block">
+            {row.standard_cash_usd > 0 && row.standard_rate > 0 ? (row.standard_cash_usd / row.standard_rate * 100).toFixed(1) + "₵":'N/A'} per pt (USD)
           </div>
-        )
+        </div>
+      )
     },
     { 
         name: 'Premium', 
         selector: 'premium_rate', 
-        grow: '0.75', 
+        grow: '1.5', 
         sortable: true,
         cell: row => (
-          row.premium_rate > 0 ?
-          <div style={{backgroundColor: 'green', color: 'white', padding: '5px', borderRadius: '5px', fontWeight: 'bold', fontSize: '0.8em'}}>
-              {`${parseInt(row.premium_rate).toLocaleString()} pts`}
-          </div>
-          :
-          <div style={{backgroundColor: 'grey', color: 'white', padding: '5px', borderRadius: '5px', fontWeight: 'bold', fontSize: '0.7em'}}>
-              {'Not Available'}
+          <div className='column-container'>
+            <div className="rate-container">
+              <div className={`rate-block ${row.premium_rate > 0 ? 'green-background' : 'grey-background'}`}>
+                {row.premium_rate > 0 ? `${parseInt(row.premium_rate).toLocaleString()} pts` : 'N/A'}
+              </div>
+              <div className={`rate-block ${row.premium_cash > 0 ? 'green-background' : 'grey-background'}`}>
+                {row.premium_cash > 0 ? `${parseInt(row.premium_cash).toLocaleString()} ${row.currency_code}` : 'N/A'}
+              </div>
+            </div>
+            <div className="point-block">
+              {row.premium_cash_usd > 0 && row.premium_rate > 0 ? (row.premium_cash_usd / row.premium_rate * 100).toFixed(1) + "₵":'N/A'} per pt (USD)
+            </div>
           </div>
         )
     },
@@ -160,6 +170,8 @@ function ExploreTable({ stays }) {
           .toLowerCase()
           .includes(filterText.toLowerCase())
     )
+    || item.hotel_province.toLowerCase().includes(filterText.toLowerCase()) // Include the region in the search
+    || item.hotel_city.toLowerCase().includes(filterText.toLowerCase()) // Include the city in the search
   );
 
   const handleChangePage = (event, newPage) => {

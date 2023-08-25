@@ -186,3 +186,43 @@
 .error{
   color: red
 }
+
+.rate-container {
+  display: flex;
+  justify-content: flex-start; /* Aligns the items horizontally */
+}
+
+.rate-block {
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 0.9em;
+  /* min-height: 30px; */
+  /* margin-top: 5px; */
+  margin-bottom: 3%;
+  margin-right: 5px;
+  display: flex;
+  align-items: center; /* Align text vertically */
+  justify-content: center; /* Align text horizontally */
+}
+
+.point-block {
+  width: auto;
+  white-space: nowrap;
+  margin-right: 5px;
+  font-size: 0.9em;
+}
+
+.column-container {
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
+
+.green-background {
+  background-color: green;
+}
+
+.grey-background {
+  background-color: grey;
+}
