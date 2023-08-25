@@ -4,10 +4,9 @@ from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, find_dotenv
 from award_search import AwardSearch
+from retry import retry
 import os
 import pytz
-# import time
-# import random
 import logging
 
 # Load environment variables
@@ -130,6 +129,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     upsert(session, stays, stay_updates, ['stay_id'])
     awardsearch.quit()
 
+@retry(tries=5, delay=1, backoff=2)
 def update_rates():
     print("Starting batch update of rates...")
 
