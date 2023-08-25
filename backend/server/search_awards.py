@@ -145,15 +145,21 @@ def update_rates():
         SET 
             standard_rate = coalesce(subquery.min_standard_rate,0),
             premium_rate = coalesce(subquery.min_premium_rate,0),
+            currency_code = subquery.currency_code,
+            premium_cash = coalesce(subquery.min_standard_cash::decimal,0),
+            standard_cash = coalesce(subquery.min_premium_cash::decimal,0),
             booking_url = search_url
         FROM (
             SELECT 
                 stay_id,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_standard_rate,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_premium_rate,
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_standard_rate,
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_premium_rate,
+                currency_code,
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate END) AS min_standard_cash,
+                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate END) AS min_premium_cash,
                 search_url
             FROM awards
-            GROUP BY stay_id, search_url
+            GROUP BY stay_id, search_url, currency_code
         ) AS subquery
         WHERE stays.stay_id = subquery.stay_id
     """)
