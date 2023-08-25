@@ -133,10 +133,6 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 def update_rates():
     print("Starting batch update of rates...")
 
-    # Define "24 hours ago"
-    one_day_ago = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
-    # print(one_day_ago)
-
     stmt = stays.update().values(standard_rate=0, premium_rate=0)
 
     # Prepare the raw SQL statement
@@ -169,9 +165,26 @@ def update_rates():
         WHERE stays.stay_id = subquery.stay_id
     """)
 
+    # Calculate available award inventory
+    stmt3 = text("""
+        UPDATE stays
+        SET available_inventory = subquery.stays_available::decimal / subquery.total_tracked_dates::decimal
+        FROM (
+        SELECT
+            stay_id,
+            sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by hotel_id) as stays_available,
+            count(stay_id) over (partition by hotel_id) as total_tracked_dates
+        FROM stays
+        WHERE status <> 'Inactive'
+        AND check_in_date >= CURRENT_DATE
+        ) AS subquery
+        WHERE stays.stay_id = subquery.stay_id
+        """)
+
     # Execute the UPDATE statement
     result = session.execute(stmt)
-    result = session.execute(stmt2, {'one_day_ago': one_day_ago})
+    result = session.execute(stmt2)
+    result = session.execute(stmt3)
     session.commit()
 
     print("Batch update completed. {} rows affected.".format(result.rowcount))
