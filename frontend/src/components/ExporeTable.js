@@ -31,8 +31,8 @@ const columns = [
       cell: row => {
         const date = new Date(row.check_in_date);
         const day = date.getDay();
-        const isWeekend = day === 5 || day === 6; // Friday or Saturday
-        const weekendDay = day === 5 ? 'Friday' : 'Saturday';
+        const isWeekend = day === 4 || day === 5; // Friday or Saturday
+        const weekendDay = day === 4 ? 'Friday' : 'Saturday';
 
         return (
           <CustomTooltip title={isWeekend ? `The Check-in Date for this stay is on ${weekendDay}!` : ''}>
