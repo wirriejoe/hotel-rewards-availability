@@ -1,27 +1,17 @@
-import React, { useEffect, useContext } from 'react';
+import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { StytchLogin, useStytchSession } from '@stytch/react';
-import { UserContext } from "./UserContext";
+import { StytchLogin, useStytchUser } from '@stytch/react';
 import Cookies from 'js-cookie';
 
 const Login = () => {
   const redirectURL = process.env.REACT_APP_TEST_REDIRECT_URL || "https://burnmypoints.com/authenticate"
   const resetURL = process.env.REACT_APP_TEST_RESET_URL || "https://burnmypoints.com/reset"
-  const { session } = useStytchSession();
-  const { setIsAuthenticated } = useContext(UserContext);
   let navigate = useNavigate();
 
-  useEffect(() => {
-    if (session) {
-      console.log('Successfully logged in!');
-      // console.log(session)
-      setIsAuthenticated(true);
-      Cookies.set('session_token', Cookies.get('stytch_session'), { secure: true, sameSite: 'lax' });
-      setTimeout(() => {
-        navigate("/"); 
-      }, 0);
-    }
-  }, [session, navigate, setIsAuthenticated]);
+  const { user } = useStytchUser();
+  if (user) {
+    navigate(`/authenticate?token=${Cookies.get('stytch_session')}&stytch_token_type=passwords`)
+  }
 
   const config = {
     "products": [

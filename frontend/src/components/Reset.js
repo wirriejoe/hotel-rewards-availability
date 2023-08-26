@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Products } from '@stytch/vanilla-js';
-import { StytchPasswordReset } from '@stytch/react';
+import { StytchPasswordReset, useStytchUser } from '@stytch/react';
+import Cookies from 'js-cookie';
 
 const config = {
   passwordOptions: {
@@ -22,7 +24,14 @@ const containerStyle = {
   };
 
 const Reset = () => {
+  const { user } = useStytchUser();
   const [passwordResetToken, setPasswordResetToken] = useState('');
+  
+  let navigate = useNavigate();
+
+  if (user) {
+    navigate(`/authenticate?token=${Cookies.get('stytch_session')}&stytch_token_type=password_resets`)
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

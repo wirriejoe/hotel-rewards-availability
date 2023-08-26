@@ -72,8 +72,7 @@ def authenticate_session(session_token):
     try:
         # Authenticate the session first
         auth_resp = stytch.sessions.authenticate(session_token=session_token, session_duration_minutes=session_duration_minutes)
-        user_id = auth_resp.user.user_id
-        return user_id
+        return auth_resp
 
     except Exception as e:
         raise AuthenticationError('Session authentication failed.')
@@ -94,7 +93,7 @@ def log_user_event():
 
     session_token = data.get('session_token')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
 
@@ -116,7 +115,7 @@ def consecutive_stays():
 
     session_token = data.get('session_token', 'default_value')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
 
@@ -152,7 +151,7 @@ def explore():
 
     session_token = data.get('session_token', 'default_value')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
 
@@ -294,17 +293,23 @@ def authenticate_user():
         print(f"Session token type: {token_type}")
         if token_type == 'oauth':
             auth_resp = stytch.oauth.authenticate(token=token, session_duration_minutes=session_duration_minutes)
+            stytch_user_id = auth_resp.user_id
             log_event('oauth_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
         elif token_type == 'magic_links':
             auth_resp = stytch.magic_links.authenticate(token=token, session_duration_minutes=session_duration_minutes)
+            stytch_user_id = auth_resp.user_id
             log_event('magic_link_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
-        # elif token_type == 'passwords':
-        #     auth_resp = stytch.passwords.authenticate(token=token, session_duration_minutes=session_duration_minutes)
-        #     log_event('password_authenticate', auth_resp.user_id, auth_resp.user.emails[0].email)
+        elif token_type == 'passwords':
+            auth_resp = authenticate_session(session_token=token)
+            stytch_user_id = auth_resp.user.user_id
+            log_event('password_authenticate', auth_resp.user.user_id, auth_resp.user.emails[0].email)
+        elif token_type == 'password_resets':
+            auth_resp = authenticate_session(session_token=token)
+            stytch_user_id = auth_resp.user.user_id
+            log_event('password_reset_authenticate', auth_resp.user.user_id, auth_resp.user.emails[0].email)
     except Exception as e:
         return jsonify({'message': 'Failed to authenticate user.', 'error': str(e)}), 401
     
-    stytch_user_id = auth_resp.user_id
     user_email = auth_resp.user.emails[0].email
     created_at = auth_resp.user.created_at
 
@@ -356,7 +361,7 @@ def make_request():
 
     session_token = data.get('session_token')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
@@ -381,7 +386,7 @@ def make_request():
 def get_requests():
     session_token = request.args.get('session_token')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
 
@@ -397,7 +402,7 @@ def get_requests():
 def get_stays():
     session_token = request.args.get('session_token')
     try:
-        stytchUserID = authenticate_session(session_token)
+        stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
     
@@ -503,7 +508,7 @@ def handle_get_status(message):
     now = datetime.now().astimezone(utc)
     try:
         session_token = message.get('session_token')
-        user_id = authenticate_session(session_token)
+        user_id = authenticate_session(session_token).user.user_id
     except Exception as e:
         return jsonify({'message': str(e)}), 401
     sel = select(users.c.customer_status).where(users.c.stytchUserID == user_id, users.c.customer_expiration_time >= now).limit(1)
