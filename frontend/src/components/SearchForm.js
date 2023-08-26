@@ -48,6 +48,8 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const [countryOptions, setCountryOptions] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
 
+    const [initialLoad, setInitialLoad] = useState(true);
+
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
     // Fetch hotel names, cities, and countries on component mount
@@ -110,7 +112,6 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         
         // Remove properties with undefined or empty values
         const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
-        
         const queryStr = queryString.stringify(filteredQueryObj);
         window.history.pushState({}, '', '?' + queryStr);
         
@@ -137,24 +138,28 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         }
     }, [api_url, startDate, endDate, lengthOfStay, city, country, category, rateFilter, pointsBudget, isCustomer, setStays, setIsLoading]);
     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        const parsed = queryString.parse(window.location.search);
+        if (initialLoad) {
+            const parsed = queryString.parse(window.location.search);
+            
+            if (Object.keys(parsed).length > 0) {
+                // Parse the parameters and set the state
+                if (parsed.startDate) setStartDate(parsed.startDate);
+                if (parsed.endDate) setEndDate(parsed.endDate);
+                if (parsed.lengthOfStay) setLengthOfStay(Number(parsed.lengthOfStay));
+                if (parsed.city) setCity(parsed.city.split(',').map(city => ({ value: city, label: city })));
+                if (parsed.country) setCountry(parsed.country.split(',').map(country => ({ value: country, label: country })));
+                if (parsed.category) setCategory(parsed.category.split(',').map(category => ({ value: category, label: category })));
+                if (parsed.rateFilter) setRateFilter(parsed.rateFilter.split(',').map(rate => ({ value: rate, label: rate })));
+                if (parsed.pointsBudget) setPointsBudget(Number(parsed.pointsBudget));
         
-        if (Object.keys(parsed).length > 0) {
-            // Parse the parameters and set the state
-            if (parsed.startDate) setStartDate(parsed.startDate);
-            if (parsed.endDate) setEndDate(parsed.endDate);
-            if (parsed.lengthOfStay) setLengthOfStay(Number(parsed.lengthOfStay));
-            if (parsed.city) setCity(parsed.city.split(',').map(city => ({ value: city, label: city })));
-            if (parsed.country) setCountry(parsed.country.split(',').map(country => ({ value: country, label: country })));
-            if (parsed.category) setCategory(parsed.category.split(',').map(category => ({ value: category, label: category })));
-            if (parsed.rateFilter) setRateFilter(parsed.rateFilter.split(',').map(rate => ({ value: rate, label: rate })));
-            if (parsed.pointsBudget) setPointsBudget(Number(parsed.pointsBudget));
-    
-            // Trigger the search
-            performSearch();
-        }    
-    }, [performSearch]);
+                // Trigger the search
+                performSearch();
+           }
+           setInitialLoad(false);
+        }
+    }, [performSearch, initialLoad]);
 
     const submitForm = (e) => {
         e.preventDefault();
