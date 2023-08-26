@@ -28,6 +28,7 @@ def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], ho
     filter_conditions = [
         stays.c.check_in_date >= start_date,
         stays.c.check_out_date <= end_date,
+        stays.c.check_out_date - stays.c.check_in_date == 1,
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48)
     ]
     
@@ -112,7 +113,6 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
                 else:
                     if max_points_budget == 0 or (standard_rate <= max_points_budget and standard_rate != 0) or (premium_rate <= max_points_budget and premium_rate != 0):
                         result.append(result_stay)
-                
     return result
 
 def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
