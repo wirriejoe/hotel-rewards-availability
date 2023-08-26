@@ -28,6 +28,7 @@ def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], ho
     filter_conditions = [
         stays.c.check_in_date >= start_date,
         stays.c.check_out_date <= end_date,
+        stays.c.check_out_date - stays.c.check_in_date == 1,
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48)
     ]
     
@@ -112,7 +113,6 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
                 else:
                     if max_points_budget == 0 or (standard_rate <= max_points_budget and standard_rate != 0) or (premium_rate <= max_points_budget and premium_rate != 0):
                         result.append(result_stay)
-                
     return result
 
 def build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
@@ -140,15 +140,3 @@ def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_nam
     except Exception as e:
         session.close()
         return "Error in search_stays.py: %s", str(e)
-
-# print(len(search_by_consecutive_nights(
-#     start_date=datetime(2023, 7, 12), 
-#     end_date=datetime(2023,8,31), 
-#     length_of_stay=3, 
-#     max_points_budget=0, 
-#     rate_filter=None,
-#     hotel_city=['New York'],
-#     hotel_country=['United States'],
-#     hotel_region=[],
-#     award_category=[]
-# )))
