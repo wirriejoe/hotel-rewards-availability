@@ -106,9 +106,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         const awardCategoryString = awardCategoryArray.map(category => category.value);
         const brandString = brandArray.map(brand => brand.value);
 
-        console.log(centsPerPoint)
-        console.log(centsPerPoint.value)
-
         const session_token = Cookies.get('session_token')
 
         try {
