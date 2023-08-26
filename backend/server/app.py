@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
 from flask_socketio import SocketIO, emit
 from .search_stays import search_by_consecutive_nights, build_url
-from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc
+from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from dotenv import load_dotenv, find_dotenv
@@ -174,8 +174,30 @@ def explore():
 
     if data['award_category'] and data['award_category'] != [None]:
         filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
-    if data['brand'] and data['brand'] != [None]:
+    if data['brand'] != [''] and data['brand'] != [None]:
         filter_conditions.append(hotels.c.brand.in_(data['brand']))
+    if data['country'] != '' and data['country'] != None:
+        filter_conditions.append(hotels.c.hotel_country.in_([data['country']]))
+    if data['points_budget'] != '' and data['points_budget'] != None:
+        filter_conditions.append(
+            or_(
+                and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
+                and_(stays.c.premium_rate <= float(data['points_budget']), stays.c.premium_rate > 0)
+        ))
+    if data['is_weekend'] == 'true':
+        print('test')
+        filter_conditions.append(
+            or_(
+                func.extract('dow', stays.c.check_in_date) == 5,  # Friday
+                func.extract('dow', stays.c.check_in_date) == 6   # Saturday
+        ))
+    if data['cents_per_point'] != '' and data['cents_per_point'] != None:
+        print(data['cents_per_point'])
+        filter_conditions.append(
+            or_(
+                text("stays.standard_cash_usd / NULLIF(stays.standard_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point']),
+                text("stays.premium_cash_usd / NULLIF(stays.premium_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point'])
+        ))
         
     query = select(
         stays.c.stay_id, 
@@ -249,7 +271,7 @@ def get_categories():
 @app.route('/api/brands', methods=['GET'])
 def get_brands():
     with engine.connect() as connection:
-        s = select(hotels.c.brand).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.brand).where(hotels.c.brand != '').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     

@@ -226,3 +226,7 @@
 .grey-background {
   background-color: grey;
 }
+
+.col-md-2 {
+  font-size: 0.9em
+}
