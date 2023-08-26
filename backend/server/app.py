@@ -427,7 +427,7 @@ def get_stays():
     return jsonify(stay_results)
 
 # @csrf.exempt
-@app.route('/webhook', methods=['POST'])
+@app.route('/stripe_webhook', methods=['POST'])
 def handle_webhook():
     payload = request.data
     event = None
