@@ -27,7 +27,7 @@ function HomePage() {
     {title: "Unlimited alerts 🔔 (Coming Soon)", description: "No more repetitive searches. Create alerts to be notified when the best seats are released."},
     {title: "Discord community 🤝", description: 
       <span>
-      <a href="https://discord.gg/faCDme7M3A" target="_blank" rel="noreferrer">
+      <a href="https://discord.gg/CJwvNuRZgu" target="_blank" rel="noreferrer">
         Join our Discord
       </a>
       {' '}community to talk about travel, request new features, or just come hang out.
@@ -63,7 +63,7 @@ function HomePage() {
 
       <div class="alert alert-info">
         <strong>BETA! </strong>
-        BurnMyPoints regularly scans for award availabilities for major hotel chains. Free users currently see 60 days of availabilities for Hyatt hotels, while Pro users see 360 days of availabilities for Hyatt hotels. Join the conversation in our <a href="https://discord.gg/faCDme7M3A">Discord</a>.
+        BurnMyPoints regularly scans for award availabilities for major hotel chains. Free users currently see 60 days of availabilities for Hyatt hotels, while Pro users see 360 days of availabilities for Hyatt hotels. Join the conversation in our <a href="https://discord.gg/CJwvNuRZgu">Discord</a>.
         <br/>
         <strong> 🚨Disclaimer:</strong> BurnMyPoints is not partnered or affiliated with Seats.aero.
       </div>
@@ -83,7 +83,7 @@ function HomePage() {
       <div className="home-container"> {/* New Section */}
         <h2>Supported reward programs</h2>
         <p>The hotel rewards programs we currently support and will support soon in the coming weeks! Come tell us on Discord what program we should add next.{' '}
-        <a href="https://discord.gg/faCDme7M3A" target="_blank" rel="noreferrer">
+        <a href="https://discord.gg/CJwvNuRZgu" target="_blank" rel="noreferrer">
           Join here 👈🏻
         </a>
         </p>
