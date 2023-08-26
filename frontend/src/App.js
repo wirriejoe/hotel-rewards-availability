@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
 import axios from 'axios';
@@ -13,6 +13,14 @@ import Authenticate from './components/Authenticate';
 import { UserContext, UserContextProvider } from './components/UserContext';
 import './App.css';
 import logo from './logo.png';
+
+const ExternalRedirect = ({ to }) => {
+    useEffect(() => {
+      window.location.href = to;
+    }, [to]);
+  
+    return null;
+  };  
 
 function App() {
   return (
@@ -35,6 +43,7 @@ function App() {
                           <Nav.Link as={Link} to="/search">Search</Nav.Link>
                           <Nav.Link as={Link} to="/explore">Discover</Nav.Link>
                           <Nav.Link as={Link} to="/request">Request</Nav.Link> 
+                          <Nav.Link as={Link} to="/alerts">Create Alert</Nav.Link> 
                       </Nav>
                       <Nav>
                           <NavigationLinks />
@@ -46,6 +55,7 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/request" element={<RequestsPage />} />
+                      <Route path="/alerts" element={<ExternalRedirect to="https://apps.burnmypoints.com/embedded/public/160eb83d-fa97-4014-9b5b-4dafd7c6ee4f"/>} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/reset" element={<Reset />} />
                       <Route path="/authenticate" element={<Authenticate />} />
@@ -58,7 +68,7 @@ function App() {
 }
 
 function NavigationLinks() {
-  const { isCustomer, setIsCustomer, isAuthenticated, setIsAuthenticated } = useContext(UserContext);
+  const { setIsCustomer, isAuthenticated, setIsAuthenticated } = useContext(UserContext);
   const navigate = useNavigate();
   const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com';
 
