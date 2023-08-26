@@ -4,7 +4,9 @@ from dotenv import load_dotenv, find_dotenv
 import os
 import traceback
 import time
+import random
 from selenium_profiles.webdriver import Chrome
+from selenium_profiles.profiles import profiles
 from selenium.webdriver.common.by import By  # locate elements
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,7 +18,14 @@ class AwardSearch:
     def initialize_driver():
         # Load Selenium profile
         load_dotenv(find_dotenv())
-        profile = json.loads(os.getenv('SELENIUM_PROFILE'))
+        selection = random.choice([1,2,3])
+        if selection == 1:
+            profile = json.loads(os.getenv('SELENIUM_PROFILE'))
+        elif selection == 2:
+            profile = json.loads(os.getenv('SELENIUM_PROFILE_2'))
+        else:
+            profile = profiles.Android()
+        print(profile)
         
         options = ChromeOptions()
         options.add_argument("--headless")
@@ -97,17 +106,3 @@ class AwardSearch:
 
     def quit(self):
         self.driver.quit()
-
-# options = ChromeOptions()
-# mydriver = Chrome(profile, options=options, uc_driver=False)
-# mydriver.options.add_argument("--headless=new")
-# driver = mydriver.start() 
-
-# awardsearch = AwardSearch()
-
-# award_stays = awardsearch.get_award_stays('Hyatt', 'mldal', '2023-08-26', '2023-08-27')
-
-# for room_details in award_stays:
-#     print(room_details)
-            
-# awardsearch.quit()

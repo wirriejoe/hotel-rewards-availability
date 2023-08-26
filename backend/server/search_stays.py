@@ -140,15 +140,3 @@ def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_nam
     except Exception as e:
         session.close()
         return "Error in search_stays.py: %s", str(e)
-
-# print(len(search_by_consecutive_nights(
-#     start_date=datetime(2023, 7, 12), 
-#     end_date=datetime(2023,8,31), 
-#     length_of_stay=3, 
-#     max_points_budget=0, 
-#     rate_filter=None,
-#     hotel_city=['New York'],
-#     hotel_country=['United States'],
-#     hotel_region=[],
-#     award_category=[]
-# )))
