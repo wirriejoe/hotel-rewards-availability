@@ -161,7 +161,8 @@ def explore():
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
-        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0)
+        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
+        stays.c.check_out_date - stays.c.check_in_date == 1
     ]
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
