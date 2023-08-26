@@ -58,7 +58,7 @@ function App() {
 }
 
 function NavigationLinks() {
-  const { isAuthenticated, setIsAuthenticated } = useContext(UserContext);
+  const { isCustomer, setIsCustomer, isAuthenticated, setIsAuthenticated } = useContext(UserContext);
   const navigate = useNavigate();
   const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com';
 
@@ -76,6 +76,7 @@ function NavigationLinks() {
                 Cookies.remove('stytch_session')
                 Cookies.remove('stytch_session_jwt')
                 setIsAuthenticated(false);  // Reset the user context
+                setIsCustomer(false);
                 navigate('/');  // Redirect the user to home page
                 window.location.reload();  // Force a page reload
             } else {
