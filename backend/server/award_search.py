@@ -18,14 +18,15 @@ class AwardSearch:
     def initialize_driver():
         # Load Selenium profile
         load_dotenv(find_dotenv())
-        selection = random.choice([1,2,3])
-        if selection == 1:
-            profile = json.loads(os.getenv('SELENIUM_PROFILE'))
-        elif selection == 2:
-            profile = json.loads(os.getenv('SELENIUM_PROFILE_2'))
-        else:
-            profile = profiles.Android()
-        print(profile)
+        profile = json.loads(os.getenv('SELENIUM_PROFILE'))
+        # selection = random.choice([1,2,3])
+        # if selection == 1:
+        #     profile = json.loads(os.getenv('SELENIUM_PROFILE'))
+        # elif selection == 2:
+        #     profile = json.loads(os.getenv('SELENIUM_PROFILE_2'))
+        # else:
+        #     profile = profiles.Android()
+        # print(profile)
         
         options = ChromeOptions()
         options.add_argument("--headless")
