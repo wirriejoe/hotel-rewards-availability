@@ -36,12 +36,16 @@ class AwardSearch:
         port = 22225
         session_id = random.random()
         super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
-        
+
+        profile["proxy"] = {
+          "proxy": super_proxy_url
+        }
+
         options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_argument(f"--proxy-server={super_proxy_url}")
+        # options.add_argument(f"--proxy-server={super_proxy_url}")
         driver = Chrome(profile=profile, options=options,uc_driver=False,injector_options=True, seleniumwire_options=True)
         driver.execute_cdp_cmd('Runtime.disable',{})
         injector = driver.profiles.injector
@@ -70,6 +74,11 @@ class AwardSearch:
         max_retries = 5
         delay = 1
         backoff_factor = 2
+
+        # proxy ip check
+        # self.driver.get('https://api.ipify.org/?format=json/')
+        # print(self.driver.page_source)
+
         for attempt in range(max_retries):
             try:
                 url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
