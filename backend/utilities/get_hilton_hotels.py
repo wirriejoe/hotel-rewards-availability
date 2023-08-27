@@ -33,6 +33,8 @@ def fetch_graphql_data(endpoint, query, max_retries=3):
     return None  # Return None after max_retries
 
 def fetch_hotel_data(uri):
+    hotel_url = 'https://www.hilton.com//graphql/customer?appName=dx_shop_search_app&operationName=hotelSummaryOptions_geocodePage&originalOpName=hotelSummaryOptions_geocodePage&bl=en'
+    
     hotel_query =  {
         "query": "query hotelSummaryOptions_geocodePage($language: String!, $path: String!, $queryLimit: Int!, $currencyCode: String!, $distanceUnit: HotelDistanceUnit, $titleFormat: MarkdownFormatType!) {\n  geocodePage(language: $language, path: $path) {\n    location {\n      pageInterlinks {\n        title\n        links {\n          name\n          uri\n        }\n      }\n      title(format: $titleFormat)\n      accessibilityTitle\n      meta {\n        pageTitle\n        description\n      }\n      name\n      brandCode\n      category\n      uri\n      globalBounds\n      breadcrumbs {\n        uri\n        name\n      }\n      about {\n        contentBlocks {\n          title(format: text)\n          descriptions\n          orderedList\n          unorderedList\n        }\n      }\n      paths {\n        base\n      }\n    }\n    match {\n      address {\n        city\n        country\n        countryName\n        state\n        stateName\n      }\n      geometry {\n        location {\n          latitude\n          longitude\n        }\n        bounds {\n          northeast {\n            latitude\n            longitude\n          }\n          southwest {\n            latitude\n            longitude\n          }\n        }\n      }\n      name\n      type\n    }\n    hotelSummaryOptions(distanceUnit: $distanceUnit, sortBy: distance) {\n      _hotels {\n        totalSize\n      }\n      bounds {\n        northeast {\n          latitude\n          longitude\n        }\n        southwest {\n          latitude\n          longitude\n        }\n      }\n      amenities {\n        id\n        name\n        hint\n      }\n      amenityCategories {\n        name\n        id\n        amenityIds\n      }\n      brands {\n        code\n        name\n      }\n      hotels(first: $queryLimit) {\n        amenityIds\n        brandCode\n        ctyhocn\n        distance\n        distanceFmt\n        facilityOverview {\n          allowAdultsOnly\n        }\n        name\n        contactInfo {\n          phoneNumber\n        }\n        display {\n          open\n          openDate\n          preOpenMsg\n          resEnabled\n          resEnabledDate\n        }\n        disclaimers {\n          desc\n          type\n        }\n        address {\n          addressFmt\n          addressLine1\n          city\n          country\n          countryName\n          postalCode\n          state\n          stateName\n        }\n        localization {\n          currencyCode\n          coordinate {\n            latitude\n            longitude\n          }\n        }\n        masterImage(variant: searchPropertyImageThumbnail) {\n          altText\n          variants {\n            size\n            url\n          }\n        }\n        leadRate {\n          lowest {\n            rateAmount(currencyCode: $currencyCode)\n            rateAmountFmt(decimal: 0, strategy: trunc)\n            ratePlanCode\n            ratePlan {\n              ratePlanName\n              ratePlanDesc\n            }\n          }\n        }\n      }\n    }\n  }\n}",
         "operationName": "hotelSummaryOptions_geocodePage",
@@ -69,10 +71,7 @@ def process_hotels(hotels):
         result.append(hotel_data)
     return result
 
-# Main Script
 region_url = 'https://www.hilton.com/graphql/customer?appName=dx_shop_search_app&operationName=regions&originalOpName=allRegions&bl=en'
-hotel_url = 'https://www.hilton.com//graphql/customer?appName=dx_shop_search_app&operationName=hotelSummaryOptions_geocodePage&originalOpName=hotelSummaryOptions_geocodePage&bl=en'
-
 # Fetch country links
 region_query = {
     "query": "query regions($language: String!) {\n  na: regions(\n    language: $language\n    containsHotels: true\n    filter: {htmlSiteMap: true, name: \"North America\"}\n  ) {\n    name\n    locationPageUri\n    countries {\n      code\n      name\n      locationPageUri\n      displayName\n      states(sort: {by: name, order: asc}) {\n        name\n        locationPageUri\n      }\n      cities(sort: {by: name, order: asc}, onlyIfNoStates: true) {\n        name\n        locationPageUri\n      }\n    }\n  }\n  others: regions(\n    language: $language\n    containsHotels: true\n    filter: {htmlSiteMap: true, name_not: \"North America\"}\n  ) {\n    name\n    locationPageUri\n    countries(sort: {by: name, order: asc}) {\n      code\n      name\n      locationPageUri\n      displayName\n      states {\n        name\n        locationPageUri\n      }\n    }\n  }\n}",
@@ -163,4 +162,4 @@ for country in countries:
     with open('hilton_hotels.json', 'w') as f:
         json.dump(all_hotels, f, indent=4)
 
-# pprint(fetch_hotel_data('/locations/canada/british-columbia/'),indent=4)
+# pprint(fetch_hotel_data('locations/usa/canopy-by-hilton/'),indent=4)
