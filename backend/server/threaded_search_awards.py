@@ -148,7 +148,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     for stay in stay_records:
         task_queue.put(stay)
     
-    num_threads = 50 # You can change this number
+    num_threads = 25 # You can change this number
     threads = []
     
     for _ in range(num_threads):
@@ -225,7 +225,7 @@ def update_rates():
 
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=20000)
+        search_awards(search_frequency_hours=24, search_batch_size=12500)
         update_rates()
         session.close()
     except Exception as e:
