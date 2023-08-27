@@ -31,8 +31,8 @@ class AwardSearch:
 
         # username = 'brd-customer-hl_94decac0-zone-isp'
         # password = 'fgezgl3cvg66'
-        username = json.loads(os.getenv('BRIGHTDATA_USERNAME'))
-        password = json.loads(os.getenv('BRIHTDATA_PASSWORD'))
+        username = os.getenv('BRIGHTDATA_USERNAME')
+        password = os.getenv('BRIHTDATA_PASSWORD')
         port = 22225
         session_id = random.random()
         super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
