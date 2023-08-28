@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
@@ -39,7 +40,9 @@ const columns = [
             <div>Award Category: {row.award_category}</div>
           </React.Fragment>
         }>
-          <div>{row.hotel_name}</div>
+        <Link to={`/hyatt/hotel/${row.hotel_code}`}>
+            <div>{row.hotel_name}</div>
+        </Link>
         </CustomTooltip>
       ),
     },

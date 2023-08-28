@@ -37,7 +37,7 @@ function HotelPage() {
             <div className="header">
               <h2>Exploring {hotelDetails ? hotelDetails['hotel_name'] : ''}</h2>
               <h6>📅 Tracking availabilities until {hotelDetails ? hotelDetails['pro_request'] ? new Date(new Date().setDate(new Date().getDate() + 360)).toISOString().split('T')[0] + " (360 days)": new Date(new Date().setDate(new Date().getDate() + 60)).toISOString().split('T')[0] + " (60 days). Request Full Calendar tracking " : ''}{hotelDetails ? hotelDetails['pro_request'] ? '' : <a href="https://burnmypoints.com/request">here</a> : ''}.</h6>
-              <h6>{hotelDetails ? hotelDetails['pro_request'] ? "One Night Stays ✅   Multi-Night Stays ✅ " : "One Night Stays ✅  Multi-Night Stays ❌ " : ''}</h6>
+              <h6 style={{ whiteSpace: "pre" }}>{hotelDetails ? hotelDetails['pro_request'] ? "✅ One Night Stays    ✅ Multi-Night Stays " : "✅ One Night Stays    ❌ Multi-Night Stays " : ''}</h6>
               <div style={{
                 height: "200px", 
                 overflow: "hidden", 

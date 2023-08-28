@@ -91,6 +91,7 @@ def get_consecutive_stays(hotel_data, num_consecutive_days, rate_filter=None, ma
 
                 result_stay = {
                     'hotel_name': stays[i]['hotel_name'],
+                    'hotel_code': stays[i]['hotel_code'],
                     'date_range_start': stays[i]['check_in_date'],
                     'date_range_end': stays[i]['check_in_date'] + timedelta(days=num_consecutive_days),
                     'last_checked': stays[i]["last_checked_time"],

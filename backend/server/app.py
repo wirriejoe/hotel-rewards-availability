@@ -204,6 +204,7 @@ def explore():
         stays.c.check_in_date, 
         stays.c.last_checked_time, 
         hotels.c.hotel_name, 
+        hotels.c.hotel_code,
         hotels.c.hotel_city, 
         hotels.c.hotel_province,
         hotels.c.hotel_country,
