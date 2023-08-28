@@ -141,7 +141,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 
     # Update status of fetched stay_records to 'Queued'
     stay_ids_to_update = [record.stay_id for record in stay_records]
-    update_query = stays.update().where(stays.c.stay_id.in_(stay_ids_to_update)).values(status='Queued')
+    update_query = stays.update().where(stays.c.stay_id.in_(stay_ids_to_update)).values(status='Queued', last_queued_time=start_timer)
     session.execute(update_query)
     session.commit()
 
