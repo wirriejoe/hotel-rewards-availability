@@ -113,7 +113,7 @@ def consecutive_stays():
     data = request.json
     print(data)
 
-    session_token = data.get('session_token', 'default_value')
+    session_token = data.get('session_token', '')
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
@@ -149,7 +149,7 @@ def explore():
     print(data)
     print(request)
 
-    session_token = data.get('session_token', 'default_value')
+    session_token = data.get('session_token', '')
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
@@ -186,6 +186,101 @@ def explore():
         ))
     if data['is_weekend'] == 'true':
         print('test')
+        filter_conditions.append(
+            or_(
+                func.extract('dow', stays.c.check_in_date) == 5,  # Friday
+                func.extract('dow', stays.c.check_in_date) == 6   # Saturday
+        ))
+    if data['cents_per_point'] != '' and data['cents_per_point'] != None:
+        print(data['cents_per_point'])
+        filter_conditions.append(
+            or_(
+                text("stays.standard_cash_usd / NULLIF(stays.standard_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point']),
+                text("stays.premium_cash_usd / NULLIF(stays.premium_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point'])
+        ))
+        
+    query = select(
+        stays.c.stay_id, 
+        stays.c.check_in_date, 
+        stays.c.last_checked_time, 
+        hotels.c.hotel_name, 
+        hotels.c.hotel_city, 
+        hotels.c.hotel_province,
+        hotels.c.hotel_country,
+        hotels.c.hotel_region,
+        hotels.c.brand,
+        hotels.c.award_category,
+        stays.c.standard_rate, 
+        stays.c.premium_rate,
+        stays.c.currency_code,
+        stays.c.standard_cash,
+        stays.c.premium_cash,
+        stays.c.available_inventory,
+        stays.c.standard_cash_usd,
+        stays.c.premium_cash_usd,
+        stays.c.booking_url).select_from(j).where(and_(*filter_conditions))
+
+    with engine.connect() as connection:
+        result = connection.execute(query)
+
+    stay_results = [row._mapping for row in result]
+    # Apply time_since function to every last_checked_time object in the list
+    stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in stay_results]
+
+    connection.close()
+
+    print(f"Explore finished! Found {len(stay_results)} results!")
+    log_event('explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
+    return jsonify(stay_results)
+
+@app.route('/api/hotel_details/<hotel_code>', methods=['GET'])
+def get_hotel_details(hotel_code):
+    with engine.connect() as connection:
+        s = select(hotels.c.hotel_name, hotels.c.brand, hotels.c.image, hotels.c.search_end_date, hotels.c.free_track, hotels.c.pro_request).where(hotels.c.hotel_code == hotel_code)
+        result = connection.execute(s)
+        return jsonify([{'hotel_name': row[0], 'brand': row[1], 'image': row[2], 'search_end_date': row[3], 'free_track': row[4], 'pro_request': row[5]} for row in result][0])
+
+@app.route('/api/hotel', methods=['POST'])
+def get_hotel():
+    data = request.json
+    print(data)
+    print(request)
+
+    session_token = data.get('session_token', '')
+    if session_token:
+        try:
+            stytchUserID = authenticate_session(session_token).user.user_id
+        except AuthenticationError as e:
+            return jsonify({'message': str(e)}), 401
+    else:
+        stytchUserID = 'guest'
+
+    isCustomer = data.get('isCustomer')
+    today = datetime.now().astimezone(utc)
+    if isCustomer:
+        future_date = today + timedelta(days=360)
+    else:    
+        future_date = today + timedelta(days=61)
+
+    filter_conditions = [
+        stays.c.check_in_date >= today + timedelta(days=1),
+        stays.c.check_in_date < future_date,
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
+        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
+        hotels.c.hotel_brand == data.get('hotel_name', ''),
+        stays.c.hotel_code == data.get('hotel_code', ''),
+        stays.c.check_out_date - stays.c.check_in_date == data.get('num_nights', 0),
+    ]
+
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
+
+    if data['points_budget'] != '' and data['points_budget'] != None:
+        filter_conditions.append(
+            or_(
+                and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
+                and_(stays.c.premium_rate <= float(data['points_budget']), stays.c.premium_rate > 0)
+        ))
+    if data['is_weekend'] == 'true':
         filter_conditions.append(
             or_(
                 func.extract('dow', stays.c.check_in_date) == 5,  # Friday

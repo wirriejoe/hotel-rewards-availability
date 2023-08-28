@@ -1,5 +1,5 @@
 import React, { useEffect, useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate} from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -7,6 +7,7 @@ import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
 import ExplorePage from './components/ExplorePage';
 import RequestsPage from './components/RequestsPage';
+import HotelPage from './components/HotelPage';
 import Login from './components/Login';
 import Reset from './components/Reset';
 import Authenticate from './components/Authenticate';
@@ -55,6 +56,7 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/request" element={<RequestsPage />} />
+                      <Route path="/:hotelName/hotel/:hotelCode" element={<HotelPage />} />
                       <Route path="/alerts" element={<ExternalRedirect to="https://apps.burnmypoints.com/embedded/public/160eb83d-fa97-4014-9b5b-4dafd7c6ee4f"/>} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/reset" element={<Reset />} />
