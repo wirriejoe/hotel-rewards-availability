@@ -225,7 +225,7 @@ def update_rates():
     print("Changes committed to the database.")
 
 def send_error_to_slack(error_msg):
-    url = "https://hooks.slack.com/services/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"
+    url = os.getenv('SLACK_WEBHOOK')
     requests.post(url, json={"text": f"Error in threaded search awards! Error message: {error_msg}"})
 
 if __name__ == "__main__":
