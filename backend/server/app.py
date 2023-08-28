@@ -332,42 +332,42 @@ def get_hotel():
 @app.route('/api/hotels', methods=['GET'])
 def get_hotels():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_name).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.hotel_name).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/cities', methods=['GET'])
 def get_cities():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_city).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.hotel_city).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/countries', methods=['GET'])
 def get_countries():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_country).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.hotel_country).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/regions', methods=['GET'])
 def get_regions():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_region).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.hotel_region).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/award_categories', methods=['GET'])
 def get_categories():
     with engine.connect() as connection:
-        s = select(hotels.c.award_category).where(hotels.c.award_category != '').distinct()
+        s = select(hotels.c.award_category).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/brands', methods=['GET'])
 def get_brands():
     with engine.connect() as connection:
-        s = select(hotels.c.brand).where(hotels.c.brand != '').distinct()
+        s = select(hotels.c.brand).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
