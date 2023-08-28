@@ -1,6 +1,8 @@
 import requests
 import json
 
+# Will be useful for refreshing auth tokens using selenium https://gist.github.com/rengler33/f8b9d3f26a518c08a414f6f86109863c
+
 url = 'https://www.hilton.com/graphql/customer?appName=dx-res-ui&operationName=hotel_shopAvailOptions_shopPropAvail&originalOpName=getShopAvail&bl=en&ctyhocn=BJSCAHI'  # Replace this with your GraphQL endpoint URL
 
 headers = {
