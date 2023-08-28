@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from 'react-router-dom'; 
 import axios from 'axios';
 import HotelForm from "./HotelForm";
 import ExploreTable from "./ExporeTable";
+import { UserContext } from './UserContext';
 
 function HotelPage() {
     const [stays, setStays] = useState([]);
@@ -10,6 +11,7 @@ function HotelPage() {
     const {hotelCode} = useParams();
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
     const [hotelDetails, setHotelDetails] = useState(null); // Add this state
+    const { isCustomer } = useContext(UserContext);
 
     const handleStaysUpdate = (newData) => {
       setStays(newData);
@@ -59,7 +61,7 @@ function HotelPage() {
               </div>
             </div>
             <div className="form-container">
-              <HotelForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} />
+              <HotelForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} />
             </div>
             <div className="table-container">
               <ExploreTable stays={stays} />
