@@ -10,6 +10,7 @@ from queue import Queue
 import os
 import pytz
 import logging
+import requests
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
@@ -223,6 +224,10 @@ def update_rates():
     print("Batch update completed. {} rows affected.".format(result.rowcount))
     print("Changes committed to the database.")
 
+def send_error_to_slack(error_msg):
+    url = "https://hooks.slack.com/services/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"
+    requests.post(url, json={"text": f"Error in threaded search awards! Error message: {error_msg}"})
+
 if __name__ == "__main__":
     try:
         search_awards(search_frequency_hours=24, search_batch_size=12000)
@@ -230,4 +235,5 @@ if __name__ == "__main__":
         session.close()
     except Exception as e:
         session.close()
+        send_error_to_slack(str(e))
         logging.error("Error in main function: %s", str(e))  # Log exceptions
