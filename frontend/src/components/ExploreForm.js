@@ -79,6 +79,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         { value: '0.03', label: 'Over 3¢ per pt' },
         { value: '0.04', label: 'Over 4¢ per pt' },
         { value: '0.05', label: 'Over 5¢ per pt' },
+        { value: '0.1', label: 'Over 10¢ per pt' },
         // Add more cents per points options as needed
     ];    
 

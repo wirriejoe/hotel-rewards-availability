@@ -275,19 +275,19 @@ def get_hotel():
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
-    if data['points_budget'] != '' and data['points_budget'] != None:
+    if data.get('points_budget','') != '' and data.get('points_budget','') != None:
         filter_conditions.append(
             or_(
                 and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
                 and_(stays.c.premium_rate <= float(data['points_budget']), stays.c.premium_rate > 0)
         ))
-    if data['is_weekend'] == 'true':
+    if data.get('is_weekend',False) == 'true':
         filter_conditions.append(
             or_(
                 func.extract('dow', stays.c.check_in_date) == 5,  # Friday
                 func.extract('dow', stays.c.check_in_date) == 6   # Saturday
         ))
-    if data['cents_per_point'] != '' and data['cents_per_point'] != None:
+    if data.get('cents_per_point','') != '' and data.get('cents_per_point','') != None:
         print(data['cents_per_point'])
         filter_conditions.append(
             or_(
