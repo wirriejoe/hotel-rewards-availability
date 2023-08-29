@@ -11,16 +11,6 @@ import os
 import pytz
 import logging
 import requests
-import sentry_sdk
-
-sentry_sdk.init(
-  dsn="https://49fec3cbb770646307c5725b7e3e323d@o4505785498927104.ingest.sentry.io/4505785501679616",
-
-  # Set traces_sample_rate to 1.0 to capture 100%
-  # of transactions for performance monitoring.
-  # We recommend adjusting this value in production.
-  traces_sample_rate=1.0
-)
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
@@ -126,6 +116,7 @@ def worker(task_queue, award_updates, stay_updates, counter_lock):
             with counter_lock:
                 award_updates.extend(award_data)
         
+        with counter_lock:
             stay_updates.append({
                 'stay_id': stay['stay_id'],
                 'last_checked_time': datetime.now(pytz.UTC),
@@ -167,9 +158,14 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
         threads.append(t)
         t.start()
     
+    print("Finished jobs! Closing out threads.")
+
     for t in threads:
         t.join()
-
+    
+    print("Finished joining threads! Upserting data.")
+    print(f"Num award updates: {len(award_updates)}")
+    print(f"Num stay updates: {len(stay_updates)}")
     upsert(session, awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
 
