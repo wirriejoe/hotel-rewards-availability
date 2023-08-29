@@ -168,9 +168,6 @@ function SearchForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     return (
         <>
-            {/* <p>Start Date: {startDate}</p>
-            <p>End Date: {endDate}</p>
-            <p>Is Customer: {isCustomer.toString()}</p> */}
             {error && <p className="error">
                 {error}{" "}
                 <a href="https://buy.stripe.com/6oE8xe4ps4ly7fy4gi" target="_blank" rel="noreferrer">

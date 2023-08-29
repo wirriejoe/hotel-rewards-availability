@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select from 'react-select';
+import queryString from 'query-string';
 
 function usePrevious(value) {
     const ref = useRef();
@@ -89,8 +90,21 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
             is_weekend: weekend.value,
             cents_per_point: centsPerPoint.value,
             isCustomer: isCustomer
-          };      
-
+          };
+        
+        const queryObj = {
+            pointsPerNight: pointsPerNight.value,
+            weekend: weekend.value,
+            cpp: centsPerPoint.value,
+            numNights: numNights.value
+        };
+    
+        const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
+        console.log('Filtered Query Object:', filteredQueryObj);
+        const queryStr = queryString.stringify(filteredQueryObj);
+        console.log('Query String:', queryStr);
+        window.history.pushState({}, '', '?' + queryStr);
+  
         try {
             const response = await axios.post(api_url + '/api/hotel', payload);
             setStays(response.data);
@@ -101,6 +115,16 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     useEffect(() => {
         if (initialLoad && !isLoading) {
+            const parsed = queryString.parse(window.location.search);
+            
+            if (Object.keys(parsed).length > 0) {
+                // Parse the parameters and set the state
+                if (parsed.pointsPerNight) setPointsPerNight(Number(parsed.pointsPerNight));
+                if (parsed.weekend) setWeekend(parsed.weekend);
+                if (parsed.centsPerPoint) setCentsPerPoint(Number(parsed.centsPerPoint));
+                if (parsed.numNights) setNumNights(Number(parsed.numNights));
+            }
+            
             submitForm();
             setInitialLoad(false);
             setIsLoading(false)
