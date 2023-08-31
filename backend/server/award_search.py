@@ -64,7 +64,7 @@ class AwardSearch:
         }
         base_url = base_url_dict[hotel_brand] + hotel_code
         search_base_url = search_base_url_dict[hotel_brand] + hotel_code
-        response_url = base_url + f'?spiritCode={hotel_code}&rooms={room_qty}&adults={adults}&checkinDate={checkin_date}&checkoutDate={checkout_date}&kids={kids}'
+        response_url = base_url + f'?spiritCode={hotel_code}&rooms={room_qty}&adults={adults}&checkinDate={checkin_date}&checkoutDate={checkout_date}&kids={kids}&rateFilter=woh'
         search_url = search_base_url + f'?checkinDate={checkin_date}&checkoutDate={checkout_date}&rateFilter=woh'
         print("Response URL: " + response_url)
         print("Verification URL: " + search_url)
