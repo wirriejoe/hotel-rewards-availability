@@ -167,7 +167,8 @@ def explore():
         stays.c.check_in_date < future_date,
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
-        stays.c.duration == 1
+        stays.c.duration == 1,
+        hotels.c.hotel_brand == 'hyatt'
     ]
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
@@ -332,42 +333,42 @@ def get_hotel():
 @app.route('/api/hotels', methods=['GET'])
 def get_hotels():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_name).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.hotel_name).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/cities', methods=['GET'])
 def get_cities():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_city).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.hotel_city).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/countries', methods=['GET'])
 def get_countries():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_country).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.hotel_country).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/regions', methods=['GET'])
 def get_regions():
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_region).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.hotel_region).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/award_categories', methods=['GET'])
 def get_categories():
     with engine.connect() as connection:
-        s = select(hotels.c.award_category).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.award_category).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/brands', methods=['GET'])
 def get_brands():
     with engine.connect() as connection:
-        s = select(hotels.c.brand).where(and_(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt')).distinct()
+        s = select(hotels.c.brand).where(hotels.c.brand != '', hotels.c.hotel_brand=='hyatt').distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
@@ -512,7 +513,8 @@ def get_stays():
         hotels.c.hotel_code,
         func.count(stays.c.check_in_date).label('num_night_monitored')).select_from(j).where(
             stays.c.status.in_(['Active', 'Queued']),
-            stays.c.check_in_date >= datetime.now() + timedelta(days=1)
+            stays.c.check_in_date >= datetime.now() + timedelta(days=1),
+            hotels.c.hotel_brand == 'hyatt'
         ).group_by(hotels.c.hotel_name, hotels.c.hotel_id, hotels.c.hotel_code).order_by(desc('num_night_monitored'),hotels.c.hotel_name)
 
     conn = engine.connect()

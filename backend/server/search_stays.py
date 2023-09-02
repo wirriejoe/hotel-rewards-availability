@@ -29,7 +29,8 @@ def fetch_stays(start_date, end_date, hotels_name_text = [], hotel_cities=[], ho
         stays.c.check_in_date >= start_date,
         stays.c.check_out_date <= end_date,
         stays.c.duration == 1,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48)
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
+        hotels.c.hotel_brand == 'hyatt'
     ]
     
     if [name for name in hotels_name_text if name]:
