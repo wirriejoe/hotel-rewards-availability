@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, MetaData, select, and_, update, func, case, text
+from sqlalchemy import create_engine, MetaData, select, and_, update, func, case, text, join
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
@@ -32,6 +32,7 @@ meta.reflect(bind=engine)
 # Map tables
 stays = meta.tables['stays']
 awards = meta.tables['awards']
+hotels = meta.tables['hotels']
 
 award_updates = []
 stay_updates = []
@@ -130,13 +131,19 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     start_timer = datetime.now()
     
     stay_records = session.execute(
-        select(*stays.c).where(
+        select(*stays.c)
+        .select_from(
+            join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
+        )
+        .where(
             and_(
                 stays.c.status == "Active", 
                 stays.c.last_checked_time < datetime.now(pytz.UTC) - timedelta(hours=search_frequency_hours),
-                stays.c.check_in_date >= datetime.now(pytz.UTC).date()
+                stays.c.check_in_date >= datetime.now(pytz.UTC).date(),
+                hotels.c.hotel_brand == 'hyatt'
             )
-        ).order_by(stays.c.last_checked_time)
+        )
+        .order_by(stays.c.last_checked_time)
         .limit(search_batch_size)
     ).fetchall()
 
