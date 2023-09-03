@@ -1,6 +1,7 @@
 from selenium_profiles.webdriver import Chrome
 from selenium_profiles.profiles import profiles
 from selenium.webdriver import ChromeOptions
+from retry import retry
 import json
 import random
 import time
@@ -16,6 +17,7 @@ def extract_cacheId(query_str):
     matches = re.findall(pattern, query_str)
     return matches[-1] if matches else None
 
+@retry(tries=3, delay=2)
 def get_hilton_auth(check_in_date, check_out_date, hotel_code):
     load_dotenv(find_dotenv())
     selection = random.choice([1,2,3])
@@ -39,6 +41,9 @@ def get_hilton_auth(check_in_date, check_out_date, hotel_code):
     options = ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
+    options.add_argument("--disable-images")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
     options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     driver = Chrome(profile=profile, options=options,uc_driver=False,injector_options=True, seleniumwire_options=True)
@@ -49,12 +54,10 @@ def get_hilton_auth(check_in_date, check_out_date, hotel_code):
 
     driver.get(url)
 
-    # time.sleep(random.random()*2)
+    time.sleep(random.randint(2,3))
     # soup = BeautifulSoup(driver.page_source, 'html.parser')
 
     logs = driver.get_log("performance")
-
-    driver.quit()
 
     for entry in logs:
         if "cacheId" in str(entry["message"]):
@@ -62,4 +65,13 @@ def get_hilton_auth(check_in_date, check_out_date, hotel_code):
             query = auth_message_data['message']["params"]["request"]["postData"]
             cacheId = extract_cacheId(query)
             auth_token = auth_message_data['message']['params']['request']['headers']['Authorization']
-            return cacheId, auth_token
+            print(f"CacheId: {cacheId}")
+            print(f"Auth Token: {auth_token}")
+            break
+
+    if cacheId and auth_token:
+        driver.quit()
+        return cacheId, auth_token
+
+    driver.quit()
+    raise Exception("Failed to get cacheId and auth_token")

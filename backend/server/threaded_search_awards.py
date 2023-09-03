@@ -149,7 +149,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 
     # Update status of fetched stay_records to 'Queued'
     stay_ids_to_update = [record.stay_id for record in stay_records]
-    update_query = stays.update().where(stays.c.stay_id.in_(stay_ids_to_update)).values(status='Queued', last_queued_time=start_timer)
+    update_query = stays.update().where(stays.c.stay_id.in_(stay_ids_to_update)).values(status='Queued', last_queued_time=datetime.now(pytz.UTC))
     session.execute(update_query)
     session.commit()
 
@@ -180,7 +180,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 def update_rates():
     print("Starting batch update of rates...")
 
-    stmt = stays.update().values(standard_rate=0, premium_rate=0)
+    stmt = stays.update().where(stays.c.last_checked_time >= (datetime.now(pytz.UTC) - timedelta(hours=2))).values(standard_rate=0, premium_rate=0)
 
     # Prepare the raw SQL statement
     stmt2 = text("""
@@ -198,12 +198,12 @@ def update_rates():
             SELECT 
                 stay_id,
                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_standard_rate,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_premium_rate,
+                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_premium_rate,
                 awards.currency_code,
                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_standard_cash,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_premium_cash,
+                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_premium_cash,
                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS standard_cash_usd,
-                MIN(CASE WHEN room_category = 'PREMIUM' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS premium_cash_usd,
+                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS premium_cash_usd,
                 search_url
             FROM awards
             left join fx on awards.currency_code = fx.currency_code
