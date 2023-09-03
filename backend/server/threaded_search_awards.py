@@ -197,8 +197,8 @@ def update_rates():
         FROM (
             SELECT 
                 stay_id,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_standard_rate,
-                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_premium_rate,
+                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_standard_rate,
+                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_premium_rate,
                 awards.currency_code,
                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_standard_cash,
                 MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_premium_cash,
