@@ -11,7 +11,6 @@ from retry import retry
 import pytz
 import random
 import requests
-import json
 import os
 
 load_dotenv(find_dotenv())
@@ -38,6 +37,10 @@ super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{sessio
 proxy_dict = {
     "http": super_proxy_url
 }
+
+award_updates = []
+stay_updates = []
+search_counter = 0
 
 def queue_stays(hotel_brand, search_frequency_hours, search_batch_size):
     stay_records = session.execute(
@@ -75,7 +78,7 @@ def upsert(session, table, list_of_dicts, unique_columns):
         session.execute(upd_stmt)
     session.commit()
 
-@retry(tries=5, delay=1, backoff=2)
+@retry(tries=3, delay=1, backoff=2)
 def get_hilton_award(check_in_date, check_out_date, hotel_code, auth_token, cacheId, stay_id, hotel_id):
     award_updates = []
     headers = {
@@ -147,17 +150,13 @@ def get_hilton_award(check_in_date, check_out_date, hotel_code, auth_token, cach
     return award_updates
 
 def search_awards(search_frequency_hours=24, search_batch_size=750):
-    # awardsearch = AwardSearch()
-    award_updates = []
-    stay_updates = []
-    search_counter = 0
     start_timer = datetime.now()
     auth_check_in_date = datetime.now() + timedelta(days=7)
     auth_check_out_date = datetime.now() + timedelta(days=8)
     hotel_code = 'LAXWAWA'
     cacheId, auth_token = get_hilton_auth(auth_check_in_date, auth_check_out_date, hotel_code)
 
-    stay_records = queue_stays(hotel_brand='hilton', search_frequency_hours=search_frequency_hours, search_batch_size=search_batch_size)
+    stay_records = queue_stays("hilton", search_frequency_hours, search_batch_size)
 
     for stay in stay_records:
         search_counter += 1
@@ -186,76 +185,9 @@ def search_awards(search_frequency_hours=24, search_batch_size=750):
             'last_checked_time': datetime.now(pytz.UTC),
             'status': 'Active'
         })
+
     upsert(session, awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
-
-# @retry(tries=5, delay=1, backoff=2)
-# def update_rates():
-#     print("Starting batch update of rates...")
-
-
-#     stmt = stays.update().where(stays.c.last_checked_time >= (datetime.now(pytz.UTC) - timedelta(hours=2))).values(standard_rate=0, premium_rate=0)
-
-#     # Prepare the raw SQL statement
-#     stmt2 = text("""
-#         UPDATE stays
-#         SET 
-#             standard_rate = coalesce(subquery.min_standard_rate,0),
-#             premium_rate = coalesce(subquery.min_premium_rate,0),
-#             currency_code = subquery.currency_code,
-#             standard_cash = coalesce(subquery.min_standard_cash,0),
-#             premium_cash = coalesce(subquery.min_premium_cash,0),
-#             standard_cash_usd = coalesce(subquery.standard_cash_usd,0),
-#             premium_cash_usd = coalesce(subquery.premium_cash_usd,0),
-#             booking_url = search_url
-#         FROM (
-#             SELECT 
-#                 stay_id,
-#                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_standard_rate,
-#                 MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '24 hours' THEN lowest_points_rate END) AS min_premium_rate,
-#                 awards.currency_code,
-#                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_standard_cash,
-#                 MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_premium_cash,
-#                 MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS standard_cash_usd,
-#                 MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS premium_cash_usd,
-#                 search_url
-#             FROM awards
-#             left join fx on awards.currency_code = fx.currency_code
-#             GROUP BY stay_id, search_url, awards.currency_code, fx.usd_exchange_rate
-#         ) AS subquery
-#         WHERE stays.stay_id = subquery.stay_id
-#     """)
-
-#     # Calculate available award inventory
-#     stmt3 = text("""
-#         UPDATE stays
-#         SET available_inventory = subquery.stays_available::decimal / subquery.total_tracked_dates::decimal
-#         FROM (
-#         SELECT
-#             stay_id,
-#             sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by hotel_id) as stays_available,
-#             count(stay_id) over (partition by hotel_id) as total_tracked_dates
-#         FROM stays
-#         WHERE status <> 'Inactive'
-#         AND check_in_date >= CURRENT_DATE
-#         ) AS subquery
-#         WHERE stays.stay_id = subquery.stay_id
-#         """)
-
-#     # Execute the UPDATE statement
-#     try:
-#         session.execute(stmt)
-#         session.commit()
-#     except SQLAlchemyError:
-#         session.rollback()
-#         raise
-#     result = session.execute(stmt)
-#     result = session.execute(stmt2)
-#     result = session.execute(stmt3)
-#     session.commit()
-
-#     print("Batch update completed. {} rows affected.".format(result.rowcount))
-#     print("Changes committed to the database.")
 
 if __name__ == "__main__":
     # try:
@@ -264,8 +196,3 @@ if __name__ == "__main__":
         session.close()
     # except Exception as e:
     #     print("Error in main function: %s", str(e))  # Log exceptions
-
-# cacheId = '5f704afc-7da3-478f-ba70-4db75b6c97d0'
-# auth_token = 'Bearer DX.eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00iLCJwaWQiOiJ3ZWIiLCJraWQiOiI4UVl1RTZfdHBValdjUmVnem1RZFlBaF9RYlk1ckVqUlpPTThwWmNKeU5BIn0.tYwYyjGMUGHHO4ilpwgeesNc_t_paQePrakSCIbkcSANh-cZ5WxzW_i3rzU_7AQIHUZE4eNRt1xLrwlvJgwevajiAB0c40E03FdiopqWNOYVxVA-840drZGgKbWqVH7St6uIJSaRGjugSkTmxjLCqhXSG27WmYW_E8amdU_kFN_dhgjwDsDXFChJu9hVhrqAhSLPTxo481lAlVLhAP4IfN0u1pXDMxegBWjxmTpjnpXNruNoISvVQSTyFOHJi_9yEz-UWP53Nh2OuYAHCE1SHmJxbk6bf1VPMmfFrjyikEoKHWdfWmebeEUo2e481-VJ1pfEMTVK--BR4MJhD0cV5A._Jor1rFpUkp4wLNz.YGxsTcA4BFtFTvc3vxmLRZDR7iRoUzax14-w9zWajAy7YL1qpuCVhLeFMgv7xKThHrpd41u8qa_9pSum1bFdH7YjkbbXKV5BgPykT0AfamfSEUzDfBEyyVnFAzIbu5hN20SaCwO7kpRRx1zUnclXuGo09ekOJDJWPkDmQ5x_EYLgQSwWMpM7cdnFN_G59actaLpdAeonN9XRrZnxTf-IGGSihf7rEGZM4mYOYxR-ct4uhP1emF1VLqsXwS5BEEZu8mTZ7--VTwpLBxj2U1H6y17PMk5hiCr1Q0rb5HDeD-i2RKlp5a7Q--5ZaeI19drXuB_kIUWw8ygt6x8H9FMsuo0BvY21ixHx4UMA4QKqQubvHvlfplzgYf7kHQSzfi2nFLs8fEVPYYiFffoiOefBvxxcdNsLPEhPUvrohLJSl_ZOiGWdp1Hafvcu48MmTDqNB24kbZ5xYqeC6ADT5Q-5z4FuFTyBb3omtruw3Frvavq583b2TpQF1_TB1fIQux6IJtz_xRjjj7wj7uNl3mX4-3UNl81CBJa6mllPovr5GM4h6HPMymHUuq2Ia1K-anYDSEIu-zjhZaEJZ320ahBWH1VsuDqr-Unx7jOQNQXfv7JhkowQHMhah5Hyc5gQr_NE8J7I9M_FCka6AUtBj_icttiHQInWsAQi-T3pNTMZZab4NF9upMo.HUw6RpCDbkJVo6ALqFw35A'
-# award_data_to_update = get_hilton_awards(check_in_date, check_out_date, hotel_code, auth_token, cacheId)
-# print(award_data_to_update)

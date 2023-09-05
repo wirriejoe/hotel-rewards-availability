@@ -8,7 +8,6 @@ import time
 from dotenv import load_dotenv, find_dotenv
 import os
 import re
-from bs4 import BeautifulSoup  # for parsing HTML
 
 # Will be useful for refreshing auth tokens using selenium https://gist.github.com/rengler33/f8b9d3f26a518c08a414f6f86109863c
 
@@ -17,8 +16,9 @@ def extract_cacheId(query_str):
     matches = re.findall(pattern, query_str)
     return matches[-1] if matches else None
 
-@retry(tries=3, delay=2)
+@retry(tries=5, delay=2)
 def get_hilton_auth(check_in_date, check_out_date, hotel_code):
+    print("Getting new auth!")
     load_dotenv(find_dotenv())
     selection = random.choice([1,2,3])
     if selection == 1:
@@ -53,11 +53,11 @@ def get_hilton_auth(check_in_date, check_out_date, hotel_code):
     url = f"https://www.hilton.com/en/book/reservation/rooms/?ctyhocn={hotel_code}&arrivalDate={check_in_date}&departureDate={check_out_date}&redeemPts=true&room1NumAdults=2"
 
     driver.get(url)
-
-    time.sleep(random.randint(2,3))
-    # soup = BeautifulSoup(driver.page_source, 'html.parser')
+    time.sleep(random.randint(1,2))
 
     logs = driver.get_log("performance")
+    cacheId = None
+    auth_token = None
 
     for entry in logs:
         if "cacheId" in str(entry["message"]):
