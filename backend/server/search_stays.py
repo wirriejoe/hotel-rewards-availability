@@ -142,7 +142,7 @@ def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_nam
         return "Error in search_stays.py: %s", str(e)
     
 
-def get_consecutive_stays_2(start_date, end_date, hotel_cities, hotel_countries, award_categories, length_of_stay, rate_filter, max_points_budget):
+def search_by_consecutive_nights_2(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], hotel_region=[], award_category=[], rate_filter=None, max_points_budget=0):
     query = text(
         """
         with ConsecutiveNights as (
@@ -174,7 +174,7 @@ def get_consecutive_stays_2(start_date, end_date, hotel_cities, hotel_countries,
             SELECT
                 c.*, 
                 count(*) over (partition by hotel_id, group_number order by check_in_date, duration rows between current row AND UNBOUNDED FOLLOWING) as num_consecutive_nights,
-                sum(available_rate * duration) / :lenght_of_stay over (partition by hotel_id, group_number order by check_in_date, duration rows between current row and unbounded following) as nightly_rate
+                sum(available_rate * duration) / :length_of_stay over (partition by hotel_id, group_number order by check_in_date, duration rows between current row and unbounded following) as nightly_rate
             FROM ConsecutiveNights as c
         )
         select * from GroupedCounts
@@ -190,13 +190,17 @@ def get_consecutive_stays_2(start_date, end_date, hotel_cities, hotel_countries,
     params = {
         'start_date': start_date,
         'end_date': end_date,
-        'hotel_cities': to_sql_param(hotel_cities),
-        'hotel_countries': to_sql_param(hotel_countries),
-        'award_categories': to_sql_param(award_categories),
+        'hotel_cities': to_sql_param(hotel_city),
+        'hotel_countries': to_sql_param(hotel_country),
+        'award_categories': to_sql_param(award_category),
         'length_of_stay': length_of_stay,
         'rate_filter': to_sql_param(rate_filter),
         'max_points_budget': max_points_budget
     }
+    print(params)
+
+    compiled_query = query.compile(bind=session.get_bind(), compile_kwargs={"literal_binds": True})
+    print(str(compiled_query))
 
     result = session.execute(statement=query, params=params).fetchall()
 
