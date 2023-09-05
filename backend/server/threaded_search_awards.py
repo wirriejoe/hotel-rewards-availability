@@ -56,15 +56,16 @@ def upsert(session, table_name, list_of_dicts, unique_columns):
     session.execute(text(upsert_sql), list_of_dicts)
     session.commit()
 
-    print("Calling tempAwards webhook!")
-    url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
-    params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        print("Request successful:", response.json())
-    else:
-        print("Request failed:", response.status_code)
-        send_error_to_slack("tempAwards webhook error: " + response)
+    if table_name == temp_awards:
+        print("Calling tempAwards webhook!")
+        url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
+        params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            print("Request successful:", response.json())
+        else:
+            print("Request failed:", response.status_code)
+            send_error_to_slack("tempAwards webhook error: " + response)
 
 
 def update_awards_table(award_stays, stay_record):
