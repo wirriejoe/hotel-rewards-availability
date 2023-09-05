@@ -43,4 +43,5 @@ RUN pip install --upgrade pip && \
 EXPOSE 80
 
 # Run server/search_awards.py when the container launches
-CMD ["python", "backend/server/threaded_search_awards.py"]
+CMD ["python", "entrypoint.py"]
+# CMD ["python", "backend/server/threaded_search_awards.py"]
