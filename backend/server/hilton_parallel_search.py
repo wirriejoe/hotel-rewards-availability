@@ -27,6 +27,7 @@ meta.reflect(bind=engine)
 stays = meta.tables['stays']
 awards = meta.tables['awards']
 hotels = meta.tables['hotels']
+temp_awards = meta.tables['temp_awards']
 
 username = os.getenv('BRIGHTDATA_USERNAME')
 password = os.getenv('BRIHTDATA_PASSWORD')
@@ -190,8 +191,8 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 12000)
-        auths = get_global_auths(5)
+        stay_records = queue_stays("hilton", 24, 1000)
+        auths = get_global_auths(2)
 
         # Asynchronous: Fetch awards
         award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
@@ -199,7 +200,7 @@ if __name__ == "__main__":
 
         # Single-thread: upsert, update rates, close session
         print(f"Upserting award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        upsert(session, awards, award_updates, ["award_id"])
+        upsert(session, temp_awards, award_updates, ["award_id"])
         print(f"Upserting stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, stays, stay_updates, ['stay_id'])
         print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")

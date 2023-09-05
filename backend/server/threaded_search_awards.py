@@ -33,24 +33,12 @@ meta.reflect(bind=engine)
 stays = meta.tables['stays']
 awards = meta.tables['awards']
 hotels = meta.tables['hotels']
+temp_awards = meta.tables['temp_awards']
 
 award_updates = []
 stay_updates = []
 search_counter = 0
 counter_lock = Lock()
-
-# def upsert(session, table, list_of_dicts, unique_columns):
-#     # Prepare a list to hold all the insert statements
-#     insert_stmts = [insert(table).values(**data_dict) for data_dict in list_of_dicts]
-#     # Using a single transaction to batch upsert
-#     with session.begin_nested():
-#         for stmt, data_dict in zip(insert_stmts, list_of_dicts):
-#             upd_stmt = stmt.on_conflict_do_update(
-#                 index_elements=unique_columns,
-#                 set_=data_dict
-#             )
-#             session.execute(upd_stmt)
-#     session.commit()
 
 def upsert(session, table_name, list_of_dicts, unique_columns):
     # Prepare the base INSERT statement
@@ -67,6 +55,17 @@ def upsert(session, table_name, list_of_dicts, unique_columns):
     # Execute the raw SQL upsert query
     session.execute(text(upsert_sql), list_of_dicts)
     session.commit()
+
+    print("Calling tempAwards webhook!")
+    url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
+    params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        print("Request successful:", response.json())
+    else:
+        print("Request failed:", response.status_code)
+        send_error_to_slack("tempAwards webhook error: " + response)
+
 
 def update_awards_table(award_stays, stay_record):
     # Replaced 'stay' with 'stay_record' to avoid naming conflict with stay from the outer function
@@ -192,7 +191,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     print("Finished joining threads! Upserting data.")
     print(f"Num award updates: {len(award_updates)}")
     print(f"Num stay updates: {len(stay_updates)}")
-    upsert(session, awards, award_updates, ['award_id'])
+    upsert(session, temp_awards, award_updates, ['award_id'])
     upsert(session, stays, stay_updates, ['stay_id'])
 
 @retry(tries=5, delay=1, backoff=2)
