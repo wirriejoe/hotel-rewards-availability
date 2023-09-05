@@ -39,14 +39,33 @@ stay_updates = []
 search_counter = 0
 counter_lock = Lock()
 
-def upsert(session, table, list_of_dicts, unique_columns):
-    for data_dict in list_of_dicts:
-        stmt = insert(table).values(**data_dict)
-        upd_stmt = stmt.on_conflict_do_update(
-            index_elements=unique_columns,
-            set_=data_dict
-        )
-        session.execute(upd_stmt)
+# def upsert(session, table, list_of_dicts, unique_columns):
+#     # Prepare a list to hold all the insert statements
+#     insert_stmts = [insert(table).values(**data_dict) for data_dict in list_of_dicts]
+#     # Using a single transaction to batch upsert
+#     with session.begin_nested():
+#         for stmt, data_dict in zip(insert_stmts, list_of_dicts):
+#             upd_stmt = stmt.on_conflict_do_update(
+#                 index_elements=unique_columns,
+#                 set_=data_dict
+#             )
+#             session.execute(upd_stmt)
+#     session.commit()
+
+def upsert(session, table_name, list_of_dicts, unique_columns):
+    # Prepare the base INSERT statement
+    keys = list_of_dicts[0].keys()
+    columns = ', '.join(keys)
+    values = ', '.join([f":{key}" for key in keys])
+    insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+    
+    # Prepare the UPDATE statement for conflict
+    update_str = ', '.join([f"{col}=EXCLUDED.{col}" for col in keys])
+    conflict_str = ', '.join(unique_columns)
+    upsert_sql = f"{insert_sql} ON CONFLICT ({conflict_str}) DO UPDATE SET {update_str}"
+    
+    # Execute the raw SQL upsert query
+    session.execute(text(upsert_sql), list_of_dicts)
     session.commit()
 
 def update_awards_table(award_stays, stay_record):
@@ -178,64 +197,71 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 
 @retry(tries=5, delay=1, backoff=2)
 def update_rates():
-    print("Starting batch update of rates...")
+    print("Calling update_rates() webhook!")
+    url = "https://api.retool.com/v1/workflows/c5027803-ab81-4c30-85cd-57748fe8f44f/startTrigger"
+    params = {'workflowApiKey': 'retool_wk_a717023c42f24f558e28f0afe3dc2abb'}
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        print("Request successful:", response.json())
+    else:
+        print("Request failed:", response.status_code)
+        send_error_to_slack("update_rates() webhook error: " + response)
 
-    stmt = stays.update().where(stays.c.last_checked_time >= (datetime.now(pytz.UTC) - timedelta(hours=2))).values(standard_rate=0, premium_rate=0)
+    # print("Starting batch update of rates...")
 
-    # Prepare the raw SQL statement
-    stmt2 = text("""
-        UPDATE stays
-        SET 
-            standard_rate = coalesce(subquery.min_standard_rate,0),
-            premium_rate = coalesce(subquery.min_premium_rate,0),
-            currency_code = subquery.currency_code,
-            standard_cash = coalesce(subquery.min_standard_cash,0),
-            premium_cash = coalesce(subquery.min_premium_cash,0),
-            standard_cash_usd = coalesce(subquery.standard_cash_usd,0),
-            premium_cash_usd = coalesce(subquery.premium_cash_usd,0),
-            booking_url = search_url
-        FROM (
-            SELECT 
-                stay_id,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_standard_rate,
-                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate END) AS min_premium_rate,
-                awards.currency_code,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_standard_cash,
-                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) AS min_premium_cash,
-                MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS standard_cash_usd,
-                MIN(CASE WHEN room_category in ('PREMIUM', 'SUITE') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal END) * fx.usd_exchange_rate AS premium_cash_usd,
-                search_url
-            FROM awards
-            left join fx on awards.currency_code = fx.currency_code
-            GROUP BY stay_id, search_url, awards.currency_code, fx.usd_exchange_rate
-        ) AS subquery
-        WHERE stays.stay_id = subquery.stay_id
-    """)
+    # # Prepare the raw SQL statement
+    # stmt = text("""
+    #     UPDATE stays
+    #     SET 
+    #         standard_rate = coalesce(subquery.min_standard_rate,0),
+    #         premium_rate = coalesce(subquery.min_premium_rate,0),
+    #         currency_code = subquery.currency_code,
+    #         standard_cash = coalesce(subquery.min_standard_cash,0),
+    #         premium_cash = coalesce(subquery.min_premium_cash,0),
+    #         standard_cash_usd = coalesce(subquery.standard_cash_usd,0),
+    #         premium_cash_usd = coalesce(subquery.premium_cash_usd,0),
+    #         booking_url = search_url
+    #     FROM (
+    #         SELECT 
+    #             stay_id,
+    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
+    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate ELSE 0 END) AS min_premium_rate,
+    #             awards.currency_code,
+    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) AS min_standard_cash,
+    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) AS min_premium_cash,
+    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) * fx.usd_exchange_rate AS standard_cash_usd,
+    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) * fx.usd_exchange_rate AS premium_cash_usd,
+    #             search_url
+    #         FROM awards
+    #         left join fx on awards.currency_code = fx.currency_code
+    #         GROUP BY stay_id, search_url, awards.currency_code, fx.usd_exchange_rate
+    #     ) AS subquery
+    #     WHERE stays.stay_id = subquery.stay_id
+    # """)
 
-    # Calculate available award inventory
-    stmt3 = text("""
-        UPDATE stays
-        SET available_inventory = subquery.stays_available::decimal / subquery.total_tracked_dates::decimal
-        FROM (
-        SELECT
-            stay_id,
-            sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by hotel_id) as stays_available,
-            count(stay_id) over (partition by hotel_id) as total_tracked_dates
-        FROM stays
-        WHERE status <> 'Inactive'
-        AND check_in_date >= CURRENT_DATE
-        ) AS subquery
-        WHERE stays.stay_id = subquery.stay_id
-        """)
+    # # Calculate available award inventory
+    # stmt2 = text("""
+    #     UPDATE stays
+    #     SET available_inventory = subquery.stays_available::decimal / subquery.total_tracked_dates::decimal
+    #     FROM (
+    #     SELECT
+    #         stay_id,
+    #         sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by hotel_id) as stays_available,
+    #         count(stay_id) over (partition by hotel_id) as total_tracked_dates
+    #     FROM stays
+    #     WHERE status <> 'Inactive'
+    #     AND check_in_date >= CURRENT_DATE
+    #     ) AS subquery
+    #     WHERE stays.stay_id = subquery.stay_id
+    #     """)
 
-    # Execute the UPDATE statement
-    result = session.execute(stmt)
-    result = session.execute(stmt2)
-    result = session.execute(stmt3)
-    session.commit()
+    # # Execute the UPDATE statement
+    # result = session.execute(stmt)
+    # result = session.execute(stmt2)
+    # session.commit()
 
-    print("Batch update completed. {} rows affected.".format(result.rowcount))
-    print("Changes committed to the database.")
+    # print("Batch update completed. {} rows affected.".format(result.rowcount))
+    # print("Changes committed to the database.")
 
 def send_error_to_slack(error_msg):
     url = os.getenv('SLACK_WEBHOOK')
