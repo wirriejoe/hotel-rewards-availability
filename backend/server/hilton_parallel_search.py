@@ -191,8 +191,8 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 1000)
-        auths = get_global_auths(2)
+        stay_records = queue_stays("hilton", 24, 12000)
+        auths = get_global_auths(5)
 
         # Asynchronous: Fetch awards
         award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
