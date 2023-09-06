@@ -5,6 +5,7 @@ from pytz import utc
 from dotenv import load_dotenv, find_dotenv
 from operator import itemgetter
 from itertools import groupby
+from sqlalchemy.dialects import postgresql
 import os
 
 # Load environment variables
@@ -140,71 +141,6 @@ def search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_nam
     except Exception as e:
         session.close()
         return "Error in search_stays.py: %s", str(e)
-    
-
-def search_by_consecutive_nights_2(start_date, end_date, length_of_stay, hotel_name_text=[], hotel_city=[], hotel_country=[], hotel_region=[], award_category=[], rate_filter=None, max_points_budget=0):
-    query = text(
-        """
-        with ConsecutiveNights as (
-            SELECT 
-                stays.hotel_id,
-                check_in_date,
-                check_out_date,
-                check_out_date - check_in_date AS duration,
-                standard_rate,
-                premium_rate,
-                case when :rate_filter = 'Standard' then standard_rate
-                    when :rate_filter = 'Premium' then premium_rate
-                    else LEAST(
-                        CASE WHEN standard_rate = 0 THEN NULL ELSE standard_rate END,
-                        CASE WHEN premium_rate = 0 THEN NULL ELSE premium_rate END
-                    )
-                    end as available_rate,
-                row_number() over (partition by stays.hotel_id, check_out_date - check_in_date order by check_in_date) - sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by stays.hotel_id, check_out_date - check_in_date order by check_in_date) as group_number
-            FROM stays
-            LEFT JOIN hotels on stays.hotel_id = hotels.hotel_id
-            WHERE check_in_date >= :start_date
-            AND check_out_date <= :end_date
-            AND status <> 'Inactive'
-            AND last_checked_time >= now() - interval '48 hours'
-            AND (hotels.hotel_city in (:hotel_cities) OR :hotel_cities is null)
-            AND (hotels.hotel_country in (:hotel_countries) OR :hotel_countries is null)
-            AND (hotels.award_category in (:award_categories) OR :award_categories is null)
-        ), GroupedCounts as (
-            SELECT
-                c.*, 
-                count(*) over (partition by hotel_id, group_number order by check_in_date, duration rows between current row AND UNBOUNDED FOLLOWING) as num_consecutive_nights,
-                sum(available_rate * duration) / :length_of_stay over (partition by hotel_id, group_number order by check_in_date, duration rows between current row and unbounded following) as nightly_rate
-            FROM ConsecutiveNights as c
-        )
-        select * from GroupedCounts
-        where duration + num_consecutive_nights - 1 >= :length_of_stay
-        and nightly_rate > 0 and nightly_rate <= :max_points_budget
-        order by hotel_id, group_number, num_consecutive_nights
-        """
-    )
-
-    def to_sql_param(lst):
-        return ", ".join(f"'{item}'" for item in lst) if lst else None
-    
-    params = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'hotel_cities': to_sql_param(hotel_city),
-        'hotel_countries': to_sql_param(hotel_country),
-        'award_categories': to_sql_param(award_category),
-        'length_of_stay': length_of_stay,
-        'rate_filter': to_sql_param(rate_filter),
-        'max_points_budget': max_points_budget
-    }
-    print(params)
-
-    compiled_query = query.compile(bind=session.get_bind(), compile_kwargs={"literal_binds": True})
-    print(str(compiled_query))
-
-    result = session.execute(statement=query, params=params).fetchall()
-
-    return result
 
 # result = get_consecutive_stays_2(
 #     start_date='2023-08-31',
