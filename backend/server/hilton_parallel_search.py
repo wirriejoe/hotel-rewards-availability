@@ -43,7 +43,7 @@ award_updates = []
 stay_updates = []
 search_counter = 0
 start_timer = datetime.now()
-sem = asyncio.Semaphore(100)
+sem = asyncio.Semaphore(75)
 
 def get_global_auths(num_runs):
     auths = []  # Declare global variable
