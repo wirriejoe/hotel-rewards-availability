@@ -176,7 +176,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
     for stay in stay_records:
         task_queue.put(stay)
     
-    num_threads = 20 # You can change this number
+    num_threads = 18 # You can change this number
     threads = []
     
     for _ in range(num_threads):
