@@ -43,7 +43,7 @@ award_updates = []
 stay_updates = []
 search_counter = 0
 start_timer = datetime.now()
-sem = asyncio.Semaphore(75)
+sem = asyncio.Semaphore(80)
 
 def get_global_auths(num_runs):
     auths = []  # Declare global variable
@@ -236,7 +236,7 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 100)
+        stay_records = queue_stays("hilton", 24, 12000)
         auths = get_global_auths(5)
 
         # Asynchronous: Fetch awards
