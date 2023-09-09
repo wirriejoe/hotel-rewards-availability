@@ -55,7 +55,7 @@ def process_hotels(hotels):
     for hotel in hotels:
         hotel_data = {
             'hotel_name': hotel.get('name', ''),
-            'hotel_brand': 'Hilton',
+            'hotel_brand': 'hilton',
             'sub_brand': hotel.get('brandCode', ''),
             'hotel_code': hotel.get('ctyhocn', ''),
             'image': hotel.get('masterImage', {}).get('variants', [-1])[-1].get('url', '') if hotel.get('masterImage') else '',
