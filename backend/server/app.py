@@ -184,13 +184,13 @@ def explore():
                 and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
                 and_(stays.c.premium_rate <= float(data['points_budget']), stays.c.premium_rate > 0)
         ))
-    if data['is_weekend'] == 'true':
-        print('test')
-        filter_conditions.append(
-            or_(
-                func.extract('dow', stays.c.check_in_date) == 5,  # Friday
-                func.extract('dow', stays.c.check_in_date) == 6   # Saturday
-        ))
+    # if data['is_weekend'] == 'true':
+    #     print('test')
+    #     filter_conditions.append(
+    #         or_(
+    #             func.extract('dow', stays.c.check_in_date) == 5,  # Friday
+    #             func.extract('dow', stays.c.check_in_date) == 6   # Saturday
+    #     ))
     if data['cents_per_point'] != '':
         print(data['cents_per_point'])
         filter_conditions.append(
