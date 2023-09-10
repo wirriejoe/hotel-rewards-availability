@@ -47,9 +47,9 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const [pointsPerNight, setPointsPerNight] = useState(
         { value: '', label: 'Any points cost'}
     );
-    const [weekend, setWeekend] = useState(
-        { value: 'false', label: 'Any day'}
-    );
+    // const [weekend, setWeekend] = useState(
+    //     { value: 'false', label: 'Any day'}
+    // );
     const [centsPerPoint, setCentsPerPoint] = useState(
         { value: '', label: 'Any ¢ per pt'}
     );
@@ -72,10 +72,10 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         { value: '100000', label: 'Under 100,000 points' },
     ];
     
-    const weekendOptions = [
-        { value: 'false', label: 'Any day' },
-        { value: 'true', label: 'Weekend only' },
-    ];
+    // const weekendOptions = [
+    //     { value: 'false', label: 'Any day' },
+    //     { value: 'true', label: 'Weekend only' },
+    // ];
     
     const centsPerPointOptions = [
         { value: '', label: 'Any ¢ per pt' },
@@ -104,7 +104,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const prevBrand = usePrevious(brand);
     const prevCountry = usePrevious(country);
     const prevPointsPerNight = usePrevious(pointsPerNight);
-    const prevWeekend = usePrevious(weekend);
+    // const prevWeekend = usePrevious(weekend);
     const prevCentsPerPoint = usePrevious(centsPerPoint);
     const prevNumNights = usePrevious(numNights);
     const prevHotelName = usePrevious(hotelName)
@@ -133,7 +133,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                 brand: brandString,
                 country: country.value,
                 points_budget: pointsPerNight.value,
-                is_weekend: weekend.value,
+                // is_weekend: weekend.value,
                 cents_per_point: centsPerPoint.value,
                 num_nights: numNights.value,
                 session_token: session_token,
@@ -145,7 +145,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         } finally {
             setIsLoading(false);
         }
-    }, [awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
+    }, [awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
 
     // Fetch award categories and brands on component mount
     useEffect(() => {
@@ -183,16 +183,16 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
-        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevWeekend !== weekend || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName != hotelName)) {
+        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
             submitForm();
         }
-    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevWeekend, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, numNights, hotelName, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
+    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
 
     const handleAwardCategoryChange = (selectedOptions) => {setAwardCategory(selectedOptions)};
     const handleBrandChange = (selectedOptions) => {setBrand(selectedOptions)};
     const handleCountryChange = (selectedOption) => setCountry(selectedOption);
     const handlePointsPerNightChange = (selectedOption) => setPointsPerNight(selectedOption);
-    const handleWeekendChange = (selectedOption) => setWeekend(selectedOption);
+    // const handleWeekendChange = (selectedOption) => setWeekend(selectedOption);
     const handleCentsPerPointChange = (selectedOption) => setCentsPerPoint(selectedOption);
     const handleNumNightsChange = (selectedOption) => setNumNights(selectedOption);
 
