@@ -30,13 +30,16 @@ function usePrevious(value) {
 function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName }) {
     const [awardCategory, setAwardCategory] = useState([]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
-    const [brand, setBrand] = useState([]);
-    useEffect(() => {
-        setBrand([{
-            value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
-            label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
-          }]);
-      }, [hotelName]);
+    const [brand, setBrand] = useState([{
+        value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
+        label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
+    }]);
+    // useEffect(() => {
+    //     setBrand([{
+    //         value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
+    //         label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
+    //       }]);
+    //   }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
     const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -158,7 +161,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                 ]);
 
                 setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
-                // setBrandOptions(brandsRes.data.sort().map(brand => ({ value: brand, label: brand })));
                 setBrandOptions([
                     { value: '', label: 'Any brand' },
                     ...brandsRes.data.sort().map(brand => ({ value: brand, label: brand }))
@@ -180,7 +182,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         }
 
         fetchData();
-    }, [submitForm, api_url, initialLoad]);  // Include initialLoad in the dependencies.
+    }, [submitForm, api_url, initialLoad, hotelName]);  // Include initialLoad in the dependencies.
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {

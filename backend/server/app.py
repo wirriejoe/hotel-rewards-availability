@@ -287,54 +287,48 @@ def get_hotel():
 @app.route('/api/hotels', methods=['GET'])
 def get_hotels():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_name).select_from(j).where(hotels.c.hotel_name != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
+        s = select(hotels.c.hotel_name).where(hotels.c.hotel_name != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/cities', methods=['GET'])
 def get_cities():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_city).select_from(j).where(hotels.c.hotel_city != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
+        s = select(hotels.c.hotel_city).where(hotels.c.hotel_city != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/countries', methods=['GET'])
 def get_countries():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_country).select_from(j).where(hotels.c.hotel_country != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
+        s = select(hotels.c.hotel_country).where(hotels.c.hotel_country != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/regions', methods=['GET'])
 def get_regions():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_region).select_from(j).where(hotels.c.hotel_region != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
+        s = select(hotels.c.hotel_region).where(hotels.c.hotel_region != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/award_categories', methods=['GET'])
 def get_categories():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.award_category).select_from(j).where(hotels.c.award_category != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
+        s = select(hotels.c.award_category).where(hotels.c.award_category != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/brands', methods=['GET'])
 def get_brands():
     hotel_brand = request.args.get('hotel', '')
-    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.brand).select_from(j).where(hotels.c.brand != '', hotels.c.hotel_brand==hotel_brand).distinct()
+        s = select(hotels.c.brand).where(hotels.c.brand != '', hotels.c.hotel_brand==hotel_brand, hotels.c.free_track==True).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
