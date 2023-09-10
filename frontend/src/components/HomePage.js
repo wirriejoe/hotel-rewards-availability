@@ -65,7 +65,6 @@ function HomePage() {
         <strong>BETA! </strong>
         BurnMyPoints regularly scans for award availabilities for major hotel chains. Free users currently see 60 days of availabilities for Hyatt hotels, while Pro users see 360 days of availabilities for Hyatt hotels. Join the conversation in our <a href="https://discord.gg/CJwvNuRZgu">Discord</a>.
         <br/>
-        <strong> 🚨Disclaimer:</strong> BurnMyPoints is not partnered or affiliated with Seats.aero.
       </div>
 
       <div className= "home-container">
