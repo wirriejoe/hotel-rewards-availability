@@ -27,12 +27,16 @@ function usePrevious(value) {
     return ref.current;
 }
 
-function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
+function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName }) {
     const [awardCategory, setAwardCategory] = useState([]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
-    const [brand, setBrand] = useState([
-        { value: 'Park Hyatt', label: 'Park Hyatt' }
-    ]);
+    const [brand, setBrand] = useState([]);
+    useEffect(() => {
+        setBrand([{
+            value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
+            label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
+          }]);
+      }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
     const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -48,6 +52,10 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     );
     const [centsPerPoint, setCentsPerPoint] = useState(
         { value: '', label: 'Any ¢ per pt'}
+    );
+
+    const [numNights, setNumNights] = useState(
+        { value: 1, label: '1 night'}
     );
 
     const [countryOptions, setCountryOptions] = useState([]);
@@ -80,8 +88,15 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         { value: '0.04', label: 'Over 4¢ per pt' },
         { value: '0.05', label: 'Over 5¢ per pt' },
         { value: '0.1', label: 'Over 10¢ per pt' },
-        // Add more cents per points options as needed
     ];    
+
+    const numNightsOptions = [
+        { value: 1, label: '1 night'},
+        { value: 2, label: '2 nights'},
+        { value: 3, label: '3 nights'},
+        { value: 4, label: '4 nights'},
+        { value: 5, label: '5 nights'},
+    ]; 
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
@@ -91,6 +106,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const prevPointsPerNight = usePrevious(pointsPerNight);
     const prevWeekend = usePrevious(weekend);
     const prevCentsPerPoint = usePrevious(centsPerPoint);
+    const prevNumNights = usePrevious(numNights);
+    const prevHotelName = usePrevious(hotelName)
 
     const submitForm = useCallback(async () => {
         if ((awardCategory.length < 1 && brand.length < 1) || awardCategory.length > 3 || brand.length > 3) {
@@ -111,12 +128,14 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
         try {
             const response = await axios.post(api_url + '/api/explore', {
+                hotel: hotelName,
                 award_category: awardCategoryString,
                 brand: brandString,
                 country: country.value,
                 points_budget: pointsPerNight.value,
                 is_weekend: weekend.value,
                 cents_per_point: centsPerPoint.value,
+                num_nights: numNights.value,
                 session_token: session_token,
                 isCustomer: isCustomer
             });
@@ -126,16 +145,16 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         } finally {
             setIsLoading(false);
         }
-    }, [awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, setIsLoading, setStays, api_url, isCustomer]);
+    }, [awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
 
     // Fetch award categories and brands on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [categoriesRes, brandsRes, countriesRes] = await Promise.all([
-                    axios.get(api_url + '/api/award_categories'),
-                    axios.get(api_url + '/api/brands'),
-                    axios.get(api_url + '/api/countries'),
+                    axios.get(api_url + `/api/award_categories?hotel=${hotelName}`),
+                    axios.get(api_url + `/api/brands?hotel=${hotelName}`),
+                    axios.get(api_url + `/api/countries?hotel=${hotelName}`),
                 ]);
 
                 setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
@@ -165,23 +184,18 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
-        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevWeekend !== weekend || prevCentsPerPoint !== centsPerPoint)) {
+        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevWeekend !== weekend || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName != hotelName)) {
             submitForm();
         }
-    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevWeekend, prevCentsPerPoint, awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
+    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevWeekend, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, weekend, centsPerPoint, numNights, hotelName, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
 
-    const handleAwardCategoryChange = (selectedOptions) => {
-        setAwardCategory(selectedOptions);
-    };
-
-    const handleBrandChange = (selectedOptions) => {
-        setBrand(selectedOptions);
-    };
-
+    const handleAwardCategoryChange = (selectedOptions) => {setAwardCategory(selectedOptions)};
+    const handleBrandChange = (selectedOptions) => {setBrand(selectedOptions)};
     const handleCountryChange = (selectedOption) => setCountry(selectedOption);
     const handlePointsPerNightChange = (selectedOption) => setPointsPerNight(selectedOption);
     const handleWeekendChange = (selectedOption) => setWeekend(selectedOption);
     const handleCentsPerPointChange = (selectedOption) => setCentsPerPoint(selectedOption);
+    const handleNumNightsChange = (selectedOption) => setNumNights(selectedOption);
 
     return (
         <div className="form-group">
@@ -192,6 +206,15 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
             ) : (
                 <>
                     <div className="row">
+                        <div className="col-md-2">
+                            <label>Number of nights:</label>
+                            <Select
+                                options={numNightsOptions} 
+                                value={numNights}
+                                onChange={handleNumNightsChange}
+                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                            />
+                        </div>
                         <div className="col-md-2">
                             <label>Brand:</label>
                             <Select
@@ -205,19 +228,20 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                                 maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
                             />
                         </div>
-                        <div className="col-md-2">
-                            <label>Award Category:</label>
-                            <Select
-                                options={awardCategoryOptions} 
-                                value={awardCategory}
-                                onChange={handleAwardCategoryChange}
-                                isMulti
-                                closeMenuOnSelect={false}
-                                hideSelectedOptions={false}
-                                components={{ Option }}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
+                        {hotelName === "hyatt" && (
+                            <div className="col-md-2">
+                                <label>Award Category:</label>
+                                <Select
+                                    options={awardCategoryOptions} 
+                                    value={awardCategory}
+                                    onChange={handleAwardCategoryChange}
+                                    isMulti
+                                    hideSelectedOptions={false}
+                                    components={{ Option }}
+                                    maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                                />
+                            </div>
+                        )}
                         <div className="col-md-2">
                             <label>Country:</label>
                             <Select
@@ -236,14 +260,14 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                                 maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
                             />
                         </div>
-                        <div className="col-md-2">
+                        {/* <div className="col-md-2">
                             <label>Day of Week:</label>
                             <Select
                                 options={weekendOptions} 
                                 value={weekend}
                                 onChange={handleWeekendChange}
                             />
-                        </div>
+                        </div> */}
                         <div className="col-md-2">
                             <label>¢ per Point:</label>
                             <Select

@@ -2,13 +2,15 @@ import React, {useState, useContext} from "react";
 import ExploreForm from "./ExploreForm";
 import ExploreTable from "./ExporeTable";
 import { UserContext } from './UserContext';
+import { useParams } from 'react-router-dom'; 
 import Login from './Login';
 
 function ExplorePage() {
     const [stays, setStays] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const { isAuthenticated, isCustomer } = useContext(UserContext);
-  
+    const {hotelName} = useParams();
+
     const handleStaysUpdate = (newData) => {
       setStays(newData);
       setIsLoading(false);
@@ -22,11 +24,11 @@ function ExplorePage() {
             {
               isCustomer ? 
                 <p>
-                  Discover hotel stays across award category and brand for supported Hyatt hotels!
+                  Discover hotel stays across award category and brand for supported {hotelName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} hotels!
                 </p>
                 :
                 <p>
-                  Discover hotel stays across award category and brand for supported Hyatt hotels! Free plan can see 60 days of availabilities.{" "}
+                  Discover hotel stays across award category and brand for supported {hotelName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} hotels! Free plan can see 60 days of availabilities.{" "}
                   <a href="https://buy.stripe.com/6oE8xe4ps4ly7fy4gi" target="_blank" rel="noreferrer">
                     Upgrade to Pro plan to see 360 days of availabilities.
                   </a>
@@ -34,10 +36,18 @@ function ExplorePage() {
             }
           </div>
           <div className="form-container">
-            <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} />
+            <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} hotelName = {hotelName} />
           </div>
           <div className="table-container">
-            <ExploreTable stays={stays} />
+            {isLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                    <h5></h5>
+                </div>
+            ) : (
+                <>
+                <ExploreTable stays={stays} isLoading={isLoading} />
+                </>
+                )}
           </div>
         </div>
       ) : (

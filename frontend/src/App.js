@@ -1,6 +1,6 @@
 import React, { useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate} from 'react-router-dom';
-import { Navbar, Nav } from 'react-bootstrap';
+import { Navbar, Nav, Dropdown } from 'react-bootstrap';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import HomePage from './components/HomePage';
@@ -42,7 +42,13 @@ function App() {
                   <Navbar.Collapse id="basic-navbar-nav" className="justify-content-between">
                       <Nav>
                           <Nav.Link as={Link} to="/search">Search</Nav.Link>
-                          <Nav.Link as={Link} to="/explore">Discover</Nav.Link>
+                          <Dropdown as={Nav.Item}>
+                            <Dropdown.Toggle as={Nav.Link}>Discover</Dropdown.Toggle>
+                            <Dropdown.Menu>
+                                <Dropdown.Item as={Link} to="/hyatt/explore">World of Hyatt</Dropdown.Item>
+                                <Dropdown.Item as={Link} to="/hilton/explore">Hilton Honors</Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
                           <Nav.Link as={Link} to="/request">Request</Nav.Link> 
                           <Nav.Link as={Link} to="/alerts">Create Alert</Nav.Link> 
                       </Nav>
@@ -56,6 +62,7 @@ function App() {
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/request" element={<RequestsPage />} />
+                      <Route path="/:hotelName/explore" element={<ExplorePage />} />
                       <Route path="/:hotelName/hotel/:hotelCode" element={<HotelPage />} />
                       <Route path="/alerts" element={<ExternalRedirect to="https://apps.burnmypoints.com/embedded/public/160eb83d-fa97-4014-9b5b-4dafd7c6ee4f"/>} />
                       <Route path="/login" element={<Login />} />

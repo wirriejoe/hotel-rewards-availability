@@ -148,7 +148,7 @@ function logEvent(url) {
   }).catch(error => console.error('Error:', error));
 }
 
-function ExploreTable({ stays }) {
+function ExploreTable({ stays, isLoading }) {
   const [filterText, setFilterText] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(

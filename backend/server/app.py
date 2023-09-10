@@ -136,7 +136,6 @@ def consecutive_stays():
     except Exception as e:
         return jsonify({'message': str(e)}), 401
 
-    # Apply time_since function to every last_checked object in the list
     stays = [{**stay, 'last_checked_string': time_since(stay['last_checked'])} for stay in stays]
 
     print(f"Search finished! Found {len(stays)} results!")
@@ -168,18 +167,18 @@ def explore():
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         stays.c.duration == 1,
-        hotels.c.hotel_brand == 'hyatt'
+        hotels.c.hotel_brand == data.get('hotel', '')
     ]
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
-    if data['award_category'] and data['award_category'] != [None]:
+    if data['award_category']:
         filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
-    if data['brand'] != [''] and data['brand'] != [None]:
+    if data['brand'] != ['']:
         filter_conditions.append(hotels.c.brand.in_(data['brand']))
-    if data['country'] != '' and data['country'] != None:
+    if data['country'] != '':
         filter_conditions.append(hotels.c.hotel_country.in_([data['country']]))
-    if data['points_budget'] != '' and data['points_budget'] != None:
+    if data['points_budget'] != '':
         filter_conditions.append(
             or_(
                 and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
@@ -192,7 +191,7 @@ def explore():
                 func.extract('dow', stays.c.check_in_date) == 5,  # Friday
                 func.extract('dow', stays.c.check_in_date) == 6   # Saturday
         ))
-    if data['cents_per_point'] != '' and data['cents_per_point'] != None:
+    if data['cents_per_point'] != '':
         print(data['cents_per_point'])
         filter_conditions.append(
             or_(
@@ -200,36 +199,13 @@ def explore():
                 text("stays.premium_cash_usd / NULLIF(stays.premium_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point'])
         ))
         
-    query = select(
-        stays.c.stay_id, 
-        stays.c.check_in_date, 
-        stays.c.last_checked_time, 
-        hotels.c.hotel_name, 
-        hotels.c.hotel_code,
-        hotels.c.hotel_city, 
-        hotels.c.hotel_province,
-        hotels.c.hotel_country,
-        hotels.c.hotel_region,
-        hotels.c.brand,
-        hotels.c.award_category,
-        stays.c.standard_rate, 
-        stays.c.premium_rate,
-        stays.c.currency_code,
-        stays.c.standard_cash,
-        stays.c.premium_cash,
-        stays.c.available_inventory,
-        stays.c.standard_cash_usd,
-        stays.c.premium_cash_usd,
-        stays.c.booking_url).select_from(j).where(and_(*filter_conditions))
+    query = select(stays, hotels).select_from(j).where(and_(*filter_conditions))
 
     with engine.connect() as connection:
         result = connection.execute(query)
 
     stay_results = [row._mapping for row in result]
-    # Apply time_since function to every last_checked_time object in the list
     stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in stay_results]
-
-    connection.close()
 
     print(f"Explore finished! Found {len(stay_results)} results!")
     log_event('explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
@@ -276,7 +252,7 @@ def get_hotel():
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
-    if data.get('points_budget','') != '' and data.get('points_budget','') != None:
+    if data.get('points_budget','') != '':
         filter_conditions.append(
             or_(
                 and_(stays.c.standard_rate <= float(data['points_budget']), stays.c.standard_rate > 0),
@@ -288,7 +264,7 @@ def get_hotel():
                 func.extract('dow', stays.c.check_in_date) == 5,  # Friday
                 func.extract('dow', stays.c.check_in_date) == 6   # Saturday
         ))
-    if data.get('cents_per_point','') != '' and data.get('cents_per_point','') != None:
+    if data.get('cents_per_point','') != '':
         print(data['cents_per_point'])
         filter_conditions.append(
             or_(
@@ -296,35 +272,13 @@ def get_hotel():
                 text("stays.premium_cash_usd / NULLIF(stays.premium_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point'])
         ))
         
-    query = select(
-        stays.c.stay_id, 
-        stays.c.check_in_date, 
-        stays.c.last_checked_time, 
-        hotels.c.hotel_name, 
-        hotels.c.hotel_city, 
-        hotels.c.hotel_province,
-        hotels.c.hotel_country,
-        hotels.c.hotel_region,
-        hotels.c.brand,
-        hotels.c.award_category,
-        stays.c.standard_rate, 
-        stays.c.premium_rate,
-        stays.c.currency_code,
-        stays.c.standard_cash,
-        stays.c.premium_cash,
-        stays.c.available_inventory,
-        stays.c.standard_cash_usd,
-        stays.c.premium_cash_usd,
-        stays.c.booking_url).select_from(j).where(and_(*filter_conditions))
+    query = select(stays, hotels).select_from(j).where(and_(*filter_conditions))
 
     with engine.connect() as connection:
         result = connection.execute(query)
 
     stay_results = [row._mapping for row in result]
-    # Apply time_since function to every last_checked_time object in the list
     stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in stay_results]
-
-    connection.close()
 
     print(f"Explore finished! Found {len(stay_results)} results!")
     log_event('explore', stytchUserID, json.dumps(data), f"Returned {len(stay_results)} results.")
@@ -332,43 +286,55 @@ def get_hotel():
 
 @app.route('/api/hotels', methods=['GET'])
 def get_hotels():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_name).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.hotel_name).select_from(j).where(hotels.c.hotel_name != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/cities', methods=['GET'])
 def get_cities():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_city).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.hotel_city).select_from(j).where(hotels.c.hotel_city != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/countries', methods=['GET'])
 def get_countries():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_country).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.hotel_country).select_from(j).where(hotels.c.hotel_country != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/regions', methods=['GET'])
 def get_regions():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.hotel_region).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.hotel_region).select_from(j).where(hotels.c.hotel_region != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
 
 @app.route('/api/award_categories', methods=['GET'])
 def get_categories():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.award_category).where(hotels.c.award_category != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.award_category).select_from(j).where(hotels.c.award_category != '', hotels.c.hotel_brand==hotel_brand, stays.c.hotel_id.isnot(None)).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
 @app.route('/api/brands', methods=['GET'])
 def get_brands():
+    hotel_brand = request.args.get('hotel', '')
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
     with engine.connect() as connection:
-        s = select(hotels.c.brand).where(hotels.c.brand != '', hotels.c.hotel_brand=='hyatt').distinct()
+        s = select(hotels.c.brand).select_from(j).where(hotels.c.brand != '', hotels.c.hotel_brand==hotel_brand).distinct()
         result = connection.execute(s)
         return jsonify([row[0] for row in result])
     
