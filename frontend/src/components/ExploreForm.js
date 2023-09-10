@@ -30,16 +30,13 @@ function usePrevious(value) {
 function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName }) {
     const [awardCategory, setAwardCategory] = useState([]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
-    const [brand, setBrand] = useState([{
-        value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
-        label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
-    }]);
-    // useEffect(() => {
-    //     setBrand([{
-    //         value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
-    //         label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
-    //       }]);
-    //   }, [hotelName]);
+    const [brand, setBrand] = useState([])
+    useEffect(() => {
+        setBrand([{
+            value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
+            label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
+          }]);
+      }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
     const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -201,88 +198,80 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
 
     return (
         <div className="form-group">
-            {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <h5>Loading...</h5>
+            <div className="row">
+                <div className="col-md-2">
+                    <label>Number of nights:</label>
+                    <Select
+                        options={numNightsOptions} 
+                        value={numNights}
+                        onChange={handleNumNightsChange}
+                        maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                    />
                 </div>
-            ) : (
-                <>
-                    <div className="row">
-                        <div className="col-md-2">
-                            <label>Number of nights:</label>
-                            <Select
-                                options={numNightsOptions} 
-                                value={numNights}
-                                onChange={handleNumNightsChange}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
-                        <div className="col-md-2">
-                            <label>Brand:</label>
-                            <Select
-                                options={brandOptions} 
-                                value={brand}
-                                onChange={handleBrandChange}
-                                // isMulti
-                                // closeMenuOnSelect={false}
-                                hideSelectedOptions={false}
-                                // components={{ Option }}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
-                        {hotelName === "hyatt" && (
-                            <div className="col-md-2">
-                                <label>Award Category:</label>
-                                <Select
-                                    options={awardCategoryOptions} 
-                                    value={awardCategory}
-                                    onChange={handleAwardCategoryChange}
-                                    isMulti
-                                    hideSelectedOptions={false}
-                                    components={{ Option }}
-                                    maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                                />
-                            </div>
-                        )}
-                        <div className="col-md-2">
-                            <label>Country:</label>
-                            <Select
-                                options={countryOptions} 
-                                value={country}
-                                onChange={handleCountryChange}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
-                        <div className="col-md-2">
-                            <label>Max Points per Night:</label>
-                            <Select
-                                options={pointsPerNightOptions} 
-                                value={pointsPerNight}
-                                onChange={handlePointsPerNightChange}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
-                        {/* <div className="col-md-2">
-                            <label>Day of Week:</label>
-                            <Select
-                                options={weekendOptions} 
-                                value={weekend}
-                                onChange={handleWeekendChange}
-                            />
-                        </div> */}
-                        <div className="col-md-2">
-                            <label>¢ per Point:</label>
-                            <Select
-                                options={centsPerPointOptions} 
-                                value={centsPerPoint}
-                                onChange={handleCentsPerPointChange}
-                                maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
-                            />
-                        </div>
+                <div className="col-md-2">
+                    <label>Brand:</label>
+                    <Select
+                        options={brandOptions} 
+                        value={brand}
+                        onChange={handleBrandChange}
+                        // isMulti
+                        // closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        // components={{ Option }}
+                        maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                    />
+                </div>
+                {hotelName === "hyatt" && (
+                    <div className="col-md-2">
+                        <label>Award Category:</label>
+                        <Select
+                            options={awardCategoryOptions} 
+                            value={awardCategory}
+                            onChange={handleAwardCategoryChange}
+                            isMulti
+                            hideSelectedOptions={false}
+                            components={{ Option }}
+                            maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                        />
                     </div>
-                    {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-                </>
-            )}
+                )}
+                <div className="col-md-2">
+                    <label>Country:</label>
+                    <Select
+                        options={countryOptions} 
+                        value={country}
+                        onChange={handleCountryChange}
+                        maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                    />
+                </div>
+                <div className="col-md-2">
+                    <label>Max Points per Night:</label>
+                    <Select
+                        options={pointsPerNightOptions} 
+                        value={pointsPerNight}
+                        onChange={handlePointsPerNightChange}
+                        maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                    />
+                </div>
+                {/* <div className="col-md-2">
+                    <label>Day of Week:</label>
+                    <Select
+                        options={weekendOptions} 
+                        value={weekend}
+                        onChange={handleWeekendChange}
+                    />
+                </div> */}
+                <div className="col-md-2">
+                    <label>¢ per Point:</label>
+                    <Select
+                        options={centsPerPointOptions} 
+                        value={centsPerPoint}
+                        onChange={handleCentsPerPointChange}
+                        maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                    />
+                </div>
+            </div>
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
     );      
 }

@@ -41,7 +41,7 @@ function ExplorePage() {
           <div className="table-container">
             {isLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <h5></h5>
+                    <h5>Loading</h5>
                 </div>
             ) : (
                 <>
