@@ -13,10 +13,8 @@ function usePrevious(value) {
     return ref.current;
 }
 
-function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
+function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoading, isCustomer }) {
     const [errorMessage, setErrorMessage] = useState(null);
-    const [initialLoad, setInitialLoad] = useState(true);
-
     const [pointsPerNight, setPointsPerNight] = useState(
         { value: '', label: 'Any points cost'}
     );
@@ -29,7 +27,6 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const [numNights, setNumNights] = useState(
         { value: 1, label: '1 night'}
     );
-
     const pointsPerNightOptions = [
         { value: '', label: 'Any points cost' },
         { value: '5000', label: 'Under 5,000 points' },
@@ -42,12 +39,10 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         { value: '80000', label: 'Under 80,000 points' },
         { value: '100000', label: 'Under 100,000 points' },
     ];
-    
     const weekendOptions = [
         { value: 'false', label: 'Any day' },
         { value: 'true', label: 'Weekend only' },
     ];
-    
     const centsPerPointOptions = [
         { value: '', label: 'Any ¢ per pt' },
         { value: '0.0075', label: 'Over 0.75¢ per pt' },
@@ -60,7 +55,6 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         { value: '0.05', label: 'Over 5¢ per pt' },
         { value: '0.1', label: 'Over 10¢ per pt' },
     ]; 
-
     const numNightsOptions = [
         { value: 1, label: '1 night'},
         { value: 2, label: '2 nights'},
@@ -79,7 +73,6 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
     const {hotelName, hotelCode} = useParams(); // Get hotel name from URL
 
     const submitForm = useCallback(async () => {
-        setIsLoading(true);
         setErrorMessage(null);  // Clear any previous error message
 
         const payload = {
@@ -111,12 +104,12 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
         } catch (error) {
             console.error(error);
         }
-    }, [pointsPerNight, weekend, centsPerPoint, numNights, hotelName, hotelCode, isCustomer,setIsLoading, setStays, api_url]);
+    }, [pointsPerNight, weekend, centsPerPoint, numNights, hotelName, hotelCode, isCustomer, setStays, api_url]);
 
     useEffect(() => {
+        setIsLoading(true);
         if (initialLoad && !isLoading) {
             const parsed = queryString.parse(window.location.search);
-            
             if (Object.keys(parsed).length > 0) {
                 // Parse the parameters and set the state
                 if (parsed.pointsPerNight) setPointsPerNight(Number(parsed.pointsPerNight));
@@ -124,15 +117,14 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                 if (parsed.centsPerPoint) setCentsPerPoint(Number(parsed.centsPerPoint));
                 if (parsed.numNights) setNumNights(Number(parsed.numNights));
             }
-            
-            submitForm();
             setInitialLoad(false);
+            submitForm();
             setIsLoading(false)
         } else if (!initialLoad && !isLoading && (prevPointsPerNight !== pointsPerNight || prevWeekend !== weekend || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights)) {
             submitForm();
             setIsLoading(false)
         }
-    }, [prevPointsPerNight, prevWeekend, prevCentsPerPoint, prevNumNights, pointsPerNight, weekend, centsPerPoint, numNights, submitForm, initialLoad, isLoading, setIsLoading]);
+    }, [prevPointsPerNight, prevWeekend, prevCentsPerPoint, prevNumNights, pointsPerNight, weekend, centsPerPoint, numNights, submitForm, initialLoad, isLoading, setIsLoading, setInitialLoad]);
 
     const handlePointsPerNightChange = (selectedOption) => setPointsPerNight(selectedOption);
     const handleWeekendChange = (selectedOption) => setWeekend(selectedOption);
@@ -141,11 +133,6 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
 
     return (
         <div className="form-group">
-            {/* {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <h5>Loading...</h5>
-                </div>
-            ) : ( */}
                 <div className="row">
                     <div className="col-md-3">
                         <label>Max Points per Night:</label>
@@ -184,7 +171,6 @@ function HotelForm({ setStays, isLoading, setIsLoading, isCustomer }) {
                     </div>
                 </div>
                 {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-            {/* )} */}
         </div>
     );      
 }

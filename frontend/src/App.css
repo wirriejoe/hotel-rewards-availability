@@ -230,3 +230,11 @@
 .col-md-2 {
   font-size: 0.9em
 }
+
+.rbc-toolbar-label {
+  font-size: 2em;  /* Large font size */
+  font-weight: bold;  /* Bold text */
+  flex: 1;  /* Take available space */
+  text-align: center;
+  justify-content: space-between;
+}
