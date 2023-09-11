@@ -238,3 +238,45 @@
   text-align: center;
   justify-content: space-between;
 }
+
+/* Make the search bar appear on top */
+#search-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
+
+/* Hide the clear ('X') button */
+.mapboxgl-ctrl-geocoder--button {
+  display: none;
+}
+
+/* Style the small search button */
+.mapboxgl-ctrl-geocoder > div > div {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.mapboxgl-ctrl-icon {
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.map-container {
+  height: 500px;
+}
+
+.marker {
+  /* background-image: url('mapbox-icon.png'); */
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+}
