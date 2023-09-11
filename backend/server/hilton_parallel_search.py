@@ -146,7 +146,6 @@ async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, 
                                 }
                             }
                             }
-
                 """,
                 "operationName": "hotel_shopAvailOptions_shopPropAvail",
                 "variables": {
