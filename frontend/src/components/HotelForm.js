@@ -107,8 +107,8 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
     }, [pointsPerNight, weekend, centsPerPoint, numNights, hotelName, hotelCode, isCustomer, setStays, api_url]);
 
     useEffect(() => {
-        setIsLoading(true);
         if (initialLoad && !isLoading) {
+            setIsLoading(true);
             const parsed = queryString.parse(window.location.search);
             if (Object.keys(parsed).length > 0) {
                 // Parse the parameters and set the state
@@ -121,8 +121,9 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
             submitForm();
             setIsLoading(false)
         } else if (!initialLoad && !isLoading && (prevPointsPerNight !== pointsPerNight || prevWeekend !== weekend || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights)) {
+            setIsLoading(true);
             submitForm();
-            setIsLoading(false)
+            setIsLoading(false);
         }
     }, [prevPointsPerNight, prevWeekend, prevCentsPerPoint, prevNumNights, pointsPerNight, weekend, centsPerPoint, numNights, submitForm, initialLoad, isLoading, setIsLoading, setInitialLoad]);
 
