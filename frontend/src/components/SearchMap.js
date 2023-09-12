@@ -127,8 +127,6 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
         isCustomer
       });
       setStays(response.data);
-      console.log(response.data);
-
     } catch (error) {
       console.error('There was a problem with the axios operation:', error);
     }

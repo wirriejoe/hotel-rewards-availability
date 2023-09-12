@@ -154,8 +154,10 @@ def search():
         stays.c.status != 'Inactive'
     ]
 
-    if award_category:
-        filter_conditions.append(hotels.c.award_category.in_([award_category]))
+    if award_category == 'STANDARD':
+        filter_conditions.append(hotels.c.award_category=='STANDARD')
+    else:
+        filter_conditions.append(hotels.c.award_category.in_('PREMIUM', 'SUITE'))
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
