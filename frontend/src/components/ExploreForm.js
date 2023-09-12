@@ -47,9 +47,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const [pointsPerNight, setPointsPerNight] = useState(
         { value: '', label: 'Any points cost'}
     );
-    // const [weekend, setWeekend] = useState(
-    //     { value: 'false', label: 'Any day'}
-    // );
     const [centsPerPoint, setCentsPerPoint] = useState(
         { value: '', label: 'Any ¢ per pt'}
     );
@@ -71,11 +68,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         { value: '80000', label: 'Under 80,000 points' },
         { value: '100000', label: 'Under 100,000 points' },
     ];
-    
-    // const weekendOptions = [
-    //     { value: 'false', label: 'Any day' },
-    //     { value: 'true', label: 'Weekend only' },
-    // ];
     
     const centsPerPointOptions = [
         { value: '', label: 'Any ¢ per pt' },
@@ -104,7 +96,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const prevBrand = usePrevious(brand);
     const prevCountry = usePrevious(country);
     const prevPointsPerNight = usePrevious(pointsPerNight);
-    // const prevWeekend = usePrevious(weekend);
     const prevCentsPerPoint = usePrevious(centsPerPoint);
     const prevNumNights = usePrevious(numNights);
     const prevHotelName = usePrevious(hotelName)
@@ -114,8 +105,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         //     setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
         //     return;
         // }
-
-        setIsLoading(true);
         // setErrorMessage(null);  // Clear any previous error message
 
         const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
@@ -133,7 +122,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                 brand: brandString,
                 country: country.value,
                 points_budget: pointsPerNight.value,
-                // is_weekend: weekend.value,
                 cents_per_point: centsPerPoint.value,
                 num_nights: numNights.value,
                 session_token: session_token,
@@ -147,42 +135,40 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         }
     }, [awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
 
-    // Fetch award categories and brands on component mount
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [categoriesRes, brandsRes, countriesRes] = await Promise.all([
-                    axios.get(api_url + `/api/award_categories?hotel=${hotelName}`),
-                    axios.get(api_url + `/api/brands?hotel=${hotelName}`),
-                    axios.get(api_url + `/api/countries?hotel=${hotelName}`),
-                ]);
+    const fetchData = async () => {
+        try {
+            const [categoriesRes, brandsRes, countriesRes] = await Promise.all([
+                axios.get(api_url + `/api/award_categories?hotel=${hotelName}`),
+                axios.get(api_url + `/api/brands?hotel=${hotelName}`),
+                axios.get(api_url + `/api/countries?hotel=${hotelName}`),
+            ]);
 
-                setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
-                setBrandOptions([
-                    { value: '', label: 'Any brand' },
-                    ...brandsRes.data.sort().map(brand => ({ value: brand, label: brand }))
-                  ]);
-                setCountryOptions([
-                    { value: '', label: 'Any country' },
-                    ...countriesRes.data.sort().map(country => ({ value: country, label: country }))
-                  ]);
-                // Call submitForm after initial load.
-                if (initialLoad) {
-                    submitForm();
-                    setInitialLoad(false);
-                }
-            } catch (err) {
-                console.log(err.message);
-                console.log(err.request);
-                console.log(err.response);
-            }
+            setAwardCategoryOptions([...categoriesRes.data.sort().map(category => ({ value: category, label: category }))]);
+            setBrandOptions([
+                { value: '', label: 'Any brand' },
+                ...brandsRes.data.sort().map(brand => ({ value: brand, label: brand }))
+              ]);
+            setCountryOptions([
+                { value: '', label: 'Any country' },
+                ...countriesRes.data.sort().map(country => ({ value: country, label: country }))
+              ]);
+        } catch (err) {
+            console.log(err.message);
+            console.log(err.request);
+            console.log(err.response);
         }
-        fetchData();
-    }, [submitForm, api_url, initialLoad, hotelName]);  // Include initialLoad in the dependencies.
+    }
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
-        if (!initialLoad && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
+        if (initialLoad) {
+            setIsLoading(true);
+            fetchData();
+            submitForm();
+            setInitialLoad(false);
+        }
+        else if (!initialLoad && !isLoading && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
+            setIsLoading(true);
             submitForm();
         }
     }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
@@ -191,7 +177,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const handleBrandChange = (selectedOptions) => {setBrand(selectedOptions)};
     const handleCountryChange = (selectedOption) => setCountry(selectedOption);
     const handlePointsPerNightChange = (selectedOption) => setPointsPerNight(selectedOption);
-    // const handleWeekendChange = (selectedOption) => setWeekend(selectedOption);
     const handleCentsPerPointChange = (selectedOption) => setCentsPerPoint(selectedOption);
     const handleNumNightsChange = (selectedOption) => setNumNights(selectedOption);
 

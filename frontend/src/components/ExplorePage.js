@@ -11,10 +11,10 @@ function ExplorePage() {
     const { isAuthenticated, isCustomer } = useContext(UserContext);
     const {hotelName} = useParams();
 
-    const handleStaysUpdate = (newData) => {
-      setStays(newData);
-      setIsLoading(false);
-    };
+    // const handleStaysUpdate = (newData) => {
+    //   setStays(newData);
+    //   setIsLoading(false);
+    // };
   
     return (
       isAuthenticated ? (
@@ -36,7 +36,7 @@ function ExplorePage() {
             }
           </div>
           <div className="form-container">
-            <ExploreForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} hotelName = {hotelName} />
+            <ExploreForm setStays={setStays} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} hotelName = {hotelName} />
           </div>
           <div className="table-container">
             {isLoading ? (
