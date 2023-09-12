@@ -13,6 +13,7 @@ import os
 import stytch
 import stripe
 import json
+from math import radians, sin, cos, sqrt, atan2
 
 load_dotenv(find_dotenv())
 
@@ -108,39 +109,76 @@ def log_user_event():
 def index():
     return render_template('index.html')
 
-@app.route('/api/consecutive_stays', methods=['POST'])
-def consecutive_stays():
+@app.route('/api/search', methods=['POST'])
+def search():
     data = request.json
-    print(data)
-
+    
+    # Authentication
     session_token = data.get('session_token', '')
     try:
-        stytchUserID = authenticate_session(session_token).user.user_id
+        user_id = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
         return jsonify({'message': str(e)}), 401
 
-    start_date = data['startDate']
-    end_date = data['endDate']
-    length_of_stay = int(data['lengthOfStay'])
-    hotel_name_text = data.get('hotel', None)  # These are optional, so use .get() to return None if they are not present
-    hotel_city = data.get('city', None)
-    hotel_country = data.get('country', None)
-    hotel_region = data.get('region', None)
-    award_category = data.get('category', None)
-    rate_filter = data.get('rateFilter', None)
-    # print(data.get('pointsBudget'))
-    max_points_budget = int(data.get('pointsBudget')) if data.get('pointsBudget') != '' else 0
+    # Extract parameters
+    geography = data.get('geography', {'lat': None, 'lng': None})
+    lat, lng = geography['lat'], geography['lng']
+    date_range = data.get('dateRange', '')
+    start_date_str, end_date_str = date_range.split(" - ")
+    start_date = datetime.strptime(start_date_str, '%m/%d/%Y').astimezone(utc)
+    end_date = datetime.strptime(end_date_str, '%m/%d/%Y').astimezone(utc)
+    num_nights = int(data.get('numNights', 1))
+    award_category = data.get('awardCategory', '')
 
-    try:
-        stays = search_by_consecutive_nights(start_date, end_date, length_of_stay, hotel_name_text, hotel_city, hotel_country, hotel_region, award_category, rate_filter, max_points_budget)
-    except Exception as e:
-        return jsonify({'message': str(e)}), 401
+    # Date calculations
+    today = datetime.now().astimezone(utc)
+    
+    # Haversine distance calculation in Python
+    def haversine_distance(lat1, lon1, lat2, lon2):
+        R = 6371  # Earth radius in km
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2) ** 2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        return R * c
 
-    stays = [{**stay, 'last_checked_string': time_since(stay['last_checked'])} for stay in stays]
+    # Conditions without distance constraint
+    filter_conditions = [
+        stays.c.check_in_date >= today + timedelta(days=1),
+        stays.c.check_in_date >= start_date,
+        stays.c.check_in_date <= end_date,
+        stays.c.duration == num_nights,
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
+        hotels.c.hotel_longitude != '',
+        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
+        stays.c.status != 'Inactive'
+    ]
 
-    print(f"Search finished! Found {len(stays)} results!")
-    log_event('search', stytchUserID, json.dumps(data), f"Returned {len(stays)} results.")
-    return jsonify(stays)  # Convert list of stays to JSON
+    if award_category:
+        filter_conditions.append(hotels.c.award_category.in_([award_category]))
+
+    j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
+
+    query = select(stays, hotels).select_from(j).where(and_(*filter_conditions))
+
+    with engine.connect() as connection:
+        result = connection.execute(query)
+
+    stay_results = [row._mapping for row in result]
+    
+    # Filter the results based on distance in Python
+    filtered_stays = []
+    for stay in stay_results:
+        lat2, lon2 = float(stay['hotel_latitude']), float(stay['hotel_longitude'])  # Convert to float
+        if haversine_distance(lat, lng, lat2, lon2) <= 50:
+            filtered_stays.append(stay)
+
+    stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in filtered_stays]
+    
+    print(f"Search finished! Found {len(stay_results)} results!")
+    log_event('search', user_id, json.dumps(data), f"Returned {len(stay_results)} results.")
+
+    return jsonify(stay_results)
 
 @app.route('/api/explore', methods=['POST'])
 def explore():
@@ -164,10 +202,11 @@ def explore():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
-        stays.c.duration == 1,
-        hotels.c.hotel_brand == data.get('hotel', '')
+        stays.c.duration == data.get('num_nights', 1),
+        hotels.c.hotel_brand == data.get('hotel', ''),
+        stays.c.status != 'Inactive'
     ]
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
@@ -175,6 +214,7 @@ def explore():
     if data['award_category']:
         filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
     if data['brand'] != ['']:
+        print("Adding brand filter")
         filter_conditions.append(hotels.c.brand.in_(data['brand']))
     if data['country'] != '':
         filter_conditions.append(hotels.c.hotel_country.in_([data['country']]))
@@ -199,7 +239,7 @@ def explore():
                 text("stays.premium_cash_usd / NULLIF(stays.premium_rate::decimal, 0) >= :cpp").bindparams(cpp=data['cents_per_point'])
         ))
         
-    query = select(stays, hotels).select_from(j).where(and_(*filter_conditions))
+    query = select(stays, hotels).select_from(j).where(and_(*filter_conditions)).limit(25000)
 
     with engine.connect() as connection:
         result = connection.execute(query)
@@ -243,7 +283,7 @@ def get_hotel():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         hotels.c.hotel_brand == data.get('hotel_name', ''),
         stays.c.hotel_code == data.get('hotel_code', ''),

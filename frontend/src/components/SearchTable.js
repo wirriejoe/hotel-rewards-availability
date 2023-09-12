@@ -23,9 +23,9 @@ const CustomTooltip = styled(({ className, ...props }) => (
 });
 
 const columns = [
-    { name: 'Check In', selector: 'date_range_start', grow: '0.75', sortable: true },
-    { name: 'Check Out', selector: 'date_range_end', grow: '0.75', sortable: true },
-    { name: 'Last Checked', selector: 'last_checked', grow: '0.75', sortable: true, format: row => row.last_checked_string},
+    { name: 'Check In', selector: 'check_in_date', grow: '0.75', sortable: true },
+    { name: 'Check Out', selector: 'check_out_date', grow: '0.75', sortable: true },
+    { name: 'Last Checked', selector: 'last_checked', grow: '0.75', sortable: true, format: row => row.last_checked},
     {
       name: 'Hotel', 
       selector: 'hotel_name', 
@@ -40,7 +40,7 @@ const columns = [
             <div>Award Category: {row.award_category}</div>
           </React.Fragment>
         }>
-        <Link to={`/hyatt/hotel/${row.hotel_code}`}>
+        <Link to={`/${row.hotel_brand}/hotel/${row.hotel_code}`}>
             <div>{row.hotel_name}</div>
         </Link>
         </CustomTooltip>
@@ -125,14 +125,13 @@ function StaysTable({ stays }) {
     localStorage.getItem('rowsPerPage') ? parseInt(localStorage.getItem('rowsPerPage')) : 10
   );
   const [sortState, setSortState] = useState([
-    { column: { selector: 'date_range_start' }, sortDirection: 'asc' }
+    { column: { selector: 'check_in_date' }, sortDirection: 'asc' }
   ]);
   
   stays = stays.map(stay => ({
     ...stay,
-    date_range_start: new Date(stay.date_range_start).toISOString().slice(0,10),
-    date_range_end: new Date(stay.date_range_end).toISOString().slice(0,10),
-    last_checked: new Date(stay.last_checked), 
+    check_in_date: new Date(stay.check_in_date).toISOString().slice(0,10),
+    check_out_date: new Date(stay.check_out_date).toISOString().slice(0,10)
   }));
 
   const filteredItems = stays.filter(item =>

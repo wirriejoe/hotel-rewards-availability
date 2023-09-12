@@ -110,7 +110,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const prevHotelName = usePrevious(hotelName)
 
     const submitForm = useCallback(async () => {
-        if ((awardCategory.length < 1 && brand.length < 1) || awardCategory.length > 3 || brand.length > 3) {
+        if ((awardCategory.length < 1 && brand == '') || awardCategory.length > 3 || brand.length > 3) {
             setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
             return;
         }

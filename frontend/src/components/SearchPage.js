@@ -10,10 +10,10 @@ function SearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, isCustomer } = useContext(UserContext);
 
-  const handleStaysUpdate = (newData) => {
-    setStays(newData);
-    setIsLoading(false);
-  };
+  // const handleStaysUpdate = (newData) => {
+  //   setStays(newData);
+  //   setIsLoading(false);
+  // };
 
   return (
     isAuthenticated ? (
@@ -22,12 +22,12 @@ function SearchPage() {
           <h1>Search</h1>
           <p>Instantly search for availability for hotel stays across all of our supported Hyatt hotels at once!</p>
         </div>
-        <div className="form-container">
-          <SearchForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer={isCustomer} />
-        </div>
         <div className="map-container">
-          <SearchMap stays={stays} />  {/* <-- Add this line */}
+          <SearchMap stays={stays} setStays={setStays} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer={isCustomer} />  {/* <-- Add this line */}
         </div>
+        {/* <div className="form-container">
+          <SearchForm setStays={handleStaysUpdate} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer={isCustomer} />
+        </div> */}
         <div className="table-container">
           <SearchTable stays={stays} />
         </div>
