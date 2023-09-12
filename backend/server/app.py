@@ -204,7 +204,7 @@ def explore():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         stays.c.duration == data.get('num_nights', 1),
         hotels.c.hotel_brand == data.get('hotel', ''),
@@ -216,7 +216,6 @@ def explore():
     if data['award_category']:
         filter_conditions.append(hotels.c.award_category.in_(data['award_category']))
     if data['brand'] != ['']:
-        print("Adding brand filter")
         filter_conditions.append(hotels.c.brand.in_(data['brand']))
     if data['country'] != '':
         filter_conditions.append(hotels.c.hotel_country.in_([data['country']]))
