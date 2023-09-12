@@ -60,7 +60,7 @@ const columns = [
             <div>Award Category: {row.award_category}</div>
           </React.Fragment>
         }>
-          <Link to={`/hyatt/hotel/${row.hotel_code}`}>
+          <Link to={`/${row.hotel_brand}/hotel/${row.hotel_code}`}>
               <div>{row.hotel_name}</div>
           </Link>
         </CustomTooltip>
