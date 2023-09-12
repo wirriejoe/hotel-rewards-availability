@@ -38,7 +38,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
           }]);
       }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
-    const [errorMessage, setErrorMessage] = useState(null);
+    // const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
 
     const [country, setCountry] = useState(
@@ -110,13 +110,13 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const prevHotelName = usePrevious(hotelName)
 
     const submitForm = useCallback(async () => {
-        if ((awardCategory.length < 1 && brand == '') || awardCategory.length > 3 || brand.length > 3) {
-            setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
-            return;
-        }
+        // if ((awardCategory.length < 1 && brand == '') || awardCategory.length > 3 || brand.length > 3) {
+        //     setErrorMessage('Please select at least one brand or one award category, and no more than three options per category.');
+        //     return;
+        // }
 
         setIsLoading(true);
-        setErrorMessage(null);  // Clear any previous error message
+        // setErrorMessage(null);  // Clear any previous error message
 
         const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
         const brandArray = Array.isArray(brand) ? brand : [brand];
@@ -271,7 +271,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                     />
                 </div>
             </div>
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+            {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} */}
         </div>
     );      
 }

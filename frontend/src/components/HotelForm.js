@@ -142,6 +142,7 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
                             value={pointsPerNight}
                             onChange={handlePointsPerNightChange}
                             maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                            styles={{ menu: (provided) => ({ ...provided, zIndex: 10 }) }}  
                         />
                     </div>
                     <div className="col-md-3">
@@ -150,6 +151,7 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
                             options={weekendOptions} 
                             value={weekend}
                             onChange={handleWeekendChange}
+                            styles={{ menu: (provided) => ({ ...provided, zIndex: 10 }) }}  
                         />
                     </div>
                     <div className="col-md-3">
@@ -159,6 +161,7 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
                             value={centsPerPoint}
                             onChange={handleCentsPerPointChange}
                             maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                            styles={{ menu: (provided) => ({ ...provided, zIndex: 10 }) }}  
                         />
                     </div>
                     <div className="col-md-3">
@@ -168,6 +171,7 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
                             value={numNights}
                             onChange={handleNumNights}
                             maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
+                            styles={{ menu: (provided) => ({ ...provided, zIndex: 10 }) }}  
                         />
                     </div>
                 </div>

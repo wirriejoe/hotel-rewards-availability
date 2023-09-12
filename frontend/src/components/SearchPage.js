@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import SearchForm from './SearchForm';
+// import SearchForm from './SearchForm';
 import SearchTable from './SearchTable';
 import SearchMap from './SearchMap';  // <-- Make sure to import this
 import { UserContext } from './UserContext';
