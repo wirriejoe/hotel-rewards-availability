@@ -177,7 +177,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                 console.log(err.response);
             }
         }
-
         fetchData();
     }, [submitForm, api_url, initialLoad, hotelName]);  // Include initialLoad in the dependencies.
 
