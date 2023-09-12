@@ -155,9 +155,9 @@ def search():
     ]
 
     if award_category == 'STANDARD':
-        filter_conditions.append(hotels.c.award_category=='STANDARD')
-    else:
-        filter_conditions.append(hotels.c.award_category.in_('PREMIUM', 'SUITE'))
+        filter_conditions.append(stays.c.standard_rate > 0)
+    elif award_category == 'PREMIUM':
+        filter_conditions.append(stays.c.premium_rate > 0)
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
