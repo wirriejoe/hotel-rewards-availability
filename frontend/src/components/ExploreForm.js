@@ -31,11 +31,13 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const [awardCategory, setAwardCategory] = useState([]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState([])
+    const [brandInitialized, setBrandInitialized] = useState(false);
     useEffect(() => {
         setBrand([{
             value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
             label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
           }]);
+          setBrandInitialized(true); 
       }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
     // const [errorMessage, setErrorMessage] = useState(null);
@@ -161,13 +163,13 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
-        if (initialLoad) {
+        if (initialLoad && brandInitialized) {
             setIsLoading(true);
             fetchData();
             submitForm();
             setInitialLoad(false);
         }
-        else if (!initialLoad && !isLoading && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
+        else if (!initialLoad && !isLoading && brandInitialized && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
             setIsLoading(true);
             submitForm();
         }
