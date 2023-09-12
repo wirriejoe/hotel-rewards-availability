@@ -76,6 +76,7 @@
     ]
   },
   "devDependencies": {
-    "babel-plugin-transform-remove-console": "^6.9.4"
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "worker-loader": "^3.0.8"
   }
 }

@@ -12,6 +12,8 @@ import Cookies from 'js-cookie';
 
 // Set Mapbox API token
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_API_KEY;
+// eslint-disable-next-line import/no-webpack-loader-syntax
+mapboxgl.workerClass = require("worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker").default;
 
 const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
   const mapContainer = useRef(null);
