@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 from hilton_auth import get_hilton_auth
-from threaded_search_awards import upsert, update_rates, send_error_to_slack
+from search_helpers import queue_stays, upsert, update_rates, send_error_to_slack
 from tenacity import retry, stop_after_attempt, wait_exponential
 from itertools import chain
 import pytz
@@ -60,25 +60,6 @@ def get_global_auths(num_runs):
         })
     
     return auths
-
-def queue_stays(hotel_brand, search_frequency_hours, search_batch_size):
-    stay_records = session.execute(
-        select(*stays.c)
-        .select_from(join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id))
-        .where(and_(stays.c.status == "Active", 
-                stays.c.last_checked_time < datetime.now(pytz.UTC) - timedelta(hours=search_frequency_hours),
-                stays.c.check_in_date >= datetime.now(pytz.UTC).date(),
-                hotels.c.hotel_brand == hotel_brand))
-        .order_by(stays.c.last_checked_time)
-        .limit(search_batch_size)).fetchall()
-
-    # Update status of fetched stay_records to 'Queued'
-    stay_ids_to_update = [stay.stay_id for stay in stay_records]
-    update_query = stays.update().where(stays.c.stay_id.in_(stay_ids_to_update)).values(status='Queued', last_queued_time=datetime.now(pytz.UTC))
-    session.execute(update_query)
-    session.commit()
-    
-    return stay_records
 
 def on_after(retry_state):
     if retry_state.attempt_number == 4:  # Replace 3 with your max retries
@@ -243,9 +224,9 @@ if __name__ == "__main__":
         award_updates = list(chain.from_iterable(award_results))
 
         # Single-thread: upsert, update rates, close session
-        print(f"Upserting award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, temp_awards, award_updates, ["award_id"])
-        print(f"Upserting stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        print(f"Upserting {len(award_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, stays, stay_updates, ['stay_id'])
         print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         update_rates()

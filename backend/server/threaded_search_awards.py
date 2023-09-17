@@ -1,16 +1,14 @@
 from sqlalchemy import create_engine, MetaData, select, and_, update, func, case, text, join
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, find_dotenv
 from award_search import AwardSearch
-from retry import retry
 from threading import Thread, Lock
 from queue import Queue
 import os
 import pytz
 import logging
-import requests
+from search_helpers import upsert, update_rates, send_error_to_slack
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
@@ -39,34 +37,6 @@ award_updates = []
 stay_updates = []
 search_counter = 0
 counter_lock = Lock()
-
-def upsert(session, table_name, list_of_dicts, unique_columns):
-    # Prepare the base INSERT statement
-    keys = list_of_dicts[0].keys()
-    columns = ', '.join(keys)
-    values = ', '.join([f":{key}" for key in keys])
-    insert_sql = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-    
-    # Prepare the UPDATE statement for conflict
-    update_str = ', '.join([f"{col}=EXCLUDED.{col}" for col in keys])
-    conflict_str = ', '.join(unique_columns)
-    upsert_sql = f"{insert_sql} ON CONFLICT ({conflict_str}) DO UPDATE SET {update_str}"
-    
-    # Execute the raw SQL upsert query
-    session.execute(text(upsert_sql), list_of_dicts)
-    session.commit()
-
-    if table_name == temp_awards:
-        print("Calling tempAwards webhook!")
-        url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
-        params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            print("Request successful:", response.json())
-        else:
-            print("Request failed:", response.status_code)
-            send_error_to_slack("tempAwards webhook error: " + response)
-
 
 def update_awards_table(award_stays, stay_record):
     # Replaced 'stay' with 'stay_record' to avoid naming conflict with stay from the outer function
@@ -188,88 +158,14 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
 
     for t in threads:
         t.join()
-    
-    print("Finished joining threads! Upserting data.")
-    print(f"Num award updates: {len(award_updates)}")
-    print(f"Num stay updates: {len(stay_updates)}")
-    upsert(session, temp_awards, award_updates, ['award_id'])
-    upsert(session, stays, stay_updates, ['stay_id'])
-
-@retry(tries=5, delay=1, backoff=2)
-def update_rates():
-    print("Calling update_rates() webhook!")
-    url = "https://api.retool.com/v1/workflows/c5027803-ab81-4c30-85cd-57748fe8f44f/startTrigger"
-    params = {'workflowApiKey': 'retool_wk_a717023c42f24f558e28f0afe3dc2abb'}
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        print("Request successful:", response.json())
-    else:
-        print("Request failed:", response.status_code)
-        send_error_to_slack("update_rates() webhook error: " + response)
-
-    # print("Starting batch update of rates...")
-
-    # # Prepare the raw SQL statement
-    # stmt = text("""
-    #     UPDATE stays
-    #     SET 
-    #         standard_rate = coalesce(subquery.min_standard_rate,0),
-    #         premium_rate = coalesce(subquery.min_premium_rate,0),
-    #         currency_code = subquery.currency_code,
-    #         standard_cash = coalesce(subquery.min_standard_cash,0),
-    #         premium_cash = coalesce(subquery.min_premium_cash,0),
-    #         standard_cash_usd = coalesce(subquery.standard_cash_usd,0),
-    #         premium_cash_usd = coalesce(subquery.premium_cash_usd,0),
-    #         booking_url = search_url
-    #     FROM (
-    #         SELECT 
-    #             stay_id,
-    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate ELSE 0 END) AS min_standard_rate,
-    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN lowest_points_rate ELSE 0 END) AS min_premium_rate,
-    #             awards.currency_code,
-    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) AS min_standard_cash,
-    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) AS min_premium_cash,
-    #             MIN(CASE WHEN room_category = 'STANDARD' AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) * fx.usd_exchange_rate AS standard_cash_usd,
-    #             MIN(CASE WHEN room_category in ('SUITE','PREMIUM') AND last_checked_time >= now() - interval '48 hours' THEN cash_rate::decimal ELSE 0 END) * fx.usd_exchange_rate AS premium_cash_usd,
-    #             search_url
-    #         FROM awards
-    #         left join fx on awards.currency_code = fx.currency_code
-    #         GROUP BY stay_id, search_url, awards.currency_code, fx.usd_exchange_rate
-    #     ) AS subquery
-    #     WHERE stays.stay_id = subquery.stay_id
-    # """)
-
-    # # Calculate available award inventory
-    # stmt2 = text("""
-    #     UPDATE stays
-    #     SET available_inventory = subquery.stays_available::decimal / subquery.total_tracked_dates::decimal
-    #     FROM (
-    #     SELECT
-    #         stay_id,
-    #         sum(case when standard_rate > 0 or premium_rate > 0 then 1 else 0 end) over (partition by hotel_id) as stays_available,
-    #         count(stay_id) over (partition by hotel_id) as total_tracked_dates
-    #     FROM stays
-    #     WHERE status <> 'Inactive'
-    #     AND check_in_date >= CURRENT_DATE
-    #     ) AS subquery
-    #     WHERE stays.stay_id = subquery.stay_id
-    #     """)
-
-    # # Execute the UPDATE statement
-    # result = session.execute(stmt)
-    # result = session.execute(stmt2)
-    # session.commit()
-
-    # print("Batch update completed. {} rows affected.".format(result.rowcount))
-    # print("Changes committed to the database.")
-
-def send_error_to_slack(error_msg):
-    url = os.getenv('SLACK_WEBHOOK')
-    requests.post(url, json={"text": f"Error in threaded search awards! Error message: {error_msg}"})
-
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=12000)
+        search_awards(search_frequency_hours=24, search_batch_size=100)
+        print("Finished joining threads! Upserting data.")
+        print(f"Num award updates: {len(award_updates)}")
+        print(f"Num stay updates: {len(stay_updates)}")
+        upsert(session, temp_awards, award_updates, ['award_id'])
+        upsert(session, stays, stay_updates, ['stay_id'])
         update_rates()
         session.close()
     except Exception as e:
