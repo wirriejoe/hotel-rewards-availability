@@ -47,6 +47,7 @@ function App() {
                             <Dropdown.Menu>
                                 <Dropdown.Item as={Link} to="/hyatt/explore">World of Hyatt</Dropdown.Item>
                                 <Dropdown.Item as={Link} to="/hilton/explore">Hilton Honors</Dropdown.Item>
+                                <Dropdown.Item as={Link} to="/ihg/explore">IHG One Rewards</Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
                           <Nav.Link as={Link} to="/request">Request</Nav.Link> 

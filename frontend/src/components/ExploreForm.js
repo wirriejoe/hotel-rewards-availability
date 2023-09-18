@@ -34,8 +34,8 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     const [brandInitialized, setBrandInitialized] = useState(false);
     useEffect(() => {
         setBrand([{
-            value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : '',
-            label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : ''
+            value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : hotelName === 'ihg' ? 'InterContinental Hotels & Resorts' : '',
+            label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : hotelName === 'ihg' ? 'InterContinental Hotels & Resorts' : ''
           }]);
           setBrandInitialized(true); 
       }, [hotelName]);
