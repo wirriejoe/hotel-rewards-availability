@@ -160,7 +160,7 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
         t.join()
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=100)
+        search_awards(search_frequency_hours=24, search_batch_size=12000)
         print("Finished joining threads! Upserting data.")
         print(f"Num award updates: {len(award_updates)}")
         print(f"Num stay updates: {len(stay_updates)}")
