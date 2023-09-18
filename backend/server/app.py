@@ -148,7 +148,7 @@ def search():
         stays.c.check_in_date >= start_date,
         stays.c.check_in_date <= end_date,
         stays.c.duration == num_nights,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=168),
         hotels.c.hotel_longitude != '',
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         stays.c.status != 'Inactive'
@@ -204,7 +204,7 @@ def explore():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=48),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=168),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         stays.c.duration == data.get('num_nights', 1),
         hotels.c.hotel_brand == data.get('hotel', ''),
@@ -284,7 +284,7 @@ def get_hotel():
     filter_conditions = [
         stays.c.check_in_date >= today + timedelta(days=1),
         stays.c.check_in_date < future_date,
-        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=144),
+        stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=168),
         or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
         hotels.c.hotel_brand == data.get('hotel_name', ''),
         stays.c.hotel_code == data.get('hotel_code', ''),
