@@ -183,7 +183,7 @@ if __name__ == "__main__":
         # Single-thread: upsert, update rates, close session
         print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, temp_awards, award_updates, ["award_id"])
-        print(f"Upserting {len(award_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        print(f"Upserting {len(stay_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, stays, stay_updates, ['stay_id'])
         print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         update_rates()
