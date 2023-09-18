@@ -41,7 +41,7 @@ search_counter = 0
 
 def queue_stays(hotel_brand, search_frequency_hours, search_batch_size):
     stay_records = session.execute(
-        select(*stays.c)
+        select(*stays.c, *hotels.c)
         .select_from(join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id))
         .where(and_(stays.c.status == "Active", 
                 stays.c.last_checked_time < datetime.now(pytz.UTC) - timedelta(hours=search_frequency_hours),
@@ -99,4 +99,4 @@ def update_rates():
 
 def send_error_to_slack(error_msg):
     url = os.getenv('SLACK_WEBHOOK')
-    requests.post(url, json={"text": f"Error in threaded search awards! Error message: {error_msg}"})
+    requests.post(url, json={"text": f"Error in award search worker! Error message: {error_msg}"})

@@ -3,8 +3,8 @@ from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-from hilton_auth import get_hilton_auth
-from search_helpers import queue_stays, upsert, update_rates, send_error_to_slack
+from auth import get_hilton_auth
+from helpers import queue_stays, upsert, update_rates, send_error_to_slack
 from tenacity import retry, stop_after_attempt, wait_exponential
 from itertools import chain
 import pytz

@@ -8,7 +8,7 @@ from queue import Queue
 import os
 import pytz
 import logging
-from search_helpers import upsert, update_rates, send_error_to_slack
+from helpers import upsert, update_rates, send_error_to_slack
 
 # Load environment variables
 # load_dotenv(os.path.realpath(os.path.join(os.path.dirname(__file__), '../.env')))
