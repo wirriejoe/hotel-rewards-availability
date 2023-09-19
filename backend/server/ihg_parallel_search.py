@@ -175,7 +175,7 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("ihg", 24, 12000)
+        stay_records = queue_stays("ihg", 168, 12000)
         # auths = ['se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y']
         auths = get_global_auths(1)
 
