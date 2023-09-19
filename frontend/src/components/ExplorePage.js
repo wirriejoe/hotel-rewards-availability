@@ -36,7 +36,7 @@ function ExplorePage() {
             }
           </div>
           <div className="form-container">
-            <ExploreForm setStays={setStays} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} hotelName = {hotelName} />
+            <ExploreForm key={hotelName} setStays={setStays} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer = {isCustomer} hotelName = {hotelName} />
           </div>
           <div className="table-container">
             {isLoading ? (

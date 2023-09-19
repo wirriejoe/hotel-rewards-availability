@@ -137,7 +137,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         }
     }, [awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [categoriesRes, brandsRes, countriesRes] = await Promise.all([
                 axios.get(api_url + `/api/award_categories?hotel=${hotelName}`),
@@ -159,7 +159,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
             console.log(err.request);
             console.log(err.response);
         }
-    }
+    }, [api_url, hotelName])
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
@@ -173,7 +173,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
             setIsLoading(true);
             submitForm();
         }
-    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, submitForm, initialLoad]);  // Include previous and current states, and submitForm in the dependencies.
+    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, submitForm, initialLoad, brandInitialized, fetchData, isLoading, setIsLoading]);  // Include previous and current states, and submitForm in the dependencies.
 
     const handleAwardCategoryChange = (selectedOptions) => {setAwardCategory(selectedOptions)};
     const handleBrandChange = (selectedOptions) => {setBrand(selectedOptions)};
