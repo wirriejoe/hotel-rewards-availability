@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta
-from hilton_auth import get_hilton_auth
+from auth import get_hilton_auth
 from threaded_search_awards import update_rates
 from retry import retry
 import pytz
