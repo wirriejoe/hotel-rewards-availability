@@ -3,10 +3,15 @@ from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
+<<<<<<< Updated upstream
 from auth import get_hilton_auth
 from helpers import queue_stays, upsert, update_rates, send_error_to_slack
+=======
+from hilton_auth import get_hilton_auth
+>>>>>>> Stashed changes
 from tenacity import retry, stop_after_attempt, wait_exponential
 from itertools import chain
+from helper import queue_stays, upsert, update_rates, send_error_to_slack
 import pytz
 import random
 import os
@@ -196,7 +201,7 @@ async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, 
                 })
                 print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         except Exception as e:
-            # print(f"Response URL {url} failed with exception: {e}")
+            print(f"Response URL {url} failed with exception: {e}")
             raise  # Re-raise the exception to trigger the retry logic
         return award_updates
 
@@ -224,9 +229,10 @@ if __name__ == "__main__":
         award_updates = list(chain.from_iterable(award_results))
 
         # Single-thread: upsert, update rates, close session
+        print("Finished joining threads! Upserting data.")
         print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, temp_awards, award_updates, ["award_id"])
-        print(f"Upserting {len(award_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        print(f"Upserting {len(stay_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         upsert(session, stays, stay_updates, ['stay_id'])
         print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         update_rates()
