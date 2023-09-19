@@ -515,8 +515,8 @@ def get_stays():
         hotels.c.hotel_code,
         func.count(stays.c.check_in_date).label('num_night_monitored')).select_from(j).where(
             stays.c.status.in_(['Active', 'Queued']),
-            stays.c.check_in_date >= datetime.now() + timedelta(days=1),
-            hotels.c.hotel_brand == 'hyatt'
+            stays.c.check_in_date >= datetime.now() + timedelta(days=1)
+            # hotels.c.hotel_brand == 'hyatt'
         ).group_by(hotels.c.hotel_name, hotels.c.hotel_id, hotels.c.hotel_code).order_by(desc('num_night_monitored'),hotels.c.hotel_name)
 
     conn = engine.connect()
