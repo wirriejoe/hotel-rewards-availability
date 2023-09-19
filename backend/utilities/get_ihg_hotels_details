@@ -1,0 +1,131 @@
+import os
+import csv
+import aiohttp
+import asyncio
+import json
+import random
+from urllib.parse import urlencode, urlunparse, quote
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
+# Initialize environment variables and proxy settings
+username = os.getenv('BRIGHTDATA_USERNAME')
+password = os.getenv('BRIHTDATA_PASSWORD')
+port = 22225
+session_id = random.random()
+super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
+
+proxy_dict = {
+    "http": super_proxy_url
+}
+
+# Counter for consecutive failures
+consecutive_fails = 0
+
+async def fetch_url(session, base_url, hotel_url, retries=3):
+    global consecutive_fails  # Use the global counter variable
+    params = {
+        "currentUrl": hotel_url
+    }
+    encoded_params = urlencode(params, quote_via=quote)
+    full_url = urlunparse(("https", "www.ihg.com", base_url, None, encoded_params, None))
+
+    backoff_factor = 1
+    for i in range(retries):
+        try:
+            async with session.get(full_url, proxy=super_proxy_url) as response:
+                data = await response.text()
+                json_data = json.loads(data)
+
+                tracking_json = json_data.get('trackingJson', {})
+                reservation = tracking_json.get('reservation', {})
+                hotel_longitude = reservation.get('propertyLong', '')
+                hotel_latitude = reservation.get('propertyLat', '')
+                brand = tracking_json.get('hotelBrand4Digit', '')
+                sub_brand = tracking_json.get('hotelBrand', '')
+                
+                consecutive_fails = 0  # Reset counter on success
+                print(f"Successfully fetched data for {hotel_url}")
+                return hotel_longitude, hotel_latitude, brand, sub_brand, "success"
+                
+        except Exception as e:
+            print(f"Failed to fetch data for {hotel_url} - Attempt {i+1}. Error: {e}")
+            consecutive_fails += 1
+            if consecutive_fails > 10:
+                print("More than 10 consecutive failures. Sleeping for 15 seconds.")
+                await asyncio.sleep(15)
+                consecutive_fails = 0  # Reset the counter
+            await asyncio.sleep(backoff_factor)
+            backoff_factor *= 2
+            
+    print(f"Exceeded retries for {hotel_url}")
+    return '', '', '', '', "failed"
+
+async def main():
+    base_url = "gs-json/getTrackingJSON/hoteldetail"
+    async with aiohttp.ClientSession() as session:
+        with open('ihg_hotels.csv', 'r') as f:
+            reader = csv.DictReader(f)
+            rows = [row for row in reader if 'ihg' in row['Hotel URL'].lower()]  # Only keep rows that contain "ihg"
+
+            semaphore = asyncio.Semaphore(25)  # Limit to 25 concurrent coroutines
+
+            async def fetch_with_semaphore(row):
+                async with semaphore:
+                    return await fetch_url(session, base_url, row['Hotel URL'])
+
+            tasks = [fetch_with_semaphore(row) for row in rows]
+            results = await asyncio.gather(*tasks)
+
+            # Writing to new CSV file
+            with open('ihg_hotels_details.csv', 'w', newline='') as out_file:
+                fieldnames = reader.fieldnames + ['Longitude', 'Latitude', 'Brand', 'Sub-brand', 'Status']
+                writer = csv.DictWriter(out_file, fieldnames=fieldnames)
+                writer.writeheader()
+
+                for row, result in zip(rows, results):
+                    row['Longitude'], row['Latitude'], row['Brand'], row['Sub-brand'], row['Status'] = result
+                    writer.writerow(row)
+
+async def retry_failed():
+    base_url = "gs-json/getTrackingJSON/hoteldetail"
+    # Read the previously generated file
+    with open('ihg_hotels_details.csv', 'r') as f:
+        reader = csv.DictReader(f)
+        failed_rows = [row for row in reader if row['Status'] == 'failed']
+
+    if not failed_rows:
+        print("No failed rows to retry.")
+        return
+
+    # Fetch the failed rows again
+    async with aiohttp.ClientSession() as session:
+        semaphore = asyncio.Semaphore(25)
+        
+        async def fetch_with_semaphore(row):
+            async with semaphore:
+                return await fetch_url(session, base_url, row['Hotel URL'])
+
+        tasks = [fetch_with_semaphore(row) for row in failed_rows]
+        updated_results = await asyncio.gather(*tasks)
+
+        # Update the rows in the file
+        all_rows = []
+        with open('ihg_hotels_details.csv', 'r') as f:
+            reader = csv.DictReader(f)
+            all_rows = [row for row in reader]
+
+        for row in all_rows:
+            for failed_row, updated_result in zip(failed_rows, updated_results):
+                if row['Hotel URL'] == failed_row['Hotel URL']:
+                    row['Longitude'], row['Latitude'], row['Brand'], row['Sub-brand'], row['Status'] = updated_result
+
+        # Write the updated rows back to the file
+        with open('ihg_hotels_details.csv', 'w', newline='') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=all_rows[0].keys())
+            writer.writeheader()
+            writer.writerows(all_rows)
+
+if __name__ == '__main__':
+    asyncio.run(retry_failed())

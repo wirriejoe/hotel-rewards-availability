@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 import pandas as pd
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
 
 sem = asyncio.Semaphore(250)  # Limit to 50 concurrent coroutines
 
@@ -37,7 +37,7 @@ async def check_full_list(url, index, total, session, max_retries=3):
                         
                         hotels_metadata.append([url, hotel_code, hotel_destination_code, hotel_name, hotel_url, hotel_address])
 
-                    return hotels_metadata
+                    return hotels_metadata, "Success"
 
             except Exception as e:
                 print(f"An error occurred while checking {url}: {e}. Retrying {retries+1}/{max_retries}")
@@ -45,11 +45,13 @@ async def check_full_list(url, index, total, session, max_retries=3):
                 await asyncio.sleep(1)
     
         print(f"Max retries reached for {url}. Skipping.")
-        return [[url, '', '', '', '', '']]
+        return [[url, '', '', '', '', '']], "Failed"
 
 async def main():
     city_urls = pd.read_csv("ihg_cities.csv")['Link'].tolist()
+    city_urls = [quote(url, safe=':/-') for url in city_urls]
     all_hotels_data = []
+    cities_status = []
     total_regions = len(city_urls)
 
     async with aiohttp.ClientSession() as session:
@@ -59,18 +61,22 @@ async def main():
             tasks.append(task)
         responses = await asyncio.gather(*tasks)
 
-        for response in responses:
-            all_hotels_data.extend(response)
+        for hotels, status in responses:
+            all_hotels_data.extend(hotels)
+            cities_status.append([hotels[0][0] if hotels else url, status])
     
-    unique_hotels_data = list(set(tuple(row) for row in all_hotels_data))
-    unique_hotels_data = [list(tup) for tup in unique_hotels_data]
-
     with open('ihg_hotels_metadata.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Region URL", "Hotel Code", "Destination Code", "Hotel Name", "Hotel URL", "Hotel Address"])
-        for row in all_hotels_data:
-            writer.writerow(row)
+        writer.writerows(all_hotels_data)
+
+    with open('ihg_cities_results.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Link", "Status"])
+        writer.writerows(cities_status)
+
     print("Data extraction completed. Results written to 'ihg_hotels_metadata.csv'.")
+    print("Cities status written to 'ihg_cities_results.csv'.")
 
 if __name__ == '__main__':
     asyncio.run(main())
