@@ -48,7 +48,7 @@ sem = asyncio.Semaphore(10)
 
 def get_global_auths(num_runs):
     auths = []  # Declare global variable
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         auths = list(executor.map(
             lambda _: {
                 "api_key": get_ihg_auth(
