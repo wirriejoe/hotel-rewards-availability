@@ -144,6 +144,7 @@
   flex: 0 0 25%; /* Adjust as necessary */
   margin-bottom: 0px;
   text-align: left;
+  padding-right: 20px;
 }
 
 .dataTables_wrapper .rdt_TableCell {

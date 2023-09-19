@@ -149,8 +149,7 @@ def search():
         stays.c.check_in_date <= end_date,
         stays.c.duration == num_nights,
         stays.c.last_checked_time > datetime.now().astimezone(utc) - timedelta(hours=168),
-        hotels.c.hotel_longitude != '',
-        or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0),
+        # hotels.c.hotel_longitude != '',
         stays.c.status != 'Inactive'
     ]
 
@@ -158,6 +157,8 @@ def search():
         filter_conditions.append(stays.c.standard_rate > 0)
     elif award_category == 'PREMIUM':
         filter_conditions.append(stays.c.premium_rate > 0)
+    else:
+        filter_conditions.append(or_(stays.c.standard_rate > 0, stays.c.premium_rate > 0))
 
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 
@@ -172,7 +173,7 @@ def search():
     filtered_stays = []
     for stay in stay_results:
         lat2, lon2 = float(stay['hotel_latitude']), float(stay['hotel_longitude'])  # Convert to float
-        if haversine_distance(lat, lng, lat2, lon2) <= 50:
+        if haversine_distance(lat, lng, lat2, lon2) <= 100:
             filtered_stays.append(stay)
 
     stay_results = [{**stay, 'last_checked': time_since(stay['last_checked_time'])} for stay in filtered_stays]
