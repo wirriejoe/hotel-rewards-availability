@@ -93,6 +93,7 @@ function HomePage() {
               paddingBottom: "35%", // 16:9 Aspect Ratio
             }}>
               <iframe 
+                title="BurnMyPoints Demo"
                 src="https://www.loom.com/embed/ab57bd375fff4bcf84ea957e23cbb41d?sid=3c3031e1-b9ff-4308-8589-d9c829e9338f"
                 webkitallowfullscreen 
                 frameBorder="0"
