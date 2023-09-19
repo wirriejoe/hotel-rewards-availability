@@ -5,6 +5,10 @@ import json
 import asyncio
 import aiohttp
 from aiohttp import ClientSession
+from dotenv import load_dotenv, find_dotenv
+import os
+
+load_dotenv(find_dotenv())
 
 # Function to process a chunk of addresses using the OpenAI API
 async def process_chunk(session, address_chunk, headers, max_retries=5):
@@ -74,7 +78,7 @@ async def process_chunk(session, address_chunk, headers, max_retries=5):
             await asyncio.sleep(2)
 
 async def main():
-    openai.api_key = "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"
+    openai.api_key = os.getenv('OPENAI_KEY')
     openai.aiosession.set(ClientSession())
 
     with open("ihg_hotels_details.csv", "r") as infile:
