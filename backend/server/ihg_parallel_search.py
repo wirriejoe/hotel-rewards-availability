@@ -120,7 +120,7 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                 check_out_month = "{:02d}".format(int(check_out_month) - 1)
 
                 currency_code = data['hotels'][0]['propertyCurrency']
-                search_url = f'www.ihg.com/intercontinental/hotels/us/en/find-hotels/select-roomrate?qDest={destination}&qSlH={hotel_code}&qCiD={check_in_day}&qCiMy={check_in_month + check_in_year}&qCoD={check_out_day}&qCoMy={check_out_month + check_out_year}&qRms=1&qAdlt=2&displayCurrency={currency_code}&qRtP=IVANI'
+                search_url = f'https://www.ihg.com/intercontinental/hotels/us/en/find-hotels/select-roomrate?qDest={destination}&qSlH={hotel_code}&qCiD={check_in_day}&qCiMy={check_in_month + check_in_year}&qCoD={check_out_day}&qCoMy={check_out_month + check_out_year}&qRms=1&qAdlt=2&displayCurrency={currency_code}&qRtP=IVANI'
                 print(f"Response URL: {url}")
                 print(f"Verification URL: {search_url}")
 
