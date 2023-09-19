@@ -110,8 +110,12 @@ def get_ihg_auth(check_in_date, check_out_date):
     driver.execute_cdp_cmd('Runtime.disable',{})
     injector = driver.profiles.injector
 
+    check_in_month = "{:02d}".format(int(check_in_date.month) - 1)
+    check_out_month = "{:02d}".format(int(check_out_date.month) - 1)
+
+
     # Open target URL
-    url = f"https://www.ihg.com/hotels/us/en/find-hotels/hotel-search?qDest=San%20Francisco,%20CA,%20United%20States&qCiD={check_in_date.day}&qCiMy={check_in_date.month + check_in_date.year}&qCoD={check_out_date.day}&qCoMy={check_out_date.month+check_out_date.year}"
+    url = f"https://www.ihg.com/hotels/us/en/find-hotels/hotel-search?qDest=San%20Francisco,%20CA,%20United%20States&qCiD={check_in_date.day}&qCiMy={check_in_month + check_in_date.year}&qCoD={check_out_date.day}&qCoMy={check_out_month+check_out_date.year}"
     driver.get(url)
     time.sleep(random.randint(0,1))
 
