@@ -179,9 +179,10 @@
   border: 1px solid #c8a2c8;  /* Lilac */
 }
 
-.btn.btn-primary.mt-3 {
+.btn.btn-primary {
   background-color: #800080;  /* Lavender */
   border: 1px solid #c8a2c8;  /* Lilac */
+  margin: auto;
 }
 
 .error{

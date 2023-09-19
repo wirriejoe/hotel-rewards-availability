@@ -20,23 +20,23 @@ function HomePage() {
     { name: "Accor", logo: AccorLogo, status: "coming_soon" },
   ];
 
-  const features = [
-    {title: "Lightning fast ⚡︎", description: "No more waiting. We constantly check hotel awards, so you see results immediately."},
-    {title: "Easy search 😅", description: "No more guessing dates, cities, and unavailable hotels. We built the hotel search tool we wish a hotel did."},
-    {title: "Explore awards 🌐", description: "Explore brands and categories for the best deals. Sort by standard or premium rates and find the best options."},
-    {title: "Unlimited alerts 🔔", description: "No more repetitive searches. Create alerts to be notified when the best stays are released."},
-    {title: "Discord community 🤝", description: 
-      <span>
-      <a href="https://discord.gg/CJwvNuRZgu" target="_blank" rel="noreferrer">
-        Join our Discord
-      </a>
-      {' '}community to talk about travel, request new features, or just come hang out.
-    </span>
-    },
-    {title: "Booking links 🔗", description: "Save time and jump directly into the booking flow on the hotel website to lock in your rate."},
-    {title: "Fresh results 🤩", description: "Results update regularly with the latest award availability from hotel websites. No more checking each rate one at a time."},
-    {title: "Cents per point (CCP) 🤑", description: "Compare point redemptions with cash rates to find the best bang for your buck every time."},
-  ];
+  // const features = [
+  //   {title: "Lightning fast ⚡︎", description: "No more waiting. We constantly check hotel awards, so you see results immediately."},
+  //   {title: "Easy search 😅", description: "No more guessing dates, cities, and unavailable hotels. We built the hotel search tool we wish a hotel did."},
+  //   {title: "Explore awards 🌐", description: "Explore brands and categories for the best deals. Sort by standard or premium rates and find the best options."},
+  //   {title: "Unlimited alerts 🔔", description: "No more repetitive searches. Create alerts to be notified when the best stays are released."},
+  //   {title: "Discord community 🤝", description: 
+  //     <span>
+  //     <a href="https://discord.gg/CJwvNuRZgu" target="_blank" rel="noreferrer">
+  //       Join our Discord
+  //     </a>
+  //     {' '}community to talk about travel, request new features, or just come hang out.
+  //   </span>
+  //   },
+  //   {title: "Booking links 🔗", description: "Save time and jump directly into the booking flow on the hotel website to lock in your rate."},
+  //   {title: "Fresh results 🤩", description: "Results update regularly with the latest award availability from hotel websites. No more checking each rate one at a time."},
+  //   {title: "Cents per point (CCP) 🤑", description: "Compare point redemptions with cash rates to find the best bang for your buck every time."},
+  // ];
 
   const featureHighlights = [
     {
@@ -128,7 +128,7 @@ function HomePage() {
               <p>{feature.description}</p>
               {/* Check if the CTA object and its 'route' property exist */}
               {featureCTAs[index]?.route && 
-                <Link to={featureCTAs[index].route} className='btn btn-primary btn-lg btn-space' role='button'>
+                <Link to={featureCTAs[index].route} className='btn btn-primary' role='button'>
                   {featureCTAs[index].label}
                 </Link>
               }
