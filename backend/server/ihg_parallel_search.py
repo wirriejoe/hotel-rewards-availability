@@ -12,7 +12,6 @@ import random
 import os
 import asyncio
 import aiohttp
-from concurrent.futures import ThreadPoolExecutor
 
 load_dotenv(find_dotenv())
 
@@ -48,16 +47,14 @@ sem = asyncio.Semaphore(10)
 
 def get_global_auths(num_runs):
     auths = []  # Declare global variable
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        auths = list(executor.map(
-            lambda _: {
-                "api_key": get_ihg_auth(
-                    (datetime.now() + timedelta(days=random.randint(4, 10))).date(),
-                    (datetime.now() + timedelta(days=random.randint(4, 10) + random.randint(1, 5))).date()
-                )
-            },
-            range(num_runs)
-        ))
+    for _ in range(num_runs):
+        auth_check_in_date = datetime.now() + timedelta(days=random.randint(4,10))
+        auth_check_out_date = auth_check_in_date + timedelta(days=random.randint(1,5))
+
+        api_key = get_ihg_auth(auth_check_in_date.date(), auth_check_out_date.date())
+        auths.append({
+            "api_key": api_key
+        })
     return auths
 
 def on_after(retry_state):
@@ -73,14 +70,15 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
         award_updates = []
 
         try:
-            rand_auth = random.randint(0,len(auths)-1)
+            # rand_auth = random.randint(0,len(auths)-1)
             url = "https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails"
                     # rateDetails.policies,
                     # rateDetails.bonusRates,
                     # rateDetails.upsells
             
             headers = {
-                'X-Ihg-Api-Key': auths[rand_auth]['api_key']
+                # 'X-Ihg-Api-Key': auths[rand_auth]['api_key']
+                'X-Ihg-Api-Key': auths
             }
             query = {"products": [{
                         "productCode": "SR",
@@ -179,7 +177,8 @@ if __name__ == "__main__":
         # Single-thread: queue_stays
         stay_records = queue_stays("ihg", 168, 12000)
         # auths = ['se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y']
-        auths = get_global_auths(1)
+        # auths = get_global_auths(1)
+        auths = 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'
 
         # Asynchronous: Fetch awards
         award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
