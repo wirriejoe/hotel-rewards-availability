@@ -9,7 +9,6 @@ import MarriottLogo from '../hotels/Marriott.png';
 import WyndhamLogo from '../hotels/Wyndham.png'; 
 
 function HomePage() {
-
   // Define hotels and their status
   const hotels = [
     { name: "Hyatt", logo: HyattLogo, status: "supported" },
@@ -94,7 +93,7 @@ function HomePage() {
             }}>
               <iframe 
                 title="BurnMyPoints Demo"
-                src="https://www.loom.com/embed/ab57bd375fff4bcf84ea957e23cbb41d?sid=3c3031e1-b9ff-4308-8589-d9c829e9338f"
+                src="https://www.loom.com/embed/021520321c404da48b7fe5911c032990?sid=24076a6c-f95c-4e63-aa19-1af27bc4d1d1"
                 webkitallowfullscreen 
                 frameBorder="0"
                 mozallowfullscreen 
