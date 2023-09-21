@@ -57,10 +57,14 @@ def get_global_auths(num_runs):
         })
     return auths
 
-def on_after(retry_state):
+async def on_after(retry_state):
     if retry_state.attempt_number == 4:  # Replace 4 with your max retries
         print("Max retries reached. Skipping this run.")
         return
+    if retry_state.outcome.result() and retry_state.outcome.result().status == 402:  # Assuming you can get status code this way
+        sleep_duration = random.uniform(1, 3)  # Sleep between 1 to 3 seconds
+        print(f"Got a 402 error. Sleeping for {sleep_duration} seconds before retry.")
+        await asyncio.sleep(sleep_duration)
 
 # IHG rate code definitions https://quizlet.com/395739938/hi-rate-codes-flash-cards/
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=5), after=on_after)
@@ -154,6 +158,11 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     'status': 'Active'
                 })
                 print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        except aiohttp.ClientResponseError as e:
+            if e.status == 402:
+                sleep_duration = random.uniform(1,3)
+                print(f"Got a 402 error. Sleeping for {sleep_duration} seconds before retry.")
+                await asyncio.sleep(sleep_duration)
         except Exception as e:
             print(f"Response URL {url} failed with exception: {e}")
             raise  # Re-raise the exception to trigger the retry logic
@@ -175,7 +184,7 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("ihg", 168, 12000)
+        stay_records = queue_stays("ihg", 24, 12000)
         # auths = ['se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y']
         # auths = get_global_auths(1)
         auths = 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'
