@@ -163,6 +163,7 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                 sleep_duration = random.uniform(1,3)
                 print(f"Got a 402 error. Sleeping for {sleep_duration} seconds before retry.")
                 await asyncio.sleep(sleep_duration)
+                raise
         except Exception as e:
             print(f"Response URL {url} failed with exception: {e}")
             raise  # Re-raise the exception to trigger the retry logic
