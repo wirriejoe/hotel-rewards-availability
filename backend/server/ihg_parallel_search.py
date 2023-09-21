@@ -36,15 +36,15 @@ session_id = random.random()
 super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
 
 proxy_dict = {
-    "http": super_proxy_url
+    "http": super_proxy_url,
+    "https": super_proxy_url
 }
 
 award_updates = []
 stay_updates = []
 search_counter = 0
 start_timer = datetime.now()
-sem = asyncio.Semaphore(10)
-pause_coroutines = False
+sem = asyncio.Semaphore(20)
 
 def get_global_auths(num_runs):
     auths = []  # Declare global variable
@@ -66,12 +66,12 @@ def on_after(retry_state):
 # IHG rate code definitions https://quizlet.com/395739938/hi-rate-codes-flash-cards/
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=5), after=on_after)
 async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, destination, stay_id, hotel_id, auths):
-    global pause_coroutines
-    while pause_coroutines:
-        await asyncio.sleep(1)
-
     async with sem:
-        global search_counter
+        global search_counter, super_proxy_url, proxy_dict
+        session_id = random.random()
+        super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
+        proxy_dict["http"] = super_proxy_url  # Update proxy_dict with the new super_proxy_url
+
         award_updates = []
 
         try:
@@ -104,6 +104,15 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     "returnAdditionalRatePlanDescriptions": True,
                     "includePackageDetails": True}
             }
+
+            # ip_url = "http://lumtest.com/myip.json"
+            # async with session.get(ip_url, proxy=super_proxy_url) as ip_response:
+            #     if ip_response.status == 200:
+            #         ip_data = await ip_response.json()
+            #         my_ip = ip_data['ip']
+            #         print(f"My IP Address: {my_ip}")
+            #     else:
+            #         print("Could not fetch IP.")
 
             # Make the POST request and capture the response
             async with session.post(url, json=query, headers=headers, proxy=super_proxy_url, timeout=30) as response:
@@ -153,22 +162,15 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     })
                     print(award_id)
                 search_counter += 1
+
                 stay_updates.append({
                     'stay_id': stay_id,
                     'last_checked_time': datetime.now(pytz.UTC),
                     'status': 'Active'
                 })
                 print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        except aiohttp.ClientResponseError as e:
+        except Exception as e:
             print(f"Response URL {url} failed with exception: {e}")
-            print(e.status)
-            print(e.status == 402 or e.status == 403)
-            if e.status == 402 or e.status == 403:
-                print(f"Got a 402 or 403 error. Sleeping for {sleep_duration} seconds before retry.")
-                pause_coroutines = True  # Set the flag to True
-                sleep_duration = random.uniform(1, 3)
-                await asyncio.sleep(sleep_duration)  # Sleep for a bit
-                pause_coroutines = False
             raise
         return award_updates
 
@@ -188,7 +190,7 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("ihg", 24, 12000)
+        stay_records = queue_stays("ihg", 24, 15000)
         # auths = ['se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y']
         # auths = get_global_auths(1)
         auths = 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'

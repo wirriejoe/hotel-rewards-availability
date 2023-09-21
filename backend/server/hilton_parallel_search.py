@@ -70,7 +70,10 @@ def on_after(retry_state):
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=5), after=on_after)
 async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, stay_id, hotel_id, auths):
     async with sem:
-        global search_counter
+        global search_counter, super_proxy_url, proxy_dict
+        session_id = random.random()
+        super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"
+        proxy_dict["http"] = super_proxy_url  # Update proxy_dict with the new super_proxy_url
         award_updates = []
 
         try:
@@ -217,7 +220,7 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 12000)
+        stay_records = queue_stays("hilton", 24, 15000)
         auths = get_global_auths(5)
 
         # Asynchronous: Fetch awards
