@@ -114,7 +114,7 @@ class AwardSearch:
                 
                 return awards_list
             except Exception as e:
-                print(f"An error occurred while getting award stays: {e}. Attempt {attempt + 1} of {max_retries}")
+                print(f"An error occurred while getting award stays: {e}. Attempt {attempt + 1} of {max_retries}. Here's the Response URL: {url}")
                 traceback.print_exc()
                 if attempt < max_retries - 1:
                     sleep_time = delay * (backoff_factor ** attempt)
