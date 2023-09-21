@@ -9,7 +9,7 @@ function RequestsPage({ isPro }) {
   const { isCustomer } = useContext(UserContext);
 
   return (
-    isAuthenticated ? (
+    // isAuthenticated ? (
       <div>
         <div>
           <h1>Request</h1>
@@ -21,9 +21,9 @@ function RequestsPage({ isPro }) {
         </div>
         <RequestsTable isLoading={isLoading} setIsLoading={setIsLoading} isCustomer={isCustomer} />
       </div>
-    ) : (
-      <Login/>
-    )
+    // ) : (
+    //   <Login/>
+    // )
   );
 }
 

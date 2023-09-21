@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from flask_wtf.csrf import CSRFProtect
 from flask_socketio import SocketIO, emit
-from .search_stays import search_by_consecutive_nights, build_url
 from sqlalchemy import create_engine, MetaData, select, join, and_, or_, desc, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
@@ -96,7 +94,10 @@ def log_user_event():
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        # return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        stytchUserID = 'guest'
+
 
     event_name = data['event_name']  # extract event name from the data
     event_details = data.get('event_details', '')  
@@ -118,7 +119,9 @@ def search():
     try:
         user_id = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        user_id = 'guest'
+        # return jsonify({'message': str(e)}), 401
 
     # Extract parameters
     geography = data.get('geography', {'lat': None, 'lng': None})
@@ -193,7 +196,9 @@ def explore():
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        stytchUserID = 'guest'
+        # return jsonify({'message': str(e)}), 401
 
     isCustomer = data.get('isCustomer')
     today = datetime.now().astimezone(utc)
@@ -267,13 +272,12 @@ def get_hotel():
     print(request)
 
     session_token = data.get('session_token', '')
-    if session_token:
-        try:
-            stytchUserID = authenticate_session(session_token).user.user_id
-        except AuthenticationError as e:
-            return jsonify({'message': str(e)}), 401
-    else:
+    try:
+        stytchUserID = authenticate_session(session_token).user.user_id
+    except AuthenticationError as e:
+        print(f"Authentication Error: {str(e)}")
         stytchUserID = 'guest'
+        # return jsonify({'message': str(e)}), 401
 
     isCustomer = data.get('isCustomer')
     today = datetime.now().astimezone(utc)
@@ -463,7 +467,9 @@ def make_request():
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        stytchUserID = 'guest'
+        # return jsonify({'message': str(e)}), 401
     
     sel = select(users.c.customer_status).where(users.c.stytchUserID == stytchUserID, users.c.customer_expiration_time >= now, users.c.customer_status == 'pro').limit(1)
     conn = engine.connect()
@@ -488,7 +494,9 @@ def get_requests():
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        # return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        stytchUserID = 'guest'
 
     # Retrieve all requests from the requests table
     sel = select(requests.c.hotel_code).distinct().where(requests.c.request_user_id == stytchUserID)
@@ -504,7 +512,10 @@ def get_stays():
     try:
         stytchUserID = authenticate_session(session_token).user.user_id
     except AuthenticationError as e:
-        return jsonify({'message': str(e)}), 401
+        # return jsonify({'message': str(e)}), 401
+        print(f"Authentication Error: {str(e)}")
+        stytchUserID = 'guest'
+
     
     j = join(stays, hotels, stays.c.hotel_id == hotels.c.hotel_id)
 

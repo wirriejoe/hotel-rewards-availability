@@ -16,7 +16,7 @@ function SearchPage() {
   // };
 
   return (
-    isAuthenticated ? (
+    // isAuthenticated ? (
       <div>
         <div className="header">
           <h1>Search</h1>
@@ -32,9 +32,9 @@ function SearchPage() {
           <SearchTable stays={stays} />
         </div>
       </div>
-    ) : (
-      <Login />
-    )
+    // ) : (
+    //   <Login />
+    // )
   );
 }
 

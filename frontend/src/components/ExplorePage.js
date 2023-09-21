@@ -17,7 +17,7 @@ function ExplorePage() {
     // };
   
     return (
-      isAuthenticated ? (
+      // isAuthenticated ? (
         <div>
           <div className="header">
             <h1>Discover</h1>
@@ -50,9 +50,9 @@ function ExplorePage() {
                 )}
           </div>
         </div>
-      ) : (
-        <Login />
-      )
+      // ) : (
+      //   <Login />
+      // )
     );
 }
 
