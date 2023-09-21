@@ -116,6 +116,13 @@ class AwardSearch:
             except Exception as e:
                 print(f"An error occurred while getting award stays: {e}. Attempt {attempt + 1} of {max_retries}. Here's the Response URL: {url}")
                 traceback.print_exc()
+
+                username = os.getenv('BRIGHTDATA_USERNAME')
+                password = os.getenv('BRIHTDATA_PASSWORD')
+                port = 22225
+                session_id = random.random()
+                super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"  
+                self.driver.profiles.proxy.set_single(super_proxy_url)
                 if attempt < max_retries - 1:
                     sleep_time = delay * (backoff_factor ** attempt)
                     print(f"Retrying in {sleep_time} seconds...")
