@@ -77,28 +77,28 @@ def upsert(session, table_name, list_of_dicts, unique_columns):
     # print(f"Table name: {table_name}")
     # print(table_name.name==temp_awards.name)
 
-    if table_name.name == temp_awards.name:
-        print("Calling tempAwards webhook!")
-        url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
-        params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            print("Request successful:", response.json())
-        else:
-            print("Request failed:", response.status_code)
-            send_error_to_slack("tempAwards webhook error: " + response)
+    # if table_name.name == temp_awards.name:
+    #     print("Calling tempAwards webhook!")
+    #     url = "https://api.retool.com/v1/workflows/412574f5-d537-442e-b2cb-4becd78c4cdb/startTrigger"
+    #     params = {'workflowApiKey': 'retool_wk_4c776ddd5e9a4168839e4af2afeacc6c'}
+    #     response = requests.get(url, params=params)
+    #     if response.status_code == 200:
+    #         print("Request successful:", response.json())
+    #     else:
+    #         print("Request failed:", response.status_code)
+    #         send_error_to_slack("tempAwards webhook error: " + response)
 
 @retry(tries=5, delay=1, backoff=2)
 def update_rates():
     print("Calling update_rates() webhook!")
-    url = "https://api.retool.com/v1/workflows/c5027803-ab81-4c30-85cd-57748fe8f44f/startTrigger"
-    params = {'workflowApiKey': 'retool_wk_a717023c42f24f558e28f0afe3dc2abb'}
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        print("Request successful:", response.json())
-    else:
-        print("Request failed:", response.status_code)
-        send_error_to_slack("update_rates() webhook error: " + response)
+    # url = "https://api.retool.com/v1/workflows/c5027803-ab81-4c30-85cd-57748fe8f44f/startTrigger"
+    # params = {'workflowApiKey': 'retool_wk_a717023c42f24f558e28f0afe3dc2abb'}
+    # response = requests.get(url, params=params)
+    # if response.status_code == 200:
+    #     print("Request successful:", response.json())
+    # else:
+    #     print("Request failed:", response.status_code)
+    #     send_error_to_slack("update_rates() webhook error: " + response)
 
 def send_error_to_slack(error_msg):
     url = os.getenv('SLACK_WEBHOOK')
