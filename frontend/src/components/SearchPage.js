@@ -20,7 +20,7 @@ function SearchPage() {
       <div>
         <div className="header">
           <h1>Search</h1>
-          <p>Instantly search for availability for hotel stays across all of our supported Hyatt hotels at once!</p>
+          <p>Instantly search for availability for hotel stays across all of our supported IHG, Hyatt, and Hilton hotels at once!</p>
         </div>
         <div className="map-container">
           <SearchMap stays={stays} setStays={setStays} isLoading={isLoading} setIsLoading={setIsLoading} isCustomer={isCustomer} />  {/* <-- Add this line */}
