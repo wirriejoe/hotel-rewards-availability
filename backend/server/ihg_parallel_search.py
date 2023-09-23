@@ -64,7 +64,7 @@ def on_after(retry_state):
         return
 
 # IHG rate code definitions https://quizlet.com/395739938/hi-rate-codes-flash-cards/
-@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=5), after=on_after)
+@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=2), after=on_after)
 async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, destination, stay_id, hotel_id, auths):
     async with sem:
         global search_counter, super_proxy_url, proxy_dict

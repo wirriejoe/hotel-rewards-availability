@@ -67,7 +67,7 @@ def on_after(retry_state):
         print("Max retries reached. Skipping this run.")
         return
 
-@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=5), after=on_after)
+@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=2), after=on_after)
 async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, stay_id, hotel_id, auths):
     async with sem:
         global search_counter, super_proxy_url, proxy_dict
