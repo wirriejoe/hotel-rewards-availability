@@ -237,6 +237,8 @@ if __name__ == "__main__":
         update_rates()
         session.close()
     except Exception as e:
-        session.close()
+        session.rollback()
         send_error_to_slack(str(e))
         print("Error in main function: %s", str(e))
+    finally:
+        session.close()
