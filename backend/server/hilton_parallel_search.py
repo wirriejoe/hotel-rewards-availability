@@ -220,8 +220,8 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 15000)
-        auths = get_global_auths(8)
+        stay_records = queue_stays("hilton", 24, 1000)
+        auths = get_global_auths(1)
 
         # Asynchronous: Fetch awards
         award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
@@ -230,9 +230,9 @@ if __name__ == "__main__":
         # Single-thread: upsert, update rates, close session
         print("Finished joining threads! Upserting data.")
         print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        upsert(session, temp_awards, award_updates, ["award_id"])
+        upsert(temp_awards, award_updates, ["award_id"])
         print(f"Upserting {len(stay_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        upsert(session, stays, stay_updates, ['stay_id'])
+        upsert(stays, stay_updates, ['stay_id'])
         print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
         update_rates()
         session.close()

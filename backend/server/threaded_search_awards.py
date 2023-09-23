@@ -164,8 +164,8 @@ if __name__ == "__main__":
         print("Finished joining threads! Upserting data.")
         print(f"Num award updates: {len(award_updates)}")
         print(f"Num stay updates: {len(stay_updates)}")
-        upsert(session, temp_awards, award_updates, ['award_id'])
-        upsert(session, stays, stay_updates, ['stay_id'])
+        upsert(temp_awards, award_updates, ['award_id'])
+        upsert(stays, stay_updates, ['stay_id'])
         update_rates()
         session.close()
     except Exception as e:
