@@ -36,8 +36,8 @@ const HotelCalendar = ({ stays }) => {
   const myEventsList = [];
 
   stays.forEach(stay => {
-    const checkInDate = moment(stay.check_in_date).toDate();
-    const checkOutDate = moment(stay.check_in_date).toDate();
+    const checkInDate = moment.utc(stay.check_in_date).add(1, "day").toDate();
+    const checkOutDate = moment.utc(stay.check_in_date).add(1, "day").toDate();
     const bookingUrl = stay.booking_url;
 
     // Handle standard rate
