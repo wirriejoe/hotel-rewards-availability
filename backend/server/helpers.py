@@ -2,6 +2,7 @@ from datetime import datetime
 from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import create_engine, MetaData, select, and_, update, func, case, text, join
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 from datetime import datetime, timedelta
 from retry import retry
 import pytz
@@ -58,6 +59,7 @@ def queue_stays(hotel_brand, search_frequency_hours, search_batch_size):
     
     return stay_records
 
+@retry(tries=5, delay=1, backoff=2)
 def upsert(session, table_name, list_of_dicts, unique_columns):
     # Prepare the base INSERT statement
     keys = list_of_dicts[0].keys()
