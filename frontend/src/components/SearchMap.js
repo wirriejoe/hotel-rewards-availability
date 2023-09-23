@@ -26,21 +26,22 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
   const session_token = Cookies.get('session_token')
   const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
   const [geography, setGeography] = useState({ lat: lat, lng: lng });
+  const [startDate, setStartDate] = useState(moment().startOf('hour').add(24, 'hour'));
+  const [endDate, setEndDate] = useState(moment().startOf('hour').add(7, 'day'));
 
   useEffect(() => {
-    $(function() {
-      $('#date-range').daterangepicker({
-        startDate: moment().startOf('hour').add(24, 'hour'),
-        endDate: moment().startOf('hour').add(7, 'day'),
-        locale: {
-          format: 'MM/DD/YYYY'
-        }
-      }, function(start, end) {
-        console.log("Start date: ", start.format('MM/DD/YYYY'));
-        console.log("End date: ", end.format('MM/DD/YYYY'));
-      });
+    $('#date-range').daterangepicker({
+      startDate: startDate,  // Use state
+      endDate: endDate,      // Use state
+      locale: {
+        format: 'MM/DD/YYYY'
+      }
+    }, function(start, end) {
+      // Update state when date range changes
+      setStartDate(start);
+      setEndDate(end);
     });
-
+  
     if (!map.current) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -110,12 +111,15 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
         map.current._markers.push(marker);
       });
     }  
-  }, [lng, lat, zoom, stays]);
+  }, [lng, lat, zoom, stays, startDate, endDate]);
 
   const submitForm = async () => {
     const dateRange = document.getElementById('date-range').value;
     const numNights = document.getElementById('length-of-stay').value;
     const awardCategory = document.getElementById('category').value;
+    const dateRangePicker = $('#date-range').data('daterangepicker');
+    setStartDate(dateRangePicker.startDate);
+    setEndDate(dateRangePicker.endDate);  
 
     setIsLoading(true);
 
@@ -143,6 +147,7 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
           type="text"
           id="date-range"
           className="form-control mapboxgl-ctrl-geocoder mx-2"
+          value={`${startDate.format('MM/DD/YYYY')} - ${endDate.format('MM/DD/YYYY')}`}  // Use state
         />
         <select
           id="length-of-stay"

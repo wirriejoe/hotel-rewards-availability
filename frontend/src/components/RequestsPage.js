@@ -1,11 +1,11 @@
 import React, {useState, useContext} from "react";
 import { UserContext } from './UserContext';
 import RequestsTable from './RequestsTable';
-import Login from './Login';
+// import Login from './Login';
 
 function RequestsPage({ isPro }) {
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated } = useContext(UserContext);
+  // const { isAuthenticated } = useContext(UserContext);
   const { isCustomer } = useContext(UserContext);
 
   return (

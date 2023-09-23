@@ -3,12 +3,12 @@ import React, { useState, useContext } from 'react';
 import SearchTable from './SearchTable';
 import SearchMap from './SearchMap';  // <-- Make sure to import this
 import { UserContext } from './UserContext';
-import Login from './Login';
+// import Login from './Login';
 
 function SearchPage() {
   const [stays, setStays] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated, isCustomer } = useContext(UserContext);
+  const { isCustomer } = useContext(UserContext);
 
   // const handleStaysUpdate = (newData) => {
   //   setStays(newData);

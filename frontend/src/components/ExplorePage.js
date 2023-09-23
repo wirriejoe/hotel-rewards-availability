@@ -3,12 +3,12 @@ import ExploreForm from "./ExploreForm";
 import ExploreTable from "./ExporeTable";
 import { UserContext } from './UserContext';
 import { useParams } from 'react-router-dom'; 
-import Login from './Login';
+// import Login from './Login';
 
 function ExplorePage() {
     const [stays, setStays] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { isAuthenticated, isCustomer } = useContext(UserContext);
+    const { isCustomer } = useContext(UserContext);
     const {hotelName} = useParams();
 
     // const handleStaysUpdate = (newData) => {
