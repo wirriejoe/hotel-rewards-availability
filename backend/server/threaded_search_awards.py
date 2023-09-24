@@ -114,7 +114,7 @@ def worker(task_queue, award_updates, stay_updates, counter_lock):
             })
     awardsearch.quit()
 
-def search_awards(search_frequency_hours = 24, search_batch_size = 1000):
+def search_awards(search_frequency_hours = 24, search_batch_size = 12000):
     global search_counter
     global start_timer
     start_timer = datetime.now()
