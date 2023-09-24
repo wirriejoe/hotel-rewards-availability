@@ -3,10 +3,10 @@ from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import create_engine, MetaData, select, and_, join
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-from auth import get_ihg_auth
 from helpers import queue_stays, upsert, update_rates, send_error_to_slack
 from tenacity import retry, stop_after_attempt, wait_exponential
 from itertools import chain
+from ParallelRequests import MultiSessionRetriever
 import pytz
 import random
 import os
@@ -46,17 +46,45 @@ search_counter = 0
 start_timer = datetime.now()
 sem = asyncio.Semaphore(10)
 
-def get_global_auths(num_runs):
-    auths = []  # Declare global variable
-    for _ in range(num_runs):
-        auth_check_in_date = datetime.now() + timedelta(days=random.randint(4,10))
-        auth_check_out_date = auth_check_in_date + timedelta(days=random.randint(1,5))
+def build_requests(stay_records):
+    requests = []
+    for stay in stay_records:
+        check_in_date = stay.check_in_date.strftime('%Y-%m-%d')
+        check_out_date = stay.check_out_date.strftime('%Y-%m-%d')
+        hotel_code = stay.hotel_code
+        
+        url = "https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails"            
+        headers = {
+            # 'X-Ihg-Api-Key': auths[rand_auth]['api_key']
+            'Content-Type': "application/json",
+            'X-Ihg-Api-Key': auths
+        }
+        query = {"products": [{
+                    "productCode": "SR",
+                    "guestCounts": [
+                        {"otaCode": "AQC10",
+                        "count": 2},
+                        {"otaCode": "AQC8",
+                        "count": 0}],
+                    "startDate": check_in_date,
+                    "endDate": check_out_date,
+                    "quantity": 1}],
+            "startDate": check_in_date,
+            "endDate": check_out_date,
+            "hotelMnemonics": [hotel_code],
+            "rates": {"ratePlanCodes": [{"internal": "IVANI"}] # award program code = IVANI
+        },
+            "options": {"disabilityMode": "ACCESSIBLE_AND_NON_ACCESSIBLE",
+                "returnAdditionalRatePlanDescriptions": True,
+                "includePackageDetails": True}
+        }
+        requests.append({"url": url, "headers": headers, "query": query})
+        print(requests)
+    return requests
 
-        api_key = get_ihg_auth(auth_check_in_date.date(), auth_check_out_date.date())
-        auths.append({
-            "api_key": api_key
-        })
-    return auths
+def parse_response(url, response):
+    print(len(response))
+    return response
 
 def on_after(retry_state):
     if retry_state.attempt_number == 4:  # Replace 4 with your max retries
@@ -76,11 +104,7 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
 
         try:
             # rand_auth = random.randint(0,len(auths)-1)
-            url = "https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails"
-                    # rateDetails.policies,
-                    # rateDetails.bonusRates,
-                    # rateDetails.upsells
-            
+            url = "https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails"            
             headers = {
                 # 'X-Ihg-Api-Key': auths[rand_auth]['api_key']
                 'X-Ihg-Api-Key': auths
@@ -104,20 +128,6 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     "returnAdditionalRatePlanDescriptions": True,
                     "includePackageDetails": True}
             }
-            
-            check_in_day, check_in_month, check_in_year = check_in_date.split('-')[::-1]
-            check_out_day, check_out_month, check_out_year = check_out_date.split('-')[::-1]
-            check_in_month = "{:02d}".format(int(check_in_month) - 1)
-            check_out_month = "{:02d}".format(int(check_out_month) - 1)
-            
-            # ip_url = "http://lumtest.com/myip.json"
-            # async with session.get(ip_url, proxy=super_proxy_url) as ip_response:
-            #     if ip_response.status == 200:
-            #         ip_data = await ip_response.json()
-            #         my_ip = ip_data['ip']
-            #         print(f"My IP Address: {my_ip}")
-            #     else:
-            #         print("Could not fetch IP.")
 
             # Make the POST request and capture the response
             async with session.post(url, json=query, headers=headers, proxy=super_proxy_url, timeout=30) as response:
@@ -131,6 +141,10 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     print(data)
                     print(f"Error on request: {e}")
                     return []
+                check_in_year, check_in_month, check_in_day = check_in_date.split('-')[::-1]
+                check_out_year, check_out_month, check_out_day = check_out_date.split('-')[::-1]
+                check_in_month = "{:02d}".format(int(check_in_month) - 1)
+                check_out_month = "{:02d}".format(int(check_out_month) - 1)
 
                 currency_code = data['hotels'][0]['propertyCurrency']
                 search_url = f'https://www.ihg.com/intercontinental/hotels/us/en/find-hotels/select-roomrate?qDest={destination}&qSlH={hotel_code}&qCiD={check_in_day}&qCiMy={check_in_month + check_in_year}&qCoD={check_out_day}&qCoMy={check_out_month + check_out_year}&qRms=1&qAdlt=2&displayCurrency={currency_code}&qRtP=IVANI'
@@ -163,25 +177,16 @@ async def get_ihg_awards(session, check_in_date, check_out_date, hotel_code, des
                     })
                     print(award_id)
                 search_counter += 1
-                print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        except aiohttp.ClientResponseError as e:  # Catch aiohttp specific Client Response errors
-            if e.status == 400:
-                search_url = f'https://www.ihg.com/intercontinental/hotels/us/en/find-hotels/select-roomrate?qDest={destination}&qSlH={hotel_code}&qCiD={check_in_day}&qCiMy={check_in_month + check_in_year}&qCoD={check_out_day}&qCoMy={check_out_month + check_out_year}&qRms=1&qAdlt=2&qRtP=IVANI'
-                print(f"400 status, no awards found. Verification URL: {search_url}")
-            else:
-                print(f"Response URL {url} failed with exception: {e}")
-                raise
-        except Exception as e:
-            print(f"Response URL {url} failed with other exception: {e}")
-            raise
-        
-        # print("Updating stay and returning award_updates")
-        # Update stay if award is found OR if award is not found (i.e. 400 error)
-        stay_updates.append({
+
+                stay_updates.append({
                     'stay_id': stay_id,
                     'last_checked_time': datetime.now(pytz.UTC),
                     'status': 'Active'
-        })
+                })
+                print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        except Exception as e:
+            print(f"Response URL {url} failed with exception: {e}")
+            raise
         return award_updates
 
 async def fetch_stay_awards(stay_records, auths):
@@ -199,24 +204,31 @@ async def fetch_stay_awards(stay_records, auths):
 
 if __name__ == "__main__":
     try:
-        # Single-thread: queue_stays
-        stay_records = queue_stays("ihg", 24, 15000)
-        # auths = ['se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y']
-        # auths = get_global_auths(1)
+        print("Queuing stays!")
+        stay_records = queue_stays("ihg", 24, 100)
         auths = 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'
+        print("Initializing MultiSessionRetriever")
+        mSession = MultiSessionRetriever(username, password, session_requests_limit=10, session_failures_limit=2)
+        print("Sending requests")
+        # check_in_date = '2023-09-28'
+        # check_out_date = '2023-09-29'
+        # hotel_code = 'SINIC'
+        award_requests = build_requests(stay_records)
+        # award_requests = [{'url': 'https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails', 'headers': {'Content-Type': 'application/json', 'X-Ihg-Api-Key': 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'}, 'query': {'products': [{'productCode': 'SR', 'guestCounts': [{'otaCode': 'AQC10', 'count': 2}, {'otaCode': 'AQC8', 'count': 0}], 'startDate': '2023-10-28', 'endDate': '2023-10-29', 'quantity': 1}], 'startDate': '2023-10-28', 'endDate': '2023-10-29', 'hotelMnemonics': ['SINIC'], 'rates': {'ratePlanCodes': [{'internal': 'IVANI'}]}, 'options': {'disabilityMode': 'ACCESSIBLE_AND_NON_ACCESSIBLE', 'returnAdditionalRatePlanDescriptions': True, 'includePackageDetails': True}}}]
+        # award_requests = [{'url': 'https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails', 'headers': {'Content-Type': 'application/json', 'X-Ihg-Api-Key': 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'}, 'query': {'products': [{'productCode': 'SR', 'guestCounts': [{'otaCode': 'AQC10', 'count': 2}, {'otaCode': 'AQC8', 'count': 0}], 'startDate': '2023-09-30', 'endDate': '2023-10-01', 'quantity': 1}], 'startDate': '2023-09-30', 'endDate': '2023-10-01', 'hotelMnemonics': ['BKKTL'], 'rates': {'ratePlanCodes': [{'internal': 'IVANI'}]}, 'options': {'disabilityMode': 'ACCESSIBLE_AND_NON_ACCESSIBLE', 'returnAdditionalRatePlanDescriptions': True, 'includePackageDetails': True}}}]
+        # award_requests = [{'url': 'https://apis.ihg.com/availability/v3/hotels/offers?fieldset=rateDetails', 'headers': {'Content-Type': 'application/json', 'X-Ihg-Api-Key': 'se9ym5iAzaW8pxfBjkmgbuGjJcr3Pj6Y'}, 'query': {'products': [{'productCode': 'SR', 'guestCounts': [{'otaCode': 'AQC10', 'count': 2}, {'otaCode': 'AQC8', 'count': 0}], 'startDate': '2024-04-26', 'endDate': '2024-04-27', 'quantity': 1}], 'startDate': '2024-04-26', 'endDate': '2024-04-27', 'hotelMnemonics': ['RMQTT'], 'rates': {'ratePlanCodes': [{'internal': 'IVANI'}]}, 'options': {'disabilityMode': 'ACCESSIBLE_AND_NON_ACCESSIBLE', 'returnAdditionalRatePlanDescriptions': True, 'includePackageDetails': True}}}]
+        
+        award_results = mSession.retrieve(award_requests, timeout=30, parallel_sessions_limit=10, callback=parse_response)
+        
+        # award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
+        # award_updates = list(chain.from_iterable(award_results))
 
-        # Asynchronous: Fetch awards
-        award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
-        award_updates = list(chain.from_iterable(award_results))
-
-        # Single-thread: upsert, update rates, close session
-        print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        upsert(temp_awards, award_updates, ["award_id"])
-        print(f"Upserting {len(stay_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        upsert(stays, stay_updates, ['stay_id'])
-        print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
-        update_rates()
-        session.close()
+        # print(f"Upserting {len(award_updates)} award updates to awards table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        # upsert(temp_awards, award_updates, ["award_id"])
+        # print(f"Upserting {len(stay_updates)} stay updates to stays table! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        # upsert(stays, stay_updates, ['stay_id'])
+        # print(f"Updating rates! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        # update_rates()
     except Exception as e:
         session.rollback()  
         send_error_to_slack(str(e))

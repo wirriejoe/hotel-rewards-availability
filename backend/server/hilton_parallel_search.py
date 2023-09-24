@@ -152,9 +152,7 @@ async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, 
                 data = await response.json()
                 try:
                     awards = data['data']['hotel']['shopAvail']['roomTypes']
-                    # print("Awards found!")
                 except Exception as e:
-                    # print("No awards found!")
                     print(data)
                     print(f"Error on request: {e}")
                     return []
@@ -193,15 +191,26 @@ async def get_hilton_awards(session, check_in_date, check_out_date, hotel_code, 
                     })
                     print(award_id)
                 search_counter += 1
-                stay_updates.append({
-                    'stay_id': stay_id,
-                    'last_checked_time': datetime.now(pytz.UTC),
-                    'status': 'Active'
-                })
                 print(f"Finished with Search #{search_counter} for hotel ID {str(hotel_id)} from {str(check_in_date)} to {str(check_out_date)}! {(datetime.now()-start_timer).total_seconds()}s has elapsed.")
+        except aiohttp.ClientResponseError as e:  # Catch aiohttp specific Client Response errors
+            search_url = f'https://www.hilton.com/en/book/reservation/rooms/?ctyhocn={hotel_code}&arrivalDate={check_in_date}&departureDate={check_out_date}&room1NumAdults=2&redeemPts=true'
+            if e.status == 400:
+                print(f"400 status, no awards found. Verification URL: {search_url}")
+            else:
+                print(f"Verification URL {search_url} failed with exception: {e}")
+                raise
         except Exception as e:
-            print(f"Response URL {url} failed with exception: {e}")
+            search_url = f'https://www.hilton.com/en/book/reservation/rooms/?ctyhocn={hotel_code}&arrivalDate={check_in_date}&departureDate={check_out_date}&room1NumAdults=2&redeemPts=true'
+            print(f"Verification URL {search_url} failed with other exception: {e}")
             raise  # Re-raise the exception to trigger the retry logic
+        
+        # print("Updating stay and returning award_updates")
+        # Update stay if award is found OR if award is not found (i.e. 400 error)
+        stay_updates.append({
+            'stay_id': stay_id,
+            'last_checked_time': datetime.now(pytz.UTC),
+            'status': 'Active'
+        })
         return award_updates
 
 async def fetch_stay_awards(stay_records, auths):
@@ -220,8 +229,8 @@ async def fetch_stay_awards(stay_records, auths):
 if __name__ == "__main__":
     try:
         # Single-thread: queue_stays
-        stay_records = queue_stays("hilton", 24, 15000)
-        auths = get_global_auths(8)
+        stay_records = queue_stays("hilton", 24, 100)
+        auths = get_global_auths(1)
 
         # Asynchronous: Fetch awards
         award_results = asyncio.run(fetch_stay_awards(stay_records, auths))
