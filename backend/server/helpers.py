@@ -83,7 +83,7 @@ def upsert_chunk(table_name, list_of_dicts, unique_columns):
         session.close()
 
 def upsert(table_name, list_of_dicts, unique_columns):
-    print("Entering upsert...")
+    print("Starting upsert...")
     chunk_size = 5  # Choose an appropriate size
     total = len(list_of_dicts)
     chunks = [list_of_dicts[i:i + chunk_size] for i in range(0, total, chunk_size)]

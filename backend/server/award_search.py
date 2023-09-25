@@ -20,17 +20,13 @@ class AwardSearch:
         load_dotenv(find_dotenv())
         # profile = json.loads(os.getenv('SELENIUM_PROFILE'))
         selection = random.choice([1,2,3])
-        print(selection)
         if selection == 1:
             profile = json.loads(os.getenv('SELENIUM_PROFILE'))
         elif selection == 2:
             profile = json.loads(os.getenv('SELENIUM_PROFILE_2'))
         else:
             profile = profiles.Android()
-        print(profile)
-
-        # username = 'brd-customer-hl_94decac0-zone-isp'
-        # password = 'fgezgl3cvg66'
+        
         username = os.getenv('BRIGHTDATA_USERNAME')
         password = os.getenv('BRIHTDATA_PASSWORD')
         port = 22225
@@ -53,7 +49,21 @@ class AwardSearch:
         return driver
 
     def __init__(self):
+        self._username = os.getenv('BRIGHTDATA_USERNAME')
+        self._password = os.getenv('BRIHTDATA_PASSWORD')
+        self._port = 22225
+        self._requests_limit = 50
+        self._failures_limit = 5
         self.driver = self.initialize_driver()
+        self._reset_session()
+    
+    def _reset_session(self):
+        session_id = random.random()
+        print(f"New session ID: {session_id}")
+        proxy = f"http://{self._username}-dns-remote-route_err-block-session-{session_id}:{self._password}@brd.superproxy.io:{self._port}"
+        self.driver.profiles.proxy.set_single(proxy)
+        self._requests = 0
+        self._failures = 0
 
     def build_url(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
         base_url_dict = {
@@ -73,21 +83,26 @@ class AwardSearch:
     def get_award_stays(self, hotel_brand, hotel_code, checkin_date, checkout_date, room_qty = 1, adults = 2, kids = 0):
         max_retries = 5
         delay = 1
-        backoff_factor = 2
-
-        # proxy ip check
-        # self.driver.get('https://api.ipify.org/?format=json/')
-        # print(self.driver.page_source)
-
+        backoff_factor = 1
+        
         for attempt in range(max_retries):
             try:
+                if self._requests == self._requests_limit:
+                    print("Reached request limit. Resetting session.")
+                    self._reset_session()
+                self._requests += 1
+                # proxy ip check
+                # self.driver.get('https://api.ipify.org/?format=json/')
+                # print(self.driver.page_source)
+                # print(self.driver.profiles.proxy.proxy)
+
                 url, search_url = self.build_url(hotel_brand, hotel_code, checkin_date, checkout_date, room_qty, adults, kids)
 
                 # Get award stays
                 # self.driver.implicitly_wait(5)
                 self.driver.get(url)
                 # wait = WebDriverWait(self.driver, 20)
-                time.sleep(random.randint(3, 5))
+                time.sleep(2 + random.uniform(-0.5, 0.5))
                 # pre_element = wait.until(EC.visibility_of_element_located((By.TAG_NAME, 'pre')))
 
                 soup = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -115,19 +130,15 @@ class AwardSearch:
                 return awards_list
             except Exception as e:
                 print(f"An error occurred while getting award stays: {e}. Attempt {attempt + 1} of {max_retries}. Here's the Response URL: {url}")
-                traceback.print_exc()
-
-                username = os.getenv('BRIGHTDATA_USERNAME')
-                password = os.getenv('BRIHTDATA_PASSWORD')
-                port = 22225
-                session_id = random.random()
-                super_proxy_url = f"http://{username}-dns-remote-route_err-block-session-{session_id}:{password}@brd.superproxy.io:{port}"  
-                self.driver.profiles.proxy.set_single(super_proxy_url)
+                # traceback.print_exc()
+                self._failures += 1
+                if self._failures == self._failures_limit:
+                    print("Reached failure limit. Resetting session.")
+                    self._reset_session()
                 if attempt < max_retries - 1:
-                    sleep_time = delay * (backoff_factor ** attempt)
+                    sleep_time = min(delay * (backoff_factor ** attempt),3)
                     print(f"Retrying in {sleep_time} seconds...")
                     time.sleep(sleep_time)  # Wait before retrying
-            
         print("Max retries reached. Returning an empty list.")
         return []  # Return empty list after max retries
 

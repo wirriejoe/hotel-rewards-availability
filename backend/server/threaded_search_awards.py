@@ -153,14 +153,14 @@ def search_awards(search_frequency_hours = 24, search_batch_size = 12000):
         t = Thread(target=worker, args=(task_queue, award_updates, stay_updates, counter_lock))
         threads.append(t)
         t.start()
-    
-    print("Finished jobs! Closing out threads.")
 
     for t in threads:
         t.join()
+    print("Finished jobs! Closing out threads.")
+    
 if __name__ == "__main__":
     try:
-        search_awards(search_frequency_hours=24, search_batch_size=12000)
+        search_awards(search_frequency_hours=24, search_batch_size=1000)
         print("Finished joining threads! Upserting data.")
         print(f"Num award updates: {len(award_updates)}")
         print(f"Num stay updates: {len(stay_updates)}")
