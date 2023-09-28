@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Select, { components } from 'react-select';
 import Cookies from 'js-cookie';
+import queryString from 'query-string';
 
 const Option = (props) => {
     return (
@@ -19,26 +20,27 @@ const Option = (props) => {
     );
 };
 
-function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-}
+// function usePrevious(value) {
+//     const ref = useRef();
+//     useEffect(() => {
+//         ref.current = value;
+//     });
+//     return ref.current;
+// }
 
 function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName }) {
     const [awardCategory, setAwardCategory] = useState([]);
     const [awardCategoryOptions, setAwardCategoryOptions] = useState([]);
     const [brand, setBrand] = useState([])
     const [brandInitialized, setBrandInitialized] = useState(false);
+    const [searchState, setSearchState] = useState(false);
     useEffect(() => {
         setBrand([{
             value: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : hotelName === 'ihg' ? 'InterContinental Hotels & Resorts' : '',
             label: hotelName === 'hyatt' ? 'Park Hyatt' : hotelName === 'hilton' ? 'Waldorf Astoria Hotels & Resorts' : hotelName === 'ihg' ? 'InterContinental Hotels & Resorts' : ''
           }]);
           setBrandInitialized(true); 
-      }, [hotelName]);
+    }, [hotelName]);
     const [brandOptions, setBrandOptions] = useState([]);
     // const [errorMessage, setErrorMessage] = useState(null);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -54,7 +56,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     );
 
     const [numNights, setNumNights] = useState(
-        { value: 1, label: '1 night'}
+        { value: '1', label: '1 night'}
     );
 
     const [countryOptions, setCountryOptions] = useState([]);
@@ -85,22 +87,22 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
     ];    
 
     const numNightsOptions = [
-        { value: 1, label: '1 night'},
-        { value: 2, label: '2 nights'},
-        { value: 3, label: '3 nights'},
-        { value: 4, label: '4 nights'},
-        { value: 5, label: '5 nights'},
+        { value: '1', label: '1 night'},
+        { value: '2', label: '2 nights'},
+        { value: '3', label: '3 nights'},
+        { value: '4', label: '4 nights'},
+        { value: '5', label: '5 nights'},
     ]; 
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
 
-    const prevAwardCategory = usePrevious(awardCategory);
-    const prevBrand = usePrevious(brand);
-    const prevCountry = usePrevious(country);
-    const prevPointsPerNight = usePrevious(pointsPerNight);
-    const prevCentsPerPoint = usePrevious(centsPerPoint);
-    const prevNumNights = usePrevious(numNights);
-    const prevHotelName = usePrevious(hotelName)
+    // const prevAwardCategory = usePrevious(awardCategory);
+    // const prevBrand = usePrevious(brand);
+    // const prevCountry = usePrevious(country);
+    // const prevPointsPerNight = usePrevious(pointsPerNight);
+    // const prevCentsPerPoint = usePrevious(centsPerPoint);
+    // const prevNumNights = usePrevious(numNights);
+    // const prevHotelName = usePrevious(hotelName)
 
     const submitForm = useCallback(async () => {
         // if ((awardCategory.length < 1 && brand == '') || awardCategory.length > 3 || brand.length > 3) {
@@ -108,7 +110,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
         //     return;
         // }
         // setErrorMessage(null);  // Clear any previous error message
-
+        setSearchState(false);
         const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
         const brandArray = Array.isArray(brand) ? brand : [brand];
 
@@ -134,7 +136,7 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
             console.error(error);
         } finally {
             setIsLoading(false);
-        }
+    }
     }, [awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, setIsLoading, setStays, api_url, isCustomer, hotelName]);
 
     const fetchData = useCallback(async () => {
@@ -163,20 +165,79 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
 
     // Call submitForm whenever awardCategory or brand changes
     useEffect(() => {
+        const awardCategoryArray = Array.isArray(awardCategory) ? awardCategory : [awardCategory];
+        const brandArray = Array.isArray(brand) ? brand : [brand];
+
+        const awardCategoryString = awardCategoryArray.map(category => category.value);
+        const brandString = brandArray.map(brand => brand.value);
+        // console.log(brandString)
+
+        const queryObj = {
+            awardCategory: awardCategoryString,
+            brand: brandString,
+            country: country.value,
+            pointsPerNight: pointsPerNight.value,
+            cpp: centsPerPoint.value,
+            numNights: numNights.value
+        };
+        
+        const existingQueryStr = window.location.search.substring(1);
+        const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
+        const queryStr = queryString.stringify(filteredQueryObj);
+        window.history.pushState({}, '', '?' + queryStr);
+        if (existingQueryStr !== queryStr) {
+            // If they are different, update the state
+            setSearchState(true);
+        }
+        console.log ("Search state: " + searchState)
         if (initialLoad && brandInitialized) {
             setIsLoading(true);
             fetchData();
+            const parsed = queryString.parse(window.location.search);
+            if (Object.keys(parsed).length > 0) {
+                // Parse the parameters and set the state
+                if (parsed.brand) {
+                    // console.log('brand: '+ parsed.brand)
+                    setBrand({ value: parsed.brand, label: parsed.brand });
+                }
+                if (parsed.awardCategory) {
+                    setAwardCategory({ value: parsed.awardCategory, label: parsed.awardCategory });
+                }
+                if (parsed.country) {
+                    setCountry({ value: parsed.country, label: parsed.country });
+                }
+                if (parsed.pointsPerNight) {
+                    setPointsPerNight({ value: parsed.pointsPerNight, label: `Under ${parsed.pointsPerNight} points` });
+                }
+                if (parsed.cpp) {  // Assuming URL parameter for centsPerPoint is "cpp"
+                    setCentsPerPoint({ value: parsed.cpp, label: `Over ${parseFloat(parsed.cpp) * 100}¢ per pt` });
+                }
+                if (parsed.numNights) {
+                    setNumNights({ value: parsed.numNights, label: `${parsed.numNights} ${parsed.numNights > 1 ? 'nights' : 'night'}` })
+                }
+            }
             submitForm();
             setInitialLoad(false);
         }
-        else if (!initialLoad && !isLoading && brandInitialized && (prevAwardCategory !== awardCategory || prevBrand !== brand || prevCountry !== country || prevPointsPerNight !== pointsPerNight || prevCentsPerPoint !== centsPerPoint || prevNumNights !== numNights || prevHotelName !== hotelName)) {
+        else if (!initialLoad && !isLoading && brandInitialized && searchState) {
             setIsLoading(true);
             submitForm();
         }
-    }, [prevAwardCategory, prevBrand, prevCountry, prevPointsPerNight, prevCentsPerPoint, prevNumNights, prevHotelName, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, submitForm, initialLoad, brandInitialized, fetchData, isLoading, setIsLoading]);  // Include previous and current states, and submitForm in the dependencies.
+    }, [searchState, awardCategory, brand, country, pointsPerNight, centsPerPoint, numNights, hotelName, brandInitialized, submitForm, initialLoad, fetchData, isLoading, setIsLoading]);  // Include previous and current states, and submitForm in the dependencies.
 
-    const handleAwardCategoryChange = (selectedOptions) => {setAwardCategory(selectedOptions)};
-    const handleBrandChange = (selectedOptions) => {setBrand(selectedOptions)};
+    const handleAwardCategoryChange = (selectedOptions) => {
+        setAwardCategory(Array.isArray(selectedOptions) ? selectedOptions : []);
+    };      
+    const handleBrandChange = (selectedOptions) => {
+        console.log("Selected Options:", selectedOptions);
+        if (Array.isArray(selectedOptions)) {
+            setBrand(selectedOptions);
+        } else if (selectedOptions) {
+            setBrand([selectedOptions]);
+        } else {
+            setBrand([]);
+        }    
+    };      
     const handleCountryChange = (selectedOption) => setCountry(selectedOption);
     const handlePointsPerNightChange = (selectedOption) => setPointsPerNight(selectedOption);
     const handleCentsPerPointChange = (selectedOption) => setCentsPerPoint(selectedOption);
@@ -239,14 +300,6 @@ function ExploreForm({ setStays, isLoading, setIsLoading, isCustomer, hotelName 
                         maxMenuHeight={window.innerHeight * 0.3}  // Adjust this value to your liking
                     />
                 </div>
-                {/* <div className="col-md-2">
-                    <label>Day of Week:</label>
-                    <Select
-                        options={weekendOptions} 
-                        value={weekend}
-                        onChange={handleWeekendChange}
-                    />
-                </div> */}
                 <div className="col-md-2">
                     <label>¢ per Point:</label>
                     <Select

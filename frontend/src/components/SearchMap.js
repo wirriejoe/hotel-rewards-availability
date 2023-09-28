@@ -30,6 +30,31 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
   const [endDate, setEndDate] = useState(moment().startOf('hour').add(7, 'day'));
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlLat = parseFloat(searchParams.get('lat'));
+    const urlLng = parseFloat(searchParams.get('lng'));
+    const urlStartDate = searchParams.get('startDate');
+    const urlEndDate = searchParams.get('endDate');
+    const urlNumNights = parseInt(searchParams.get('numNights'), 10);
+    const urlAwardCategory = searchParams.get('awardCategory');
+
+    if (urlLat && urlLng) {
+      setGeography({ lat: urlLat, lng: urlLng });
+    }
+
+    if (urlStartDate && urlEndDate) {
+      setStartDate(moment(urlStartDate, 'MM-DD-YYYY'));
+      setEndDate(moment(urlEndDate, 'MM-DD-YYYY'));
+    }
+    
+    if (urlNumNights) {
+      document.getElementById('length-of-stay').value = urlNumNights;
+    }
+
+    if (urlAwardCategory) {
+      document.getElementById('category').value = urlAwardCategory;
+    }
+
     $('#date-range').daterangepicker({
       startDate: startDate,  // Use state
       endDate: endDate,      // Use state
@@ -120,6 +145,28 @@ const SearchMap = ({stays, setStays, isLoading, setIsLoading, isCustomer}) => {
     const dateRangePicker = $('#date-range').data('daterangepicker');
     setStartDate(dateRangePicker.startDate);
     setEndDate(dateRangePicker.endDate);  
+
+    // Add form values to URL as query parameters
+    const params = new URLSearchParams();
+    if (geography.lat && geography.lng) {
+      params.append('lat', geography.lat);
+      params.append('lng', geography.lng);
+    }
+    const formattedStartDate = startDate.format('MM-DD-YYYY');
+    const formattedEndDate = endDate.format('MM-DD-YYYY');
+    if (formattedStartDate) {
+      params.append('startDate', formattedStartDate);
+    }
+    if (formattedEndDate) {
+      params.append('endDate', formattedEndDate);
+    }
+    if (numNights) {
+      params.append('numNights', numNights);
+    }
+    if (awardCategory) {
+      params.append('awardCategory', awardCategory);
+    }  
+    window.history.replaceState({}, '', `?${params.toString()}`);
 
     setIsLoading(true);
 

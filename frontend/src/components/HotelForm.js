@@ -56,11 +56,11 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
         { value: '0.1', label: 'Over 10¢ per pt' },
     ]; 
     const numNightsOptions = [
-        { value: 1, label: '1 night'},
-        { value: 2, label: '2 nights'},
-        { value: 3, label: '3 nights'},
-        { value: 4, label: '4 nights'},
-        { value: 5, label: '5 nights'},
+        { value: '1', label: '1 night'},
+        { value: '2', label: '2 nights'},
+        { value: '3', label: '3 nights'},
+        { value: '4', label: '4 nights'},
+        { value: '5', label: '5 nights'},
     ]; 
 
     const api_url = process.env.REACT_APP_TEST_API_URL || 'https://hotel-rewards-availability-api.onrender.com'
@@ -71,6 +71,27 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
     const prevNumNights = usePrevious(numNights);
 
     const {hotelName, hotelCode} = useParams(); // Get hotel name from URL
+
+    const initializeFormFromURL = () => {
+    //    console.log("Initialize Form loading")
+        const parsed = queryString.parse(window.location.search);
+        if (Object.keys(parsed).length > 0) {
+            // Parse the parameters and set the state
+            if (parsed.pointsPerNight) {
+                setPointsPerNight({ value: parsed.pointsPerNight, label: `Under ${parsed.pointsPerNight} points` });
+            }
+            if (parsed.weekend) {
+                const label = parsed.weekend === 'true' ? 'Weekend only' : 'Any day';
+                setWeekend({ value: parsed.weekend, label: label });
+            }
+            if (parsed.cpp) {  // Assuming URL parameter for centsPerPoint is "cpp"
+                setCentsPerPoint({ value: parsed.cpp, label: `Over ${parseFloat(parsed.cpp) * 100}¢ per pt` });
+            }
+            if (parsed.numNights) {
+                setNumNights({ value: parsed.numNights, label: `${parsed.numNights} ${parsed.numNights > 1 ? 'nights' : 'night'}` })
+            }       
+        }
+    }
 
     const submitForm = useCallback(async () => {
         setErrorMessage(null);  // Clear any previous error message
@@ -91,32 +112,27 @@ function HotelForm({ initialLoad, setInitialLoad, setStays, isLoading, setIsLoad
             cpp: centsPerPoint.value,
             numNights: numNights.value
         };
-    
-        const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
-        console.log('Filtered Query Object:', filteredQueryObj);
-        const queryStr = queryString.stringify(filteredQueryObj);
-        console.log('Query String:', queryStr);
-        window.history.pushState({}, '', '?' + queryStr);
-  
+
+        if (!initialLoad) {  // Only push new state if it's not the initial load
+            const filteredQueryObj = Object.fromEntries(Object.entries(queryObj).filter(([_, value]) => value && value.length > 0));
+            // console.log('Filtered Query Object:', filteredQueryObj);
+            const queryStr = queryString.stringify(filteredQueryObj);
+            // console.log('Query String:', queryStr);
+            window.history.replaceState({}, '', '?' + queryStr);
+        }    
+      
         try {
             const response = await axios.post(api_url + '/api/hotel', payload);
             setStays(response.data);
         } catch (error) {
             console.error(error);
         }
-    }, [pointsPerNight, weekend, centsPerPoint, numNights, hotelName, hotelCode, isCustomer, setStays, api_url]);
+    }, [pointsPerNight, weekend, centsPerPoint, numNights, hotelName, hotelCode, isCustomer, setStays, api_url, initialLoad]);
 
     useEffect(() => {
-        if (initialLoad && !isLoading) {
+        if (initialLoad) {
+            initializeFormFromURL();
             setIsLoading(true);
-            const parsed = queryString.parse(window.location.search);
-            if (Object.keys(parsed).length > 0) {
-                // Parse the parameters and set the state
-                if (parsed.pointsPerNight) setPointsPerNight(Number(parsed.pointsPerNight));
-                if (parsed.weekend) setWeekend(parsed.weekend);
-                if (parsed.centsPerPoint) setCentsPerPoint(Number(parsed.centsPerPoint));
-                if (parsed.numNights) setNumNights(Number(parsed.numNights));
-            }
             setInitialLoad(false);
             submitForm();
             setIsLoading(false)
